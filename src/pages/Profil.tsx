@@ -63,6 +63,14 @@ export function Profil() {
 
   const discordCheck = useDiscord(draft?.discordId ?? '', !!draft && (draft.options.discordAvatar || draft.options.discordDecoration || draft.options.discordPresence))
 
+  // Le message « Profil publié / mis à jour / Lien copié » s'efface tout seul.
+  const okMsg = status.kind === 'ok' ? status.msg : null
+  useEffect(() => {
+    if (!okMsg) return
+    const t = setTimeout(() => setStatus({ kind: 'idle' }), 2500)
+    return () => clearTimeout(t)
+  }, [okMsg])
+
   if (!draft) {
     return (
       <>
@@ -139,7 +147,7 @@ export function Profil() {
       )}
 
       {/* ------------------------------------------------------------ Médias */}
-      <SectionTitle>Import de médias</SectionTitle>
+      <Group title="Import de médias" open>
       <div className="media-grid">
         <Drop label="Arrière-plan" hint="Image, GIF ou vidéo MP4" accept="image/*,video/mp4,video/webm" busy={busy === 'bg'}
           preview={draft.background && (draft.background.type === 'video'
@@ -169,8 +177,9 @@ export function Profil() {
         </label>
       )}
 
+      </Group>
       {/* ---------------------------------------------------------- Identité */}
-      <SectionTitle>Identité</SectionTitle>
+      <Group title="Identité" open>
       <label className="field">
         <span>Pseudo</span>
         <span className="prefixed">
@@ -201,8 +210,9 @@ export function Profil() {
         </span>
       </label>
 
+      </Group>
       {/* ----------------------------------------------------------- Réseaux */}
-      <SectionTitle meta={`${draft.links.length}/12`}>Réseaux</SectionTitle>
+      <Group title="Réseaux" meta={`${draft.links.length}/12`}>
       <ul className="list links-edit">
         {draft.links.map((l, i) => (
           <li key={i}>
@@ -223,8 +233,9 @@ export function Profil() {
         </button>
       )}
 
+      </Group>
       {/* ------------------------------------------- Personnalisation générale */}
-      <SectionTitle>Personnalisation générale</SectionTitle>
+      <Group title="Personnalisation générale">
       <label className="field">
         <span>Effets d’arrière-plan</span>
         <select className="select" value={draft.effects.background} onChange={(e) => setIn('effects', { background: e.target.value as Profile['effects']['background'] })}>
@@ -251,8 +262,9 @@ export function Profil() {
         </div>
       </div>
 
+      </Group>
       {/* ----------------------------------------------------------- Couleurs */}
-      <SectionTitle>Personnalisation des couleurs</SectionTitle>
+      <Group title="Personnalisation des couleurs">
       <div className="palettes">
         {PALETTES.map((p) => (
           <button key={p.id} className="palette" onClick={() => set({ colors: p.colors })} title={p.label}>
@@ -266,8 +278,9 @@ export function Profil() {
       <ColorField label="Couleur d’arrière-plan" value={draft.colors.background} onChange={(v) => setIn('colors', { background: v })} />
       <ColorField label="Couleur des icônes" value={draft.colors.icons} onChange={(v) => setIn('colors', { icons: v })} />
 
+      </Group>
       {/* ------------------------------------------------------------ Widgets */}
-      <SectionTitle meta={`${draft.widgets.length}/8`}>Widgets</SectionTitle>
+      <Group title="Widgets" meta={`${draft.widgets.length}/8`}>
       <ul className="list widget-list">
         {draft.widgets.map((w, i) => (
           <li key={w.id}>
@@ -296,8 +309,9 @@ export function Profil() {
       )}
       <p className="muted small">Les widgets affichent tes moyennes au moment où tu publies, puis se mettent à jour à chaque actualisation.</p>
 
+      </Group>
       {/* ------------------------------------------------------------ Discord */}
-      <SectionTitle>Discord</SectionTitle>
+      <Group title="Discord">
       <label className="field">
         <span>Identifiant Discord</span>
         <input value={draft.discordId} inputMode="numeric" placeholder="ex. 123456789012345678" maxLength={21}
@@ -310,8 +324,9 @@ export function Profil() {
       <Toggle label="Décoration d’avatar Discord" on={draft.options.discordDecoration} onChange={(v) => setIn('options', { discordDecoration: v })} />
       <Toggle label="Présence Discord" hint="Statut et activité en direct" on={draft.options.discordPresence} onChange={(v) => setIn('options', { discordPresence: v })} />
 
+      </Group>
       {/* ------------------------------------------------------------- Autres */}
-      <SectionTitle>Autres personnalisations</SectionTitle>
+      <Group title="Autres personnalisations">
       <Toggle label="Icônes monochromes" hint="Réseaux dans la couleur des icônes" on={draft.options.monoIcons} onChange={(v) => setIn('options', { monoIcons: v })} />
  <Toggle label="Description animée" hint="Ta description s’écrit lettre par lettre" on={draft.options.animatedBio} onChange={(v) => setIn('options', { animatedBio: v })} />
       <Toggle label="Titre animé" hint="Le titre de l’onglet s’écrit en boucle" on={draft.options.animatedTitle} onChange={(v) => setIn('options', { animatedTitle: v })} />
@@ -319,24 +334,30 @@ export function Profil() {
       <Toggle label="Contrôle du volume" hint="Bouton son sur ton profil" on={draft.options.volumeControl} onChange={(v) => setIn('options', { volumeControl: v })} />
       <Toggle label="Badges" hint="Félicitations, compliments, en progression…" on={draft.options.showBadges} onChange={(v) => setIn('options', { showBadges: v })} />
 
-      <div className="save-bar">
-        {status.kind === 'error' && <p className="error" role="alert">{status.msg}</p>}
-        {status.kind === 'ok' && <p className="ok" role="status">{status.msg}</p>}
-        <button className="btn primary" onClick={onSave} disabled={!canSave || (!dirty && !!saved && status.kind !== 'error')}>
-          {status.kind === 'saving' ? 'Enregistrement…' : saved ? (dirty ? 'Enregistrer' : 'Enregistré') : 'Publier mon profil'}
-        </button>
-        {saved && (
-          <button className="btn ghost danger" onClick={async () => {
-            if (!confirm('Supprimer ton profil public ? Ton pseudo sera libéré.')) return
-            await deleteProfile(m)
-            setSaved(null)
-            setStatus({ kind: 'ok', msg: 'Profil supprimé' })
-          }}>Supprimer le profil</button>
-        )}
-      </div>
+      </Group>
+
+      {(!saved || dirty || status.kind !== 'idle') && (
+        <div className="save-bar">
+          {status.kind === 'error' && <p className="error" role="alert">{status.msg}</p>}
+          {status.kind === 'ok' && <p className="ok" role="status">{status.msg}</p>}
+          {(!saved || dirty || status.kind === 'saving' || status.kind === 'error') && (
+            <button className="btn primary" onClick={onSave} disabled={!canSave}>
+              {status.kind === 'saving' ? 'Enregistrement…' : saved ? 'Enregistrer les modifications' : 'Publier mon profil'}
+            </button>
+          )}
+        </div>
+      )}
 
       <SectionTitle>Application</SectionTitle>
       <a href="#/reglages" className="row-link"><span className="grow">Réglages</span><Icon name="chevron" size={16} /></a>
+      {saved && (
+        <button className="row-link danger" onClick={async () => {
+          if (!confirm('Supprimer ton profil public ? Ton pseudo sera libéré.')) return
+          await deleteProfile(m)
+          setSaved(null)
+          setStatus({ kind: 'ok', msg: 'Profil supprimé' })
+        }}><span className="grow">Supprimer mon profil public</span></button>
+      )}
     </>
   )
 }
@@ -397,5 +418,19 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
           }} />
       </span>
     </label>
+  )
+}
+
+/** Section repliable de l'éditeur. */
+function Group({ title, meta, open, children }: { title: string; meta?: ReactNode; open?: boolean; children: ReactNode }) {
+  return (
+    <details className="group" open={open}>
+      <summary>
+        <span>{title}</span>
+        {meta && <em>{meta}</em>}
+        <Icon name="chevron" size={16} />
+      </summary>
+      <div className="group-body">{children}</div>
+    </details>
   )
 }

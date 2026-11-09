@@ -1,7 +1,4 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import '@fontsource/quicksand/500.css'
-import '@fontsource/quicksand/600.css'
-import '@fontsource/quicksand/700.css'
 import { fmt } from '../lib'
 import { Icon } from '../components/Icon'
 import { badgesFor } from './api'

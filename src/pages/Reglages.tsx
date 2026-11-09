@@ -1,18 +1,20 @@
 import { useData, useSession } from '../state/session'
 import { PageHeader, SectionTitle, Segmented } from '../components/ui'
 import { Icon } from '../components/Icon'
+import { Avatar, useMyProfile } from '../profile/useMyProfile'
 
 export type Theme = 'system' | 'light' | 'dark'
 
 export function Reglages({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
   const { student } = useData()
   const { mode, refresh, refreshing, signOut } = useSession()
+  const me = useMyProfile()
   return (
     <>
       <a href="#/profil" className="back"><Icon name="chevron" size={16} />Profil</a>
       <PageHeader title="Réglages" />
       <section className="profile">
-        <div className="avatar">{student.firstName[0]}{student.lastName[0]}</div>
+        <Avatar profile={me} initials={`${student.firstName[0]}${student.lastName[0] ?? ''}`} size={48} />
         <div className="grow">
           <strong>{student.firstName} {student.lastName}</strong>
           <small>{[student.className, student.school].filter(Boolean).join(' · ')}</small>

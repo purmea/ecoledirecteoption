@@ -4,6 +4,8 @@ import type { SchoolData } from '../types'
 import { averageTimeline, generalAverage, groupBySubject } from '../lib'
 import { withDefaults, type Profile, type Snapshot } from './types'
 
+const notifyChanged = () => window.dispatchEvent(new Event('edo:profile-changed'))
+
 const LOCAL_KEY = 'edo:profile'
 /** Compteur de vues fixe du profil de démonstration (fictif, comme les notes de la démo). */
 const DEMO_VIEWS = 5371
@@ -61,14 +63,18 @@ export async function saveProfile(mode: 'demo' | 'live', p: Profile): Promise<Pr
     const prev = local.get()
     const saved = { ...p, views: DEMO_VIEWS, createdAt: prev?.createdAt ?? new Date().toISOString(), snapshot: { ...p.snapshot, updatedAt: new Date().toISOString() } }
     local.set(saved)
+    notifyChanged()
     return saved
   }
-  return withDefaults(await call<Profile>('/me/profile', { method: 'PUT', body: JSON.stringify(p) }))
+  const saved = withDefaults(await call<Profile>('/me/profile', { method: 'PUT', body: JSON.stringify(p) }))
+  notifyChanged()
+  return saved
 }
 
-export function deleteProfile(mode: 'demo' | 'live') {
-  if (mode === 'demo') return Promise.resolve(local.clear())
-  return call('/me/profile', { method: 'DELETE' })
+export async function deleteProfile(mode: 'demo' | 'live') {
+  if (mode === 'demo') local.clear()
+  else await call('/me/profile', { method: 'DELETE' })
+  notifyChanged()
 }
 
 export async function checkHandle(mode: 'demo' | 'live', handle: string): Promise<{ available: boolean; reason?: string }> {

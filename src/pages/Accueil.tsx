@@ -2,10 +2,12 @@ import { useData, useSession } from '../state/session'
 import { averageTimeline, fmt, formatDate, generalAverage, greeting, on20, todayIndex, DAYS } from '../lib'
 import { Empty, SectionTitle } from '../components/ui'
 import { Sparkline } from '../components/charts'
+import { Avatar, useMyProfile } from '../profile/useMyProfile'
 
 export function Accueil() {
   const { student, grades, lessons, homework, currentPeriod } = useData()
   const { mode } = useSession()
+  const me = useMyProfile()
   const periodGrades = grades.filter((g) => g.period === currentPeriod)
   const avg = generalAverage(periodGrades)
   const trend = averageTimeline(periodGrades)
@@ -23,12 +25,15 @@ export function Accueil() {
 
   return (
     <>
-      <header className="page-header">
-        <p className="eyebrow">
-          {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-          {mode === 'demo' && <span className="tag">Démo</span>}
-        </p>
-        <h1>{greeting()} {student.firstName}</h1>
+      <header className="page-header home-head">
+        <div>
+          <p className="eyebrow">
+            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {mode === 'demo' && <span className="tag">Démo</span>}
+          </p>
+          <h1>{greeting()} {student.firstName}</h1>
+        </div>
+        <a href="#/profil" aria-label="Mon profil"><Avatar profile={me} initials={`${student.firstName[0]}${student.lastName[0] ?? ''}`} size={44} /></a>
       </header>
 
       <a href="#/notes" className="hero">

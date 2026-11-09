@@ -55,11 +55,11 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font: 500 15px/1.45 'Quicksand', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
-h1, h2, h3 { margin: 0; font-weight: 600; }
+h1, h2, h3 { margin: 0; font-weight: 700; }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: default; opacity: 0.5; }
@@ -70,13 +70,13 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .nowrap { white-space: nowrap; }
 .grow { flex: 1; min-width: 0; }
 .grow > strong, .grow > span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.grow > strong { font-weight: 550; }
+.grow > strong { font-weight: 600; }
 .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 
 .eyebrow { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; color: var(--muted); }
 .eyebrow::first-letter { text-transform: uppercase; }
-.big { display: block; font-size: 44px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.big { display: block; font-size: 44px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .big small { display: inline; font-size: 15px; font-weight: 400; margin-left: 3px; letter-spacing: 0; }
 .tag { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
 .status { display: inline-block; font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 8px; white-space: nowrap; }
@@ -172,7 +172,11 @@ small { display: block; font-size: 13px; color: var(--muted); }
 
 /* Réglages ------------------------------------------------------------- */
 .profile { display: flex; align-items: center; gap: 14px; }
-.avatar { width: 48px; height: 48px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--fill); color: var(--text-2); font-weight: 600; }
+.avatar { width: 48px; height: 48px; flex: none; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--fill); color: var(--text-2); font-weight: 700; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.home-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.home-head > a { flex: none; border-radius: 50%; transition: transform 0.2s; }
+.home-head > a:active { transform: scale(0.94); }
 .actions > .row-action { display: block; width: 100%; text-align: left; padding: 14px 0; background: none; border: 0; border-bottom: 1px solid var(--line); font-weight: 500; }
 .row-action.danger { color: var(--bad); }
 .footer { margin-top: 40px; }
@@ -417,6 +421,7 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .save-bar { display: grid; gap: 10px; margin-top: 28px; }
 .ok { margin: 0; color: var(--good); font-size: 14px; }
 .btn.danger { color: var(--bad); }
+.row-link.danger { width: 100%; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; font: inherit; font-weight: 600; color: var(--bad); }
 .row-link { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); font-weight: 500; color: var(--text); }
 .row-link svg { color: var(--muted); }
 .back { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-size: 15px; margin-bottom: 8px; }
@@ -475,7 +480,8 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .links-edit select { flex: none; width: 112px; padding: 9px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--fill); color: var(--text); font: inherit; font-size: 14px; }
 .links-edit input { flex: 1; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--fill); color: var(--text); font-size: 16px; }
 .links-edit + .chip { margin-top: 10px; }
-.save-bar { position: sticky; bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom)); z-index: 3; padding: 12px; margin-left: -12px; margin-right: -12px; border-radius: 16px; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.save-bar { position: sticky; bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom)); z-index: 3; display: grid; gap: 8px; padding: 10px; margin: 16px -10px 0; border-radius: 16px; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); animation: rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.save-bar > p { text-align: center; }
 
 /* ======================================================================
    Animations d'entrée : fondu en cascade + tracé (courbes, barres, filets).
@@ -522,3 +528,25 @@ small { display: block; font-size: 13px; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
   .page > *, .draw, .after-draw, .list > li::after, .bars > li::after, .bar-fill, .bar-tick { animation: none; }
 }
+
+/* Sections repliables de l'éditeur de profil */
+.group { border-bottom: 1px solid var(--line); }
+.group > summary { display: flex; align-items: center; gap: 10px; padding: 18px 0; cursor: pointer; list-style: none; font-weight: 700; font-size: 16px; }
+.group > summary::-webkit-details-marker { display: none; }
+.group > summary span { flex: 1; }
+.group > summary em { font-style: normal; font-weight: 500; font-size: 13px; color: var(--muted); }
+.group > summary svg { color: var(--muted); transition: transform 0.25s; }
+.group[open] > summary svg { transform: rotate(90deg); }
+.group-body { padding-bottom: 20px; animation: rise 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.group-body > .field:first-child, .group-body > .media-grid:first-child { margin-top: 0; }
+.group + .save-bar { margin-top: 20px; }
+
+/* Connexion : apparition en cascade */
+.login > * { animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.login > :nth-child(2) { animation-delay: 90ms; }
+.login > :nth-child(3) { animation-delay: 180ms; }
+.login-brand h1 { font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .login > *, .group-body { animation: none; } }
+
+/* La barre d'enregistrement apparaît quand on modifie quelque chose : sans le délai de cascade de la page. */
+.page > .save-bar { animation: rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: 0s; }
