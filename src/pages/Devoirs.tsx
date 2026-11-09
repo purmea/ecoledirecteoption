@@ -23,7 +23,7 @@ export function Devoirs() {
     const left = homework.filter((h) => !h.done).length - 1
     if (left === 0) {
       celebrate()
-      toast('Tout est fait, bravo !')
+      toast('Tout est fait, bravo !', 'party')
     } else toast(`Fait · plus que ${left}`)
   }
 

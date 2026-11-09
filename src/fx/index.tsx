@@ -31,27 +31,48 @@ export const haptic = (ms = 10) => {
   try { navigator.vibrate?.(ms) } catch { /* non pris en charge */ }
 }
 
-// --- Messages courts (toasts) ----------------------------------------------
+// --- Messages courts, façon « Dynamic Island » ------------------------------
 
-type Toast = { id: number; text: string }
+type ToastIcon = 'check' | 'party' | 'link'
+type Toast = { id: number; text: string; icon: ToastIcon; leaving: boolean }
 const TOAST = 'edo:toast'
-export const toast = (text: string) => window.dispatchEvent(new CustomEvent(TOAST, { detail: text }))
+export const toast = (text: string, icon: ToastIcon = 'check') =>
+  window.dispatchEvent(new CustomEvent(TOAST, { detail: { text, icon } }))
+
+const SHOW_MS = 2200
+const LEAVE_MS = 320
 
 export function Toaster() {
   const [items, setItems] = useState<Toast[]>([])
   useEffect(() => {
     let n = 0
     const on = (e: Event) => {
+      const { text, icon } = (e as CustomEvent<{ text: string; icon: ToastIcon }>).detail
       const id = ++n
-      setItems((xs) => [...xs.slice(-2), { id, text: (e as CustomEvent<string>).detail }])
-      setTimeout(() => setItems((xs) => xs.filter((x) => x.id !== id)), 2400)
+      // Un seul message à la fois, comme l'île dynamique : le nouveau remplace l'ancien.
+      setItems([{ id, text, icon, leaving: false }])
+      setTimeout(() => setItems((xs) => xs.map((x) => (x.id === id ? { ...x, leaving: true } : x))), SHOW_MS)
+      setTimeout(() => setItems((xs) => xs.filter((x) => x.id !== id)), SHOW_MS + LEAVE_MS)
     }
     window.addEventListener(TOAST, on)
     return () => window.removeEventListener(TOAST, on)
   }, [])
   return (
     <div className="toaster" role="status" aria-live="polite">
-      {items.map((t) => <div key={t.id} className="toast">{t.text}</div>)}
+      {items.map((t) => (
+        <div key={t.id} className={`toast ${t.leaving ? 'leaving' : ''}`}>
+          <span className={`toast-ico ico-${t.icon}`} aria-hidden="true">
+            {t.icon === 'check' && (
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" className="bg" /><path d="M7 12.5l3.2 3.2L17 8.8" className="tick" pathLength={1} /></svg>
+            )}
+            {t.icon === 'party' && <span className="party">🎉</span>}
+            {t.icon === 'link' && (
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" className="bg" /><path d="M10 14a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5l-1 1M14 10a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5l1-1" className="stroke" /></svg>
+            )}
+          </span>
+          <span className="toast-text">{t.text}</span>
+        </div>
+      ))}
     </div>
   )
 }

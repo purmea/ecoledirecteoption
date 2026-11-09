@@ -129,7 +129,7 @@ export function Profil() {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(publicUrl)
-      toast('Lien copié')
+      toast('Lien copié', 'link')
     } catch {
       setStatus({ kind: 'error', msg: publicUrl })
     }
