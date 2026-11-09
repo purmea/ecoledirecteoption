@@ -1,0 +1,118 @@
+// Proxy vers l'API École Directe.
+//
+// Le navigateur ne peut pas appeler api.ecoledirecte.com directement : l'API ne
+// gère pas le CORS et la connexion exige un cookie « GTK » qu'un script ne peut
+// pas lire. Ce proxy tourne côté serveur (vite dev / vite preview / npm start),
+// garde les cookies d'École Directe par session et ajoute les en-têtes attendus.
+//
+// Seules les routes /v3/* de api.ecoledirecte.com sont relayées. Les identifiants
+// ne sont jamais stockés : ils ne font que transiter vers École Directe.
+
+// ED_API_ORIGIN permet de pointer vers un faux serveur pour les tests.
+const ED_ORIGIN = process.env.ED_API_ORIGIN || 'https://api.ecoledirecte.com'
+export const ED_VERSION = '4.75.0'
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+const MAX_BODY = 64 * 1024
+const JAR_TTL = 6 * 60 * 60 * 1000
+
+/** @type {Map<string, { cookies: Map<string, string>, seen: number }>} */
+const jars = new Map()
+
+function jarFor(sessionId) {
+  const now = Date.now()
+  for (const [k, j] of jars) if (now - j.seen > JAR_TTL) jars.delete(k)
+  let jar = jars.get(sessionId)
+  if (!jar) jars.set(sessionId, (jar = { cookies: new Map(), seen: now }))
+  jar.seen = now
+  return jar
+}
+
+function storeCookies(jar, res) {
+  for (const line of res.headers.getSetCookie?.() ?? []) {
+    const [pair] = line.split(';')
+    const i = pair.indexOf('=')
+    if (i > 0) jar.cookies.set(pair.slice(0, i).trim(), pair.slice(i + 1).trim())
+  }
+}
+
+const cookieHeader = (jar) => [...jar.cookies].map(([k, v]) => `${k}=${v}`).join('; ')
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let size = 0
+    const chunks = []
+    req.on('data', (c) => {
+      size += c.length
+      if (size > MAX_BODY) {
+        reject(new Error('Requête trop volumineuse'))
+        req.destroy()
+      } else chunks.push(c)
+    })
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
+    req.on('error', reject)
+  })
+}
+
+function send(res, status, body) {
+  res.statusCode = status
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-store')
+  res.end(typeof body === 'string' ? body : JSON.stringify(body))
+}
+
+/** Récupère le cookie GTK requis avant chaque login (depuis mars 2025). */
+async function fetchGtk(jar) {
+  const r = await fetch(`${ED_ORIGIN}/v3/login.awp?gtk=1&v=${ED_VERSION}`, {
+    headers: { 'User-Agent': USER_AGENT, Cookie: cookieHeader(jar) },
+  })
+  storeCookies(jar, r)
+  await r.arrayBuffer()
+  return jar.cookies.get('GTK')
+}
+
+/**
+ * Middleware Connect/Node : gère les requêtes sur `${prefix}/v3/...`.
+ * @param {string} prefix
+ */
+export function edProxy(prefix = '/ed') {
+  return async (req, res, next) => {
+    if (!req.url?.startsWith(prefix + '/')) return next()
+    if (req.method !== 'POST') return send(res, 405, { code: 405, message: 'Méthode non autorisée' })
+
+    const url = new URL(req.url.slice(prefix.length), 'http://local')
+    if (!/^\/v3\/[\w/.-]+\.awp$/.test(url.pathname) || url.pathname.includes('..')) {
+      return send(res, 400, { code: 400, message: 'Route non autorisée' })
+    }
+    const sessionId = String(req.headers['x-session'] ?? '')
+    if (!/^[\w-]{8,64}$/.test(sessionId)) return send(res, 400, { code: 400, message: 'Session manquante' })
+
+    try {
+      const body = await readBody(req)
+      const jar = jarFor(sessionId)
+      const headers = {
+        'User-Agent': USER_AGENT,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json, text/plain, */*',
+      }
+      const token = req.headers['x-token']
+      if (typeof token === 'string' && token) headers['X-Token'] = token
+
+      if (url.pathname === '/v3/login.awp') {
+        const gtk = await fetchGtk(jar)
+        if (gtk) headers['X-Gtk'] = gtk
+      }
+      if (jar.cookies.size) headers.Cookie = cookieHeader(jar)
+
+      url.searchParams.set('v', ED_VERSION)
+      const upstream = await fetch(`${ED_ORIGIN}${url.pathname}${url.search}`, { method: 'POST', headers, body })
+      storeCookies(jar, upstream)
+      const text = await upstream.text()
+      const newToken = upstream.headers.get('x-token')
+      if (newToken) res.setHeader('X-Token', newToken)
+      send(res, upstream.ok ? 200 : 502, upstream.ok ? text : { code: upstream.status, message: 'École Directe ne répond pas' })
+    } catch (err) {
+      send(res, 502, { code: 502, message: `Impossible de joindre École Directe (${err instanceof Error ? err.message : err})` })
+    }
+  }
+}

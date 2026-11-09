@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { colorOf } from '../lib'
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <section className={`card ${className}`}>{children}</section>
@@ -14,19 +13,33 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
   )
 }
 
-export function SubjectDot({ subject }: { subject: string }) {
-  return <span className="dot" style={{ background: colorOf(subject) }} aria-hidden="true" />
-}
-
-export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
   return (
     <header className="page-header">
-      <h1>{title}</h1>
-      {subtitle && <p>{subtitle}</p>}
+      <div>
+        <h1>{title}</h1>
+        {subtitle && <p>{subtitle}</p>}
+      </div>
+      {action}
     </header>
   )
 }
 
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="empty">{children}</p>
+}
+
+export function Segmented<T extends string>({ value, options, onChange, label }: {
+  value: T
+  options: readonly (readonly [T, string])[]
+  onChange: (v: T) => void
+  label: string
+}) {
+  return (
+    <div className="tabs" role="tablist" aria-label={label}>
+      {options.map(([k, text]) => (
+        <button key={k} role="tab" aria-selected={value === k} onClick={() => onChange(k)}>{text}</button>
+      ))}
+    </div>
+  )
 }

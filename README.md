@@ -4,9 +4,9 @@
 
 # EcoleDirecte Option
 
-**Une nouvelle interface, moderne et mobile-first, pour suivre sa scolarité sur École Directe.**
+**Une nouvelle interface, épurée et mobile-first, pour suivre sa scolarité sur École Directe.**
 
-Notes, emploi du temps et devoirs dans une app rapide et agréable à utiliser, avec un thème sombre.
+Connecte-toi avec ton compte École Directe et retrouve tes notes (avec graphiques), ton emploi du temps et tes devoirs.
 
 [![Stars](https://img.shields.io/github/stars/purmea/ecoledirecteoption?style=flat-square)](https://github.com/purmea/ecoledirecteoption/stargazers)
 [![Issues](https://img.shields.io/github/issues/purmea/ecoledirecteoption?style=flat-square)](https://github.com/purmea/ecoledirecteoption/issues)
@@ -15,6 +15,7 @@ Notes, emploi du temps et devoirs dans une app rapide et agréable à utiliser, 
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-22-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white)
 
 [Signaler un bug](https://github.com/purmea/ecoledirecteoption/issues) · [Proposer une fonctionnalité](https://github.com/purmea/ecoledirecteoption/issues)
 
@@ -23,14 +24,16 @@ Notes, emploi du temps et devoirs dans une app rapide et agréable à utiliser, 
 ---
 
 > [!NOTE]
-> Projet **non officiel**, sans lien avec Aplim / École Directe.
-> La version actuelle utilise des **données de démonstration** : la connexion à un vrai compte n'est pas encore disponible.
+> Projet **non officiel**, sans lien avec Aplim / École Directe. Il s'appuie sur l'API non documentée
+> d'École Directe ([documentation communautaire](https://github.com/EduWireApps/ecoledirecte-api-docs)),
+> qui peut changer à tout moment. Un **mode démo** permet d'essayer l'app sans compte.
 
 ## Sommaire
 
 - [Fonctionnalités](#fonctionnalités)
 - [Stack technique](#stack-technique)
 - [Démarrage rapide](#démarrage-rapide)
+- [Connexion à École Directe](#connexion-à-école-directe)
 - [Scripts](#scripts)
 - [Structure du projet](#structure-du-projet)
 - [Feuille de route](#feuille-de-route)
@@ -42,19 +45,21 @@ Notes, emploi du temps et devoirs dans une app rapide et agréable à utiliser, 
 
 | Écran | Ce qu'il fait |
 | --- | --- |
-| 🏠 **Accueil** | Salutation, moyenne générale, cours du jour, dernières notes et prochains devoirs |
-| 📊 **Notes** | Moyenne générale pondérée, moyenne par matière comparée à celle de la classe, détail de chaque note |
-| 📅 **Planning** | Emploi du temps jour par jour sous forme de frise, avec les cours annulés |
-| 📚 **Devoirs** | Liste filtrable (à faire / faits / tous) ; les devoirs cochés sont gardés en mémoire |
-| ⚙️ **Réglages** | Profil, thème clair / sombre / automatique, réinitialisation des données |
+| 🔐 **Connexion** | Identifiant / mot de passe École Directe, QCM de vérification du compte, option « Rester connecté », mode démo |
+| 🏠 **Accueil** | Moyenne générale avec tendance, cours du jour, dernières notes et prochains devoirs |
+| 📊 **Notes** | Courbe d'évolution de la moyenne, barres par matière comparées à la classe, détail de chaque note, choix du trimestre |
+| 📅 **Planning** | Emploi du temps de la semaine, cours annulés et cours en cours mis en avant |
+| 📚 **Devoirs** | Consignes groupées par date, filtres, cases à cocher synchronisées avec École Directe |
+| ⚙️ **Réglages** | Profil, thème clair / sombre / automatique, actualisation, déconnexion |
 
 Aussi inclus :
 
-- 📱 Design **mobile-first** avec barre de navigation en bas, adapté aux encoches (safe areas)
-- 🌙 **Thème sombre** qui suit le système ou se choisit à la main
+- 🎨 Design **épuré** : fonds neutres, un seul bleu d'accent (contraste vérifié en clair et en sombre)
+- 📈 Graphiques en SVG faits maison, avec info-bulles au survol, au toucher et au clavier
+- 📱 **Mobile-first** : barre de navigation en bas, adapté aux encoches (safe areas)
 - 📲 **Manifest PWA** : l'app peut être ajoutée à l'écran d'accueil
-- ♿ Accessibilité de base : HTML sémantique, attributs ARIA, focus visible, respect de `prefers-reduced-motion`
-- ⚡ Zéro dépendance UI : React et du CSS natif, rien d'autre
+- ♿ Accessibilité : HTML sémantique, ARIA, focus visible, `prefers-reduced-motion`
+- ⚡ Aucune dépendance UI : React et du CSS natif
 
 ## Stack technique
 
@@ -62,6 +67,7 @@ Aussi inclus :
 - [React 19](https://react.dev) + [TypeScript](https://www.typescriptlang.org) (mode strict)
 - CSS natif avec variables (design tokens) ; pas de framework CSS
 - Routage minimal par hash (`#/notes`, `#/devoirs`…), sans dépendance
+- Petit proxy Node (`server/ed-proxy.mjs`) vers l'API École Directe
 
 ## Démarrage rapide
 
@@ -74,7 +80,34 @@ npm install
 npm run dev
 ```
 
-Puis ouvrir <http://localhost:5173>. Le serveur écoute aussi sur le réseau local : pour tester sur un téléphone, ouvrir l'adresse `Network` affichée dans le terminal.
+Puis ouvrir <http://localhost:5173>. Le serveur écoute aussi sur le réseau local : pour tester sur ton téléphone (connecté au même Wi-Fi), ouvre l'adresse `Network` affichée dans le terminal.
+
+### En production
+
+```bash
+npm run build
+npm start          # sert dist/ + le proxy sur http://localhost:8080 (PORT=… pour changer)
+```
+
+## Connexion à École Directe
+
+Le navigateur ne peut pas parler directement à `api.ecoledirecte.com` : l'API ne gère pas le CORS et la
+connexion exige un cookie `GTK` qu'un script ne peut pas lire. L'app passe donc par un **petit proxy**
+(`server/ed-proxy.mjs`), branché automatiquement sur `npm run dev`, `npm run preview` et `npm start`.
+
+```
+Téléphone / navigateur  ──►  /ed/v3/...  (serveur de l'app)  ──►  api.ecoledirecte.com/v3/...
+```
+
+- Le proxy récupère le cookie `GTK` avant chaque login, garde les cookies École Directe par appareil et
+  utilise toujours le même User-Agent (sinon le jeton est invalidé).
+- Il ne relaie que les routes `/v3/*.awp` d'École Directe et **n'enregistre jamais** les identifiants.
+- Le **QCM** de vérification (« nouvel appareil ») est géré ; les jetons obtenus sont mémorisés sur
+  l'appareil si « Rester connecté » est coché, pour ne pas le redemander.
+- Sans le serveur (par exemple une version statique hébergée seule), seule la démo fonctionne.
+- Seuls les **comptes élèves** sont pris en charge pour l'instant (pas encore les comptes parents).
+- Pour tester sans vrai compte : `ED_API_ORIGIN=http://localhost:9999 npm run dev` redirige le proxy
+  vers un faux serveur.
 
 ## Scripts
 
@@ -84,6 +117,7 @@ Puis ouvrir <http://localhost:5173>. Le serveur écoute aussi sur le réseau loc
 | `npm run build` | Vérifie les types puis génère la version de production dans `dist/` |
 | `npm run preview` | Sert la version de production en local |
 | `npm run typecheck` | Vérifie les types TypeScript uniquement |
+| `npm start` | Sert la version de production + le proxy École Directe (après `npm run build`) |
 
 ## Structure du projet
 
@@ -95,11 +129,17 @@ Puis ouvrir <http://localhost:5173>. Le serveur écoute aussi sur le réseau loc
 │   ├── main.tsx            # Montage de React
 │   ├── App.tsx             # Shell : routage, thème, état des devoirs
 │   ├── styles.css          # Design tokens + styles (clair & sombre)
+│   ├── types.ts            # Types partagés (notes, cours, devoirs…)
 │   ├── lib.ts              # Calculs de moyennes, formatage des dates
-│   ├── data/demo.ts        # Types et données de démonstration
+│   ├── api/                # Client École Directe + conversion des données
+│   ├── state/session.tsx   # Connexion, QCM, démo, chargement des données
+│   ├── data/demo.ts        # Données de démonstration
 │   ├── hooks/              # useHashRoute, useLocalStorage
-│   ├── components/         # BottomNav, Icon, composants UI de base
-│   └── pages/              # Accueil, Notes, Planning, Devoirs, Réglages
+│   ├── components/         # Graphiques, navigation, composants UI
+│   └── pages/              # Connexion, Accueil, Notes, Planning, Devoirs, Réglages
+├── server/
+│   ├── ed-proxy.mjs        # Proxy vers l'API École Directe
+│   └── serve.mjs           # Serveur de production (npm start)
 └── vite.config.ts
 ```
 
@@ -108,7 +148,9 @@ Puis ouvrir <http://localhost:5173>. Le serveur écoute aussi sur le réseau loc
 - [x] Nouvelle interface mobile-first (Vite + React + TypeScript)
 - [x] Notes, emploi du temps, devoirs, réglages
 - [x] Thème sombre et manifest PWA
-- [ ] Connexion à un compte École Directe
+- [x] Connexion à un compte École Directe (élève), QCM de vérification
+- [x] Graphiques : évolution de la moyenne, comparaison à la classe
+- [ ] Comptes parents (plusieurs enfants)
 - [ ] Messagerie et vie scolaire (absences, retards)
 - [ ] Mode hors-ligne (service worker)
 - [ ] Notifications de nouvelles notes

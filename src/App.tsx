@@ -1,35 +1,53 @@
 import { useEffect } from 'react'
-import { homework as demoHomework, type Homework } from './data/demo'
 import { useHashRoute } from './hooks/useHashRoute'
 import { useLocalStorage } from './hooks/useLocalStorage'
+import { SessionProvider, useSession } from './state/session'
 import { BottomNav } from './components/BottomNav'
 import { Accueil } from './pages/Accueil'
 import { Notes } from './pages/Notes'
 import { Planning } from './pages/Planning'
 import { Devoirs } from './pages/Devoirs'
+import { Login } from './pages/Login'
 import { Reglages, type Theme } from './pages/Reglages'
 
 export default function App() {
-  const route = useHashRoute()
   const [theme, setTheme] = useLocalStorage<Theme>('edo:theme', 'system')
-  const [homework, setHomework] = useLocalStorage<Homework[]>('edo:homework', demoHomework)
-
   useEffect(() => {
     if (theme === 'system') delete document.documentElement.dataset.theme
     else document.documentElement.dataset.theme = theme
   }, [theme])
 
-  const toggle = (id: string) => setHomework((hs) => hs.map((h) => (h.id === id ? { ...h, done: !h.done } : h)))
-  const todo = homework.filter((h) => !h.done).length
+  return (
+    <SessionProvider>
+      <Shell theme={theme} setTheme={setTheme} />
+    </SessionProvider>
+  )
+}
 
+function Shell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
+  const { status, data, error } = useSession()
+  const route = useHashRoute()
+
+  if (status === 'signed-out') return <Login />
+  if (status === 'loading' || !data) {
+    return (
+      <main className="loading" aria-busy="true">
+        <div className="spinner" />
+        <p className="muted">Chargement de tes données…</p>
+      </main>
+    )
+  }
+
+  const todo = data.homework.filter((h) => !h.done).length
   return (
     <div className="app">
       <main className="page" key={route}>
-        {route === 'accueil' && <Accueil homework={homework} />}
+        {error && <p className="banner" role="alert">{error}</p>}
+        {route === 'accueil' && <Accueil />}
         {route === 'notes' && <Notes />}
         {route === 'planning' && <Planning />}
-        {route === 'devoirs' && <Devoirs homework={homework} onToggle={toggle} />}
-        {route === 'reglages' && <Reglages theme={theme} setTheme={setTheme} onReset={() => setHomework(demoHomework)} />}
+        {route === 'devoirs' && <Devoirs />}
+        {route === 'reglages' && <Reglages theme={theme} setTheme={setTheme} />}
       </main>
       <BottomNav current={route} badge={todo} />
     </div>
