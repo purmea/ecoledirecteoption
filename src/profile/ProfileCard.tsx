@@ -201,13 +201,14 @@ function useTypewriter(text: string, on: boolean, loop = false) {
     const t = setInterval(() => {
       if (pause > 0) return void pause--
       i += dir
+      // Afficher d'abord la lettre courante (y compris la dernière), puis décider de la suite.
+      setN(i)
       if (i >= text.length) {
         if (!loop) return clearInterval(t)
         dir = -1
         pause = 16
       }
       if (i <= 0) { dir = 1; pause = 4 }
-      setN(i)
     }, loop ? 110 : 45)
     return () => clearInterval(t)
   }, [text, on, loop])
