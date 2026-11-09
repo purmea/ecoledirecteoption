@@ -78,6 +78,8 @@ async function fetchGtk(jar) {
 export function edProxy(prefix = '/ed') {
   return async (req, res, next) => {
     if (!req.url?.startsWith(prefix + '/')) return next()
+    // Permet à l'app de vérifier que le serveur (et donc la connexion) est disponible.
+    if (req.url === `${prefix}/health`) return send(res, 200, { ok: true, version: ED_VERSION })
     if (req.method !== 'POST') return send(res, 405, { code: 405, message: 'Méthode non autorisée' })
 
     const url = new URL(req.url.slice(prefix.length), 'http://local')
@@ -108,10 +110,14 @@ export function edProxy(prefix = '/ed') {
       const upstream = await fetch(`${ED_ORIGIN}${url.pathname}${url.search}`, { method: 'POST', headers, body })
       storeCookies(jar, upstream)
       const text = await upstream.text()
+      // Journal sans données sensibles : route, statut HTTP et code École Directe.
+      const edCode = /"code"\s*:\s*(\d+)/.exec(text)?.[1] ?? '?'
+      console.log(`[ed] ${url.pathname} → HTTP ${upstream.status}, code ${edCode}${edCode === '?' ? ` (${JSON.stringify(text.slice(0, 120))})` : ''}`)
       const newToken = upstream.headers.get('x-token')
       if (newToken) res.setHeader('X-Token', newToken)
       send(res, upstream.ok ? 200 : 502, upstream.ok ? text : { code: upstream.status, message: 'École Directe ne répond pas' })
     } catch (err) {
+      console.error(`[ed] ${url.pathname} → échec : ${err instanceof Error ? (err.cause ?? err.message) : err}`)
       send(res, 502, { code: 502, message: `Impossible de joindre École Directe (${err instanceof Error ? err.message : err})` })
     }
   }

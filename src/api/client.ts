@@ -67,11 +67,12 @@ export async function edRequest<T>(
   try {
     json = JSON.parse(text)
   } catch {
-    // Sans proxy (ex. version statique), on reçoit la page HTML au lieu du JSON.
-    throw new EdError(res.status === 404 || text.startsWith('<') ? 404 : res.status,
-      res.status === 404 || text.startsWith('<')
-        ? 'La connexion nécessite le serveur de l’app (npm run dev ou npm start).'
-        : 'Réponse illisible d’École Directe.')
+    // Pas de JSON : on ne parle pas au proxy de l'app (version statique, hébergeur qui bloque le POST…)
+    // ou École Directe a renvoyé autre chose. Le début de la réponse aide au diagnostic.
+    console.warn(`[ed] réponse non JSON pour ${path} (HTTP ${res.status}) :`, text.slice(0, 300))
+    throw new EdError(-1, res.ok && text.trim().startsWith('{')
+      ? 'École Directe a renvoyé une réponse inattendue. Réessaie dans un instant.'
+      : `Le serveur de l’app est injoignable ici (HTTP ${res.status}). La connexion ne marche qu’en lançant l’app avec npm run dev ou npm start.`)
   }
 
   const newToken = json.token || res.headers.get('X-Token') || undefined
@@ -99,5 +100,15 @@ export function b64decode(s: string) {
     return new TextDecoder().decode(bytes)
   } catch {
     return s
+  }
+}
+
+/** Vérifie que le proxy École Directe de l'app répond (sinon seule la démo est possible). */
+export async function proxyAvailable() {
+  try {
+    const r = await fetch('./ed/health', { cache: 'no-store' })
+    return r.ok && (await r.json()).ok === true
+  } catch {
+    return false
   }
 }
