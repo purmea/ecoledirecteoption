@@ -1,85 +1,53 @@
 <div align="center">
 
-<img src="public/icon.svg" width="80" alt="Logo EcoleDirecte Option" />
+<img src="public/icon.svg" width="72" alt="" />
 
 # EcoleDirecte Option
 
-**Une nouvelle interface, épurée et mobile-first, pour suivre sa scolarité sur École Directe.**
+**Une interface épurée et mobile-first pour suivre sa scolarité sur École Directe.**<br />
+Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.lol.
 
-Connecte-toi avec ton compte École Directe et retrouve tes notes (avec graphiques), ton emploi du temps et tes devoirs.
-
-[![Stars](https://img.shields.io/github/stars/purmea/ecoledirecteoption?style=flat-square)](https://github.com/purmea/ecoledirecteoption/stargazers)
-[![Issues](https://img.shields.io/github/issues/purmea/ecoledirecteoption?style=flat-square)](https://github.com/purmea/ecoledirecteoption/issues)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-
-![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)
+[![Licence MIT](https://img.shields.io/badge/licence-MIT-blue?style=flat-square)](LICENSE)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-22-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)
+[![Issues](https://img.shields.io/github/issues/purmea/ecoledirecteoption?style=flat-square)](https://github.com/purmea/ecoledirecteoption/issues)
 
-[Signaler un bug](https://github.com/purmea/ecoledirecteoption/issues) · [Proposer une fonctionnalité](https://github.com/purmea/ecoledirecteoption/issues)
+<br />
+
+<img src="docs/apercu.png" alt="Aperçu : accueil, notes avec simulateur, profil public" width="880" />
 
 </div>
-
----
 
 > [!NOTE]
 > Projet **non officiel**, sans lien avec Aplim / École Directe. Il s'appuie sur l'API non documentée
 > d'École Directe ([documentation communautaire](https://github.com/EduWireApps/ecoledirecte-api-docs)),
 > qui peut changer à tout moment. Un **mode démo** permet d'essayer l'app sans compte.
 
-## Sommaire
-
-- [Fonctionnalités](#fonctionnalités)
-- [Stack technique](#stack-technique)
-- [Démarrage rapide](#démarrage-rapide)
-- [Connexion à École Directe](#connexion-à-école-directe)
-- [Profils publics](#profils-publics)
-- [Scripts](#scripts)
-- [Structure du projet](#structure-du-projet)
-- [Feuille de route](#feuille-de-route)
-- [Contribuer](#contribuer)
-- [Licence](#licence)
-- [Contact](#contact)
-
 ## Fonctionnalités
 
-| Écran | Ce qu'il fait |
-| --- | --- |
-| 🔐 **Connexion** | Identifiant / mot de passe École Directe, QCM de vérification du compte, option « Rester connecté », mode démo |
-| 🏠 **Accueil** | Moyenne générale avec tendance, cours du jour, dernières notes et prochains devoirs |
-| 📊 **Notes** | Courbe d'évolution de la moyenne, barres par matière comparées à la classe, détail de chaque note, choix du trimestre |
-| 📅 **Planning** | Emploi du temps de la semaine, cours annulés et cours en cours mis en avant |
-| 📚 **Devoirs** | Consignes groupées par date, filtres, cases à cocher synchronisées avec École Directe |
-| 👤 **Profil** | Éditeur façon guns.lol avec aperçu en direct (voir [Profils publics](#profils-publics)) |
-| ✨ **Profil public** | Page `#/u/ton-pseudo` au style « clean » de guns.lol : fond image/vidéo, musique, effets, réseaux, badges, widgets, vues |
-| ⚙️ **Réglages** | Thème clair / sombre / automatique, actualisation, déconnexion |
+**Au quotidien**
 
-Aussi inclus :
+- 🏠 **Accueil** : moyenne qui défile, carte « En cours · fin dans 30 min » / « Prochain cours dans… », dernières notes, devoirs à faire
+- 📊 **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix du trimestre
+- 🧮 **Simulateur** : « et si j'avais 15/20 en maths (coef 2) ? » → l'effet immédiat sur la moyenne générale
+- 📅 **Planning** : emploi du temps de la semaine, cours annulés et cours en cours mis en avant
+- 📚 **Devoirs** : consignes groupées par date, cases à cocher synchronisées avec École Directe, confettis quand tout est fait
 
-- 🎨 Design **épuré** : fonds neutres, un seul bleu d'accent (contraste vérifié en clair et en sombre)
-- 📈 Graphiques en SVG faits maison, avec info-bulles au survol, au toucher et au clavier
-- ✨ Agréable à utiliser : carte « En cours / Prochain cours dans… » sur l'accueil, moyenne qui défile,
-  simulateur « et si j'avais 15 ? » sur les notes, messages courts, confettis quand tous les devoirs sont
-  faits, vibration et retours au toucher
-- 🎬 Animations d'entrée sur chaque page : fondu en cascade, courbes qui se tracent, barres qui se
-  remplissent, filets qui se dessinent (désactivées si « réduire les animations » est activé)
-- 📱 **Mobile-first** : barre de navigation en bas, adapté aux encoches (safe areas)
-- 📲 **Manifest PWA** : l'app peut être ajoutée à l'écran d'accueil
-- ♿ Accessibilité : HTML sémantique, ARIA, focus visible, `prefers-reduced-motion`
-- ⚡ Aucune dépendance UI : React et du CSS natif
+**Profil public** (`#/u/ton-pseudo`)
 
-## Stack technique
+- 🎨 Page au style « clean » : fond image ou vidéo, musique, effets (pluie, neige, étoiles…), couleurs, réseaux, badges, widgets de moyennes
+- 🔗 Pseudo unique, photo, bio, localisation, compteur de vues, présence Discord
 
-- [Vite 8](https://vite.dev) : serveur de dev et build
-- [React 19](https://react.dev) + [TypeScript](https://www.typescriptlang.org) (mode strict)
-- CSS natif avec variables (design tokens) ; pas de framework CSS
-- Routage minimal par hash (`#/notes`, `#/devoirs`…), sans dépendance
-- Petit proxy Node (`server/ed-proxy.mjs`) vers l'API École Directe
+**Confort**
+
+- 🌗 Thème clair, sombre ou automatique · 📱 pensé pour le téléphone (encoches, barre du bas, PWA)
+- 🎬 Animations d'entrée, messages façon « Dynamic Island », retours au toucher
+- ♿ HTML sémantique, ARIA, focus visible, respect de « réduire les animations »
 
 ## Démarrage rapide
 
-Prérequis : **Node.js ≥ 20.19** (ou ≥ 22.12) et npm.
+Prérequis : **Node.js ≥ 20.19** et npm.
 
 ```bash
 git clone https://github.com/purmea/ecoledirecteoption.git
@@ -88,155 +56,106 @@ npm install
 npm run dev
 ```
 
-Puis ouvrir <http://localhost:5173>. Le serveur écoute aussi sur le réseau local : pour tester sur ton téléphone (connecté au même Wi-Fi), ouvre l'adresse `Network` affichée dans le terminal.
+Ouvre <http://localhost:5173>. Pour tester sur ton téléphone (même Wi-Fi), ouvre l'adresse `Network` affichée dans le terminal.
 
-### En production
+En production :
 
 ```bash
 npm run build
-npm start          # sert dist/ + le proxy sur http://localhost:8080 (PORT=… pour changer)
+npm start        # http://localhost:8080  (PORT=… pour changer)
 ```
 
-## Connexion à École Directe
-
-Le navigateur ne peut pas parler directement à `api.ecoledirecte.com` : l'API ne gère pas le CORS et la
-connexion exige un cookie `GTK` qu'un script ne peut pas lire. L'app passe donc par un **petit proxy**
-(`server/ed-proxy.mjs`), branché automatiquement sur `npm run dev`, `npm run preview` et `npm start`.
-
-```
-Téléphone / navigateur  ──►  /ed/v3/...  (serveur de l'app)  ──►  api.ecoledirecte.com/v3/...
-```
-
-- Le proxy récupère le cookie `GTK` avant chaque login **ainsi que le second cookie `httponly`** posé
-  avec lui (sans lui, École Directe répond « mot de passe invalide » même avec les bons identifiants),
-  garde les cookies par appareil et utilise toujours le même User-Agent (sinon le jeton est invalidé).
-- Le **QCM** suit le flux observé sur le vrai site : en-tête `2FA-Token` chaîné de requête en requête,
-  champ `isReLogin`, `cn`/`cv` à la racine et dans `fa[]` (voir la
-  [PR #55 de la doc](https://github.com/EduWireApps/ecoledirecte-api-docs/pull/55)).
-- Il ne relaie que les routes `/v3/*.awp` d'École Directe et **n'enregistre jamais** les identifiants.
-- Après le QCM de vérification (« nouvel appareil »), les jetons obtenus sont mémorisés sur
-  l'appareil si « Rester connecté » est coché, pour ne pas le redemander.
-- Sans le serveur (par exemple une version statique hébergée seule), seule la démo fonctionne.
-- Seuls les **comptes élèves** sont pris en charge pour l'instant (pas encore les comptes parents).
-- Derrière un proxy d'entreprise (`HTTPS_PROXY`), lance le serveur avec `NODE_USE_ENV_PROXY=1 npm run dev` :
-  sinon le `fetch` de Node ignore le proxy.
-- Pour tester sans vrai compte : `ED_API_ORIGIN=http://localhost:9999 npm run dev` redirige le proxy
-  vers un faux serveur.
+> [!TIP]
+> Pas de compte sous la main ? Clique sur **« Essayer avec la démo »** sur l'écran de connexion.
 
 ## Scripts
 
-| Commande | Description |
+| Commande | Rôle |
 | --- | --- |
-| `npm run dev` | Lance le serveur de développement avec rechargement à chaud |
-| `npm run build` | Vérifie les types puis génère la version de production dans `dist/` |
-| `npm run preview` | Sert la version de production en local |
-| `npm run typecheck` | Vérifie les types TypeScript uniquement |
-| `npm start` | Sert la version de production + le proxy École Directe (après `npm run build`) |
+| `npm run dev` | Serveur de développement (app + proxy + API des profils) |
+| `npm run build` | Vérifie les types puis construit `dist/` |
+| `npm run preview` | Sert la version construite en local |
+| `npm start` | Serveur de production : `dist/` + proxy + API des profils |
+| `npm run typecheck` | Vérification TypeScript seule |
 
-## Profils publics
+## Comment ça marche
 
-Chaque élève peut publier un profil à la guns.lol, partageable par un lien `…/#/u/pseudo`. La mise en
-page s'inspire de [guns.lol/clean](https://guns.lol/clean) : pas de carte, avatar et nom côte à côte,
-badges en pastille, widgets en pastilles translucides, icônes lumineuses, vues et localisation en pied
-de page, police arrondie (Quicksand, embarquée).
+### Connexion à École Directe
 
-| Catégorie | Options |
-| --- | --- |
-| **Médias** | Arrière-plan (image, GIF ou vidéo MP4/WebM), avatar, musique (MP3/M4A/OGG/WAV) avec écran d'entrée personnalisable, curseur personnalisé |
-| **Identité** | Pseudo unique, nom affiché, description (animée ou non), localisation, « membre depuis » |
-| **Réseaux** | Instagram, TikTok, Snapchat, YouTube, X, Discord, GitHub, Twitch, Spotify, SoundCloud, Pinterest, Telegram, site web |
-| **Personnalisation** | Effets d'arrière-plan (halos, pluie, neige, étoiles, particules), effets du pseudo (arc-en-ciel, machine à écrire, glitch, étincelles), opacité et flou des blocs, effet lumineux (pseudo, réseaux, badges, widgets) |
-| **Couleurs** | Accentuation (blocs), texte, arrière-plan, icônes + 5 palettes rapides |
-| **Widgets** | Moyenne générale, une matière, évolution, meilleures matières, devoirs restants |
-| **Badges** | Gagnés automatiquement : Félicitations / Compliments / Encouragements, En progression, Devoirs à jour |
-| **Discord** | Avatar, décoration d'avatar et présence en direct via [Lanyard](https://github.com/Phineas/lanyard) (il faut rejoindre son serveur Discord) |
-| **Autres** | Icônes monochromes, description animée, titre d'onglet animé, inversion des couleurs des blocs, contrôle du volume, affichage des badges |
+Le navigateur ne peut pas appeler `api.ecoledirecte.com` directement (pas de CORS, cookie `GTK` illisible
+par un script). L'app passe par un **petit proxy Node** branché sur `dev`, `preview` et `start` :
 
-- **Pseudo unique** : 3 à 20 caractères (`a-z`, `0-9`, `_`, `.`), vérifié en direct ; changer de pseudo
-  libère l'ancien.
-- **Images** redimensionnées et converties en WebP dans le navigateur avant l'envoi (les GIF restent animés).
-- **Widgets** : instantané des moyennes, mis à jour à chaque publication et à chaque actualisation des
-  données. Rien n'est public tant que tu ne publies pas.
-- **Sécurité** : un profil appartient à un compte élève. Quand un login École Directe réussit, le serveur
-  lie la session de l'appareil à ce compte ; seule une session liée peut modifier ce profil ou envoyer des
-  fichiers. Un profil ne peut utiliser que ses propres médias ; les SVG sont refusés ; les médias servis
-  ont un type fixe (`nosniff`). Les médias inutilisés sont supprimés automatiquement.
-- **Stockage** : `data/profiles.json` et `data/media/` (ignorés par git), ou `$DATA_DIR`.
-- En **mode démo**, le profil reste sur l'appareil (fichiers limités à 2 Mo).
+```
+navigateur ──► /ed/v3/…  (serveur de l'app) ──► api.ecoledirecte.com/v3/…
+```
 
-API (servie par `npm run dev`, `npm run preview` et `npm start`) :
+- Il gère le flux de connexion observé sur le vrai site : cookie `GTK` **et** second cookie `httponly`, QCM
+  « nouvel appareil » avec l'en-tête `2FA-Token`, `cn`/`cv` mémorisés si « Rester connecté » est coché.
+- Il ne relaie que les routes `/v3/*.awp` et **n'enregistre jamais** les identifiants.
+- Sans le serveur (version statique seule), seule la démo fonctionne : l'écran de connexion le détecte et le dit.
+- Seuls les **comptes élèves** sont pris en charge pour l'instant.
+- Derrière un proxy d'entreprise : `NODE_USE_ENV_PROXY=1 npm run dev`.
+
+### Profils publics
+
+- **Pseudo unique** (3 à 20 caractères : `a-z`, `0-9`, `_`, `.`), vérifié en direct ; en changer libère l'ancien.
+- **Propriété** : au login réussi, le serveur lie la session de l'appareil au compte élève ; seule cette session
+  peut modifier le profil ou envoyer des fichiers. Un profil ne peut utiliser que ses propres médias.
+- **Médias** : images (converties en WebP côté navigateur), GIF, vidéos MP4/WebM, audio. SVG refusés, type de
+  contenu fixé (`nosniff`), fichiers inutilisés supprimés automatiquement.
+- **Widgets** : instantané des moyennes, mis à jour à chaque publication et actualisation. **Rien n'est public
+  tant que tu ne publies pas.**
+- **Stockage** : `data/` (ignoré par git), ou `$DATA_DIR`. En mode démo, tout reste sur l'appareil.
+- **Discord** (avatar, décoration, présence) via [Lanyard](https://github.com/Phineas/lanyard).
 
 | Route | Rôle |
 | --- | --- |
 | `GET /api/u/:pseudo` | Profil public (+1 vue) |
 | `GET /api/handles/:pseudo` | Disponibilité d'un pseudo |
-| `GET` / `PUT` / `DELETE /api/me/profile` | Lire, créer ou modifier, supprimer son profil |
-| `POST /api/media` | Envoyer un média (corps brut + `Content-Type`) |
-| `GET /api/media/:fichier` | Lire un média |
+| `GET` · `PUT` · `DELETE /api/me/profile` | Lire, enregistrer, supprimer son profil |
+| `POST /api/media` · `GET /api/media/:fichier` | Envoyer / lire un média |
 
-## Structure du projet
+## Structure
 
 ```
-.
-├── index.html              # Point d'entrée HTML
-├── public/                 # Icône et manifest PWA
-├── src/
-│   ├── main.tsx            # Montage de React
-│   ├── App.tsx             # Shell : routage, thème, état des devoirs
-│   ├── styles.css          # Design tokens + styles (clair & sombre)
-│   ├── types.ts            # Types partagés (notes, cours, devoirs…)
-│   ├── lib.ts              # Calculs de moyennes, formatage des dates
-│   ├── api/                # Client École Directe + conversion des données
-│   ├── state/session.tsx   # Connexion, QCM, démo, chargement des données
-│   ├── profile/            # Profils publics : types, API, page, effets, réseaux, Discord
-│   ├── data/demo.ts        # Données de démonstration
-│   ├── hooks/              # useHashRoute, useLocalStorage
-│   ├── components/         # Graphiques, navigation, composants UI
-│   └── pages/              # Connexion, Accueil, Notes, Planning, Devoirs, Profil, Profil public, Réglages
-├── server/
-│   ├── ed-proxy.mjs        # Proxy vers l'API École Directe
-│   ├── profiles.mjs        # API des profils publics (pseudos, photos, widgets)
-│   └── serve.mjs           # Serveur de production (npm start)
-└── vite.config.ts
+src/
+├── pages/        Accueil, Notes, Planning, Devoirs, Profil, Profil public, Réglages, Connexion
+├── components/   Graphiques, navigation, simulateur, carte « maintenant »
+├── profile/      Profils publics : types, API, page, effets, réseaux, Discord
+├── api/          Client École Directe + conversion des données
+├── state/        Session : connexion, QCM, démo, chargement
+├── fx/           Messages, confettis, compteur animé, vibration
+└── styles.css    Design tokens + styles (clair & sombre)
+server/
+├── ed-proxy.mjs  Proxy vers École Directe
+├── profiles.mjs  API des profils publics
+└── serve.mjs     Serveur de production
 ```
 
 ## Feuille de route
 
-- [x] Nouvelle interface mobile-first (Vite + React + TypeScript)
-- [x] Notes, emploi du temps, devoirs, réglages
-- [x] Thème sombre et manifest PWA
-- [x] Connexion à un compte École Directe (élève), QCM de vérification
-- [x] Graphiques : évolution de la moyenne, comparaison à la classe
-- [x] Profils publics façon guns.lol : médias, effets, couleurs, réseaux, badges, Discord, widgets
+- [x] Interface mobile-first, thèmes clair / sombre, PWA
+- [x] Connexion École Directe (élève) avec QCM
+- [x] Notes en graphiques, simulateur, planning, devoirs
+- [x] Profils publics : médias, effets, couleurs, réseaux, badges, Discord, widgets
 - [ ] Comptes parents (plusieurs enfants)
 - [ ] Messagerie et vie scolaire (absences, retards)
 - [ ] Mode hors-ligne (service worker)
 - [ ] Notifications de nouvelles notes
-- [ ] Application mobile native (iOS / Swift)
+- [ ] Application mobile native (iOS)
 
 ## Contribuer
 
-Les contributions sont les bienvenues !
-
-1. Forkez le projet
-2. Créez une branche (`git checkout -b feature/ma-fonctionnalite`)
-3. Vérifiez que le build passe (`npm run build`)
-4. Commitez (`git commit -m "Ajoute ma fonctionnalité"`)
-5. Poussez (`git push origin feature/ma-fonctionnalite`)
-6. Ouvrez une Pull Request
+1. Forkez le projet et créez une branche (`git checkout -b feature/ma-fonctionnalite`)
+2. Vérifiez que `npm run build` passe
+3. Commitez, poussez, puis ouvrez une Pull Request
 
 ## Licence
 
-Distribué sous licence MIT. Voir [`LICENSE`](LICENSE).
+[MIT](LICENSE)
 
 ## Contact
 
-**@mea et @sofki**
+**@mea et @sofki** · [@purmea](https://github.com/purmea) · [shawtybae@atomicmail.io](mailto:shawtybae@atomicmail.io)
 
-- GitHub : [@purmea](https://github.com/purmea)
-- E-mail : [shawtybae@atomicmail.io](mailto:shawtybae@atomicmail.io)
-- Projet : <https://github.com/purmea/ecoledirecteoption>
-
----
-
-<div align="center">Fait avec ❤️ par @mea et @sofki</div>
+<div align="center"><sub>Fait avec ❤️ par @mea et @sofki</sub></div>
