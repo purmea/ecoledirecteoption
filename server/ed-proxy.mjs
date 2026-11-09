@@ -5,6 +5,10 @@
 // pas lire. Ce proxy tourne côté serveur (vite dev / vite preview / npm start),
 // garde les cookies d'École Directe par session et ajoute les en-têtes attendus.
 //
+// Comportement calé sur la doc communautaire (EduWireApps/ecoledirecte-api-docs),
+// y compris la PR #55 (capture du vrai site, 31/08/2026) : second cookie httponly
+// posé avec GTK, en-tête 2FA-Token pendant le QCM.
+//
 // Seules les routes /v3/* de api.ecoledirecte.com sont relayées. Les identifiants
 // ne sont jamais stockés : ils ne font que transiter vers École Directe.
 
@@ -99,8 +103,13 @@ export function edProxy(prefix = '/ed') {
       }
       const token = req.headers['x-token']
       if (typeof token === 'string' && token) headers['X-Token'] = token
+      const twoFa = req.headers['2fa-token']
+      if (typeof twoFa === 'string' && twoFa) headers['2FA-Token'] = twoFa
 
       if (url.pathname === '/v3/login.awp') {
+        // Nouveau login : on repart d'un pot à cookies vide. La route GTK pose GTK + un second
+        // cookie au nom aléatoire ; il faut renvoyer les deux, sinon le login échoue en 505.
+        jar.cookies.clear()
         const gtk = await fetchGtk(jar)
         if (gtk) headers['X-Gtk'] = gtk
       }
@@ -115,6 +124,8 @@ export function edProxy(prefix = '/ed') {
       console.log(`[ed] ${url.pathname} → HTTP ${upstream.status}, code ${edCode}${edCode === '?' ? ` (${JSON.stringify(text.slice(0, 120))})` : ''}`)
       const newToken = upstream.headers.get('x-token')
       if (newToken) res.setHeader('X-Token', newToken)
+      const newTwoFa = upstream.headers.get('2fa-token')
+      if (newTwoFa) res.setHeader('2FA-Token', newTwoFa)
       send(res, upstream.ok ? 200 : 502, upstream.ok ? text : { code: upstream.status, message: 'École Directe ne répond pas' })
     } catch (err) {
       console.error(`[ed] ${url.pathname} → échec : ${err instanceof Error ? (err.cause ?? err.message) : err}`)

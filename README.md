@@ -99,10 +99,14 @@ connexion exige un cookie `GTK` qu'un script ne peut pas lire. L'app passe donc 
 Téléphone / navigateur  ──►  /ed/v3/...  (serveur de l'app)  ──►  api.ecoledirecte.com/v3/...
 ```
 
-- Le proxy récupère le cookie `GTK` avant chaque login, garde les cookies École Directe par appareil et
-  utilise toujours le même User-Agent (sinon le jeton est invalidé).
+- Le proxy récupère le cookie `GTK` avant chaque login **ainsi que le second cookie `httponly`** posé
+  avec lui (sans lui, École Directe répond « mot de passe invalide » même avec les bons identifiants),
+  garde les cookies par appareil et utilise toujours le même User-Agent (sinon le jeton est invalidé).
+- Le **QCM** suit le flux observé sur le vrai site : en-tête `2FA-Token` chaîné de requête en requête,
+  champ `isReLogin`, `cn`/`cv` à la racine et dans `fa[]` (voir la
+  [PR #55 de la doc](https://github.com/EduWireApps/ecoledirecte-api-docs/pull/55)).
 - Il ne relaie que les routes `/v3/*.awp` d'École Directe et **n'enregistre jamais** les identifiants.
-- Le **QCM** de vérification (« nouvel appareil ») est géré ; les jetons obtenus sont mémorisés sur
+- Après le QCM de vérification (« nouvel appareil »), les jetons obtenus sont mémorisés sur
   l'appareil si « Rester connecté » est coché, pour ne pas le redemander.
 - Sans le serveur (par exemple une version statique hébergée seule), seule la démo fonctionne.
 - Seuls les **comptes élèves** sont pris en charge pour l'instant (pas encore les comptes parents).

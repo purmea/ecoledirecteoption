@@ -33,6 +33,8 @@ proxySession.fallback = undefined as string | undefined
 export interface RequestResult<T> {
   data: T
   token?: string
+  /** En-tête 2FA-Token renvoyé par École Directe (à renvoyer à l'appel suivant). */
+  twoFa?: string
   code: number
 }
 
@@ -43,7 +45,7 @@ export interface RequestResult<T> {
 export async function edRequest<T>(
   path: string,
   body: unknown = {},
-  { verbe = 'get', token, allowCodes = [] }: { verbe?: string; token?: string; allowCodes?: number[] } = {},
+  { verbe = 'get', token, twoFa, allowCodes = [] }: { verbe?: string; token?: string; twoFa?: string; allowCodes?: number[] } = {},
 ): Promise<RequestResult<T>> {
   const sep = path.includes('?') ? '&' : '?'
   const url = `./ed${path}${verbe ? `${sep}verbe=${verbe}` : ''}`
@@ -55,6 +57,7 @@ export async function edRequest<T>(
         'Content-Type': 'application/x-www-form-urlencoded',
         'X-Session': proxySession(),
         ...(token ? { 'X-Token': token } : {}),
+        ...(twoFa ? { '2FA-Token': twoFa } : {}),
       },
       body: 'data=' + encodeURIComponent(JSON.stringify(body)),
     })
@@ -79,7 +82,7 @@ export async function edRequest<T>(
   if (json.code !== 200 && !allowCodes.includes(json.code)) {
     throw new EdError(json.code, json.message || messageFor(json.code))
   }
-  return { data: json.data, token: newToken, code: json.code }
+  return { data: json.data, token: newToken, twoFa: res.headers.get('2FA-Token') || undefined, code: json.code }
 }
 
 function messageFor(code: number) {

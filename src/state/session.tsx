@@ -15,6 +15,7 @@ interface PendingQcm {
   motdepasse: string
   remember: boolean
   token: string
+  twoFa?: string
   qcm: Qcm
 }
 
@@ -130,7 +131,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       const trust = store.get<Record<string, DeviceTrust>>(TRUST_KEY)?.[trustKey(identifiant)]
       const r = await edLogin(identifiant, motdepasse, trust)
-      if (r.kind === 'qcm') setPendingQcm({ identifiant, motdepasse, remember, token: r.token, qcm: r.qcm })
+      if (r.kind === 'qcm') setPendingQcm({ identifiant, motdepasse, remember, token: r.token, twoFa: r.twoFa, qcm: r.qcm })
       else await finishLogin(r.session, remember)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -142,11 +143,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!p) return
     setError(null)
     try {
-      const trust = await answerQcm(p.token, choice)
+      const { trust, twoFa } = await answerQcm(p.token, p.twoFa, choice)
       // cn/cv sont réutilisables : on les garde pour éviter le QCM la prochaine fois.
       if (p.remember) store.set(TRUST_KEY, { ...store.get<Record<string, DeviceTrust>>(TRUST_KEY), [trustKey(p.identifiant)]: trust })
-      const r = await edLogin(p.identifiant, p.motdepasse, trust)
-      if (r.kind === 'qcm') setPendingQcm({ ...p, token: r.token, qcm: r.qcm })
+      const r = await edLogin(p.identifiant, p.motdepasse, trust, twoFa)
+      if (r.kind === 'qcm') setPendingQcm({ ...p, token: r.token, twoFa: r.twoFa, qcm: r.qcm })
       else await finishLogin(r.session, p.remember)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
