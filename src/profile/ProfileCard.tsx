@@ -15,16 +15,16 @@ const rgb = (hex: string) => {
   return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`
 }
 
-/** « Membre depuis 3 mois » à partir de la date de création. */
+/** « depuis 3 mois » (ancienneté du profil) à partir de la date de création. */
 function memberSince(iso?: string) {
   if (!iso) return null
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 864e5)
-  if (days < 1) return 'Membre depuis aujourd’hui'
-  if (days < 31) return `Membre depuis ${days} jour${days > 1 ? 's' : ''}`
+  if (days < 1) return 'depuis aujourd’hui'
+  if (days < 31) return `depuis ${days} jour${days > 1 ? 's' : ''}`
   const months = Math.floor(days / 30.44)
-  if (months < 12) return `Membre depuis ${months} mois`
+  if (months < 12) return `depuis ${months} mois`
   const years = Math.floor(months / 12)
-  return `Membre depuis ${years} an${years > 1 ? 's' : ''}`
+  return `depuis ${years} an${years > 1 ? 's' : ''}`
 }
 
 /**
@@ -60,6 +60,11 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
   const badges = options.showBadges ? badgesFor(profile.snapshot) : []
   const joined = memberSince(profile.createdAt)
   const presence = options.discordPresence && discord
+  const footer = [
+    profile.views !== undefined && { key: 'views', icon: 'eye' as const, text: profile.views.toLocaleString('fr-FR'), title: 'Vues du profil' },
+    profile.location && { key: 'loc', icon: 'pin' as const, text: profile.location, title: 'Localisation' },
+    joined && !embedded && { key: 'since', icon: 'calendar' as const, text: joined, title: `Membre ${joined}` },
+  ].filter((f): f is { key: string; icon: 'eye' | 'pin' | 'calendar'; text: string; title: string } => !!f)
 
   return (
     <div className={`pf-page ${embedded ? 'embedded' : ''} ${hasAudio && options.volumeControl ? 'has-volume' : ''}`} style={style}>
@@ -100,12 +105,12 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
                   </ul>
                 )}
               </div>
+              <p className="pf-sub">@{profile.handle}</p>
               {profile.bio && (
                 <p className="pf-bio">
                   {options.animatedBio ? <>{bio}<i className="pf-caret" aria-hidden="true">|</i></> : profile.bio}
                 </p>
               )}
-              <p className="pf-sub">@{profile.handle}{joined && !embedded ? ` · ${joined}` : ''}</p>
             </div>
           </header>
 
@@ -146,11 +151,14 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
             </ul>
           )}
 
-          {(profile.views !== undefined || profile.location) && (
+          {footer.length > 0 && (
             <footer className="pf-foot pf-in">
-              {profile.views !== undefined && <span title="Vues du profil"><Icon name="eye" size={16} />{profile.views.toLocaleString('fr-FR')}</span>}
-              {profile.views !== undefined && profile.location && <i className="pf-sep" />}
-              {profile.location && <span><Icon name="pin" size={16} />{profile.location}</span>}
+              {footer.map((f, i) => (
+                <span key={f.key} title={f.title}>
+                  {i > 0 && <i className="pf-sep" aria-hidden="true" />}
+                  <Icon name={f.icon} size={15} />{f.text}
+                </span>
+              ))}
             </footer>
           )}
         </main>
@@ -316,7 +324,10 @@ function WidgetTile({ widget, profile, wide }: { widget: Widget; profile: Profil
     case 'trend':
       return (
         <div className={cls}>
-          <span className="pf-label">Évolution de la moyenne</span>
+          <div className="pf-tile-head">
+            <span className="pf-label">Évolution</span>
+            {s.trend.length > 1 && <span className="pf-tile-val">{fmt(s.trend[s.trend.length - 1])}</span>}
+          </div>
           <TrendLine values={s.trend} />
         </div>
       )
@@ -344,7 +355,7 @@ function WidgetTile({ widget, profile, wide }: { widget: Widget; profile: Profil
 function TrendLine({ values }: { values: number[] }) {
   if (values.length < 2) return <p className="pf-label">Pas encore assez de notes</p>
   const w = 300
-  const h = 56
+  const h = 44
   const lo = Math.min(...values)
   const hi = Math.max(...values)
   const span = hi - lo || 1
@@ -355,12 +366,10 @@ function TrendLine({ values }: { values: number[] }) {
     <div className="pf-trend">
       <div className="pf-trend-plot">
         <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
-          <path d={`${d}L${lx},${h}L4,${h}Z`} className="area" />
           <path d={d} className="line" />
         </svg>
         <span className="pf-dot after-draw" style={{ left: `${(lx / w) * 100}%`, top: `${(ly / h) * 100}%` }} />
       </div>
-      <span className="pf-trend-val">{fmt(values[values.length - 1])}</span>
     </div>
   )
 }
