@@ -106,6 +106,8 @@ Téléphone / navigateur  ──►  /ed/v3/...  (serveur de l'app)  ──►  
   l'appareil si « Rester connecté » est coché, pour ne pas le redemander.
 - Sans le serveur (par exemple une version statique hébergée seule), seule la démo fonctionne.
 - Seuls les **comptes élèves** sont pris en charge pour l'instant (pas encore les comptes parents).
+- Derrière un proxy d'entreprise (`HTTPS_PROXY`), lance le serveur avec `NODE_USE_ENV_PROXY=1 npm run dev` :
+  sinon le `fetch` de Node ignore le proxy.
 - Pour tester sans vrai compte : `ED_API_ORIGIN=http://localhost:9999 npm run dev` redirige le proxy
   vers un faux serveur.
 
