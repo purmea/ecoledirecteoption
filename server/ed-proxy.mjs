@@ -13,6 +13,8 @@
 // ne sont jamais stockés : ils ne font que transiter vers École Directe.
 
 // ED_API_ORIGIN permet de pointer vers un faux serveur pour les tests.
+import { bindSession } from './profiles.mjs'
+
 const ED_ORIGIN = process.env.ED_API_ORIGIN || 'https://api.ecoledirecte.com'
 export const ED_VERSION = '4.75.0'
 const USER_AGENT =
@@ -122,6 +124,14 @@ export function edProxy(prefix = '/ed') {
       // Journal sans données sensibles : route, statut HTTP et code École Directe.
       const edCode = /"code"\s*:\s*(\d+)/.exec(text)?.[1] ?? '?'
       console.log(`[ed] ${url.pathname} → HTTP ${upstream.status}, code ${edCode}${edCode === '?' ? ` (${JSON.stringify(text.slice(0, 120))})` : ''}`)
+      // Login réussi : cette session (appareil) est désormais liée au compte élève, ce qui
+      // l'autorise à gérer le profil public de ce compte (voir profiles.mjs).
+      if (url.pathname === '/v3/login.awp' && edCode === '200') {
+        try {
+          const account = JSON.parse(text)?.data?.accounts?.find((a) => a.typeCompte === 'E')
+          if (account?.id) await bindSession(sessionId, account.id)
+        } catch { /* réponse inattendue : pas de liaison */ }
+      }
       const newToken = upstream.headers.get('x-token')
       if (newToken) res.setHeader('X-Token', newToken)
       const newTwoFa = upstream.headers.get('2fa-token')

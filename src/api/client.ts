@@ -19,7 +19,7 @@ interface EdResponse<T> {
 const SESSION_KEY = 'edo:proxy-session'
 
 /** Identifiant aléatoire qui permet au proxy de garder les cookies École Directe de cet appareil. */
-function proxySession() {
+export function proxySession() {
   try {
     let id = localStorage.getItem(SESSION_KEY)
     if (!id) localStorage.setItem(SESSION_KEY, (id = crypto.randomUUID()))

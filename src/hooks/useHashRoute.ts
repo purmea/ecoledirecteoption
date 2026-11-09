@@ -1,22 +1,25 @@
 import { useEffect, useState } from 'react'
 
-export type Route = 'accueil' | 'notes' | 'planning' | 'devoirs' | 'reglages'
-const ROUTES: Route[] = ['accueil', 'notes', 'planning', 'devoirs', 'reglages']
+export type Route = 'accueil' | 'notes' | 'planning' | 'devoirs' | 'profil' | 'reglages' | 'u'
+const ROUTES: Route[] = ['accueil', 'notes', 'planning', 'devoirs', 'profil', 'reglages', 'u']
 
-const read = (): Route => {
-  const h = location.hash.replace('#/', '') as Route
-  return ROUTES.includes(h) ? h : 'accueil'
+export interface Location { route: Route; param?: string }
+
+const read = (): Location => {
+  const [name, param] = location.hash.replace(/^#\/?/, '').split('/')
+  if (name === 'u' && param) return { route: 'u', param: decodeURIComponent(param) }
+  return { route: ROUTES.includes(name as Route) && name !== 'u' ? (name as Route) : 'accueil' }
 }
 
 export function useHashRoute() {
-  const [route, setRoute] = useState<Route>(read)
+  const [loc, setLoc] = useState<Location>(read)
   useEffect(() => {
     const on = () => {
-      setRoute(read())
+      setLoc(read())
       window.scrollTo({ top: 0 })
     }
     window.addEventListener('hashchange', on)
     return () => window.removeEventListener('hashchange', on)
   }, [])
-  return route
+  return loc
 }

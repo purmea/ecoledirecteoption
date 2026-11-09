@@ -34,6 +34,7 @@ Connecte-toi avec ton compte École Directe et retrouve tes notes (avec graphiqu
 - [Stack technique](#stack-technique)
 - [Démarrage rapide](#démarrage-rapide)
 - [Connexion à École Directe](#connexion-à-école-directe)
+- [Profils publics](#profils-publics)
 - [Scripts](#scripts)
 - [Structure du projet](#structure-du-projet)
 - [Feuille de route](#feuille-de-route)
@@ -50,7 +51,9 @@ Connecte-toi avec ton compte École Directe et retrouve tes notes (avec graphiqu
 | 📊 **Notes** | Courbe d'évolution de la moyenne, barres par matière comparées à la classe, détail de chaque note, choix du trimestre |
 | 📅 **Planning** | Emploi du temps de la semaine, cours annulés et cours en cours mis en avant |
 | 📚 **Devoirs** | Consignes groupées par date, filtres, cases à cocher synchronisées avec École Directe |
-| ⚙️ **Réglages** | Profil, thème clair / sombre / automatique, actualisation, déconnexion |
+| 👤 **Profil** | Photo, pseudo unique, nom, bio, thème et widgets (moyennes, évolution…) ; aperçu en direct |
+| ✨ **Profil public** | Page `#/u/ton-pseudo` façon guns.lol : fond animé, carte en verre, widgets, compteur de vues |
+| ⚙️ **Réglages** | Thème clair / sombre / automatique, actualisation, déconnexion |
 
 Aussi inclus :
 
@@ -125,6 +128,29 @@ Téléphone / navigateur  ──►  /ed/v3/...  (serveur de l'app)  ──►  
 | `npm run typecheck` | Vérifie les types TypeScript uniquement |
 | `npm start` | Sert la version de production + le proxy École Directe (après `npm run build`) |
 
+## Profils publics
+
+Chaque élève peut publier un profil à la guns.lol, partageable par un lien `…/#/u/pseudo`.
+
+- **Pseudo unique** : 3 à 20 caractères (`a-z`, `0-9`, `_`, `.`), vérifié en direct ; changer de pseudo
+  libère l'ancien.
+- **Photo** recadrée en carré et compressée dans le navigateur (WebP, ~30 Ko) avant l'envoi.
+- **Widgets** : moyenne générale, une matière au choix, évolution, meilleures matières, devoirs restants.
+  Ils affichent un **instantané** des moyennes, mis à jour à chaque publication et à chaque
+  actualisation des données. Rien n'est public tant que tu ne publies pas.
+- **Sécurité** : un profil appartient à un compte élève. Quand un login École Directe réussit, le serveur
+  lie la session de l'appareil à ce compte ; seule une session liée peut modifier le profil de ce compte.
+- **Stockage** : `data/profiles.json` (ignoré par git), ou `$DATA_DIR/profiles.json`.
+- En **mode démo**, le profil reste sur l'appareil (pas de pseudo réservé côté serveur).
+
+API (servie par `npm run dev`, `npm run preview` et `npm start`) :
+
+| Route | Rôle |
+| --- | --- |
+| `GET /api/u/:pseudo` | Profil public (+1 vue) |
+| `GET /api/handles/:pseudo` | Disponibilité d'un pseudo |
+| `GET` / `PUT` / `DELETE /api/me/profile` | Lire, créer ou modifier, supprimer son profil |
+
 ## Structure du projet
 
 ```
@@ -139,12 +165,14 @@ Téléphone / navigateur  ──►  /ed/v3/...  (serveur de l'app)  ──►  
 │   ├── lib.ts              # Calculs de moyennes, formatage des dates
 │   ├── api/                # Client École Directe + conversion des données
 │   ├── state/session.tsx   # Connexion, QCM, démo, chargement des données
+│   ├── profile/            # Profils publics : types, API, carte façon guns.lol
 │   ├── data/demo.ts        # Données de démonstration
 │   ├── hooks/              # useHashRoute, useLocalStorage
 │   ├── components/         # Graphiques, navigation, composants UI
-│   └── pages/              # Connexion, Accueil, Notes, Planning, Devoirs, Réglages
+│   └── pages/              # Connexion, Accueil, Notes, Planning, Devoirs, Profil, Profil public, Réglages
 ├── server/
 │   ├── ed-proxy.mjs        # Proxy vers l'API École Directe
+│   ├── profiles.mjs        # API des profils publics (pseudos, photos, widgets)
 │   └── serve.mjs           # Serveur de production (npm start)
 └── vite.config.ts
 ```
@@ -156,6 +184,7 @@ Téléphone / navigateur  ──►  /ed/v3/...  (serveur de l'app)  ──►  
 - [x] Thème sombre et manifest PWA
 - [x] Connexion à un compte École Directe (élève), QCM de vérification
 - [x] Graphiques : évolution de la moyenne, comparaison à la classe
+- [x] Profils publics façon guns.lol : photo, pseudo unique, widgets de moyennes
 - [ ] Comptes parents (plusieurs enfants)
 - [ ] Messagerie et vie scolaire (absences, retards)
 - [ ] Mode hors-ligne (service worker)

@@ -1,5 +1,6 @@
 import { useData, useSession } from '../state/session'
 import { PageHeader, SectionTitle, Segmented } from '../components/ui'
+import { Icon } from '../components/Icon'
 
 export type Theme = 'system' | 'light' | 'dark'
 
@@ -8,6 +9,7 @@ export function Reglages({ theme, setTheme }: { theme: Theme; setTheme: (t: Them
   const { mode, refresh, refreshing, signOut } = useSession()
   return (
     <>
+      <a href="#/profil" className="back"><Icon name="chevron" size={16} />Profil</a>
       <PageHeader title="Réglages" />
       <section className="profile">
         <div className="avatar">{student.firstName[0]}{student.lastName[0]}</div>

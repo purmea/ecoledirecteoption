@@ -5,6 +5,7 @@ import { readFile, stat } from 'node:fs/promises'
 import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { edProxy } from './ed-proxy.mjs'
+import { profilesApi } from './profiles.mjs'
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url))
 const port = Number(process.env.PORT) || 8080
@@ -17,9 +18,10 @@ const types = {
   '.png': 'image/png',
 }
 const proxy = edProxy('/ed')
+const profiles = profilesApi('/api')
 
 createServer((req, res) => {
-  proxy(req, res, async () => {
+  proxy(req, res, () => profiles(req, res, async () => {
     try {
       let path = normalize(decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname)).replace(/^([/\\])+/, '')
       if (path.startsWith('..')) throw new Error('interdit')
@@ -31,5 +33,5 @@ createServer((req, res) => {
       res.statusCode = 404
       res.end('Introuvable')
     }
-  })
+  }))
 }).listen(port, '0.0.0.0', () => console.log(`EcoleDirecte Option → http://localhost:${port}`))

@@ -6,7 +6,7 @@ const items: { route: Route; label: string; icon: IconName }[] = [
   { route: 'notes', label: 'Notes', icon: 'chart' },
   { route: 'planning', label: 'Planning', icon: 'calendar' },
   { route: 'devoirs', label: 'Devoirs', icon: 'book' },
-  { route: 'reglages', label: 'Réglages', icon: 'settings' },
+  { route: 'profil', label: 'Profil', icon: 'user' },
 ]
 
 export function BottomNav({ current, badge }: { current: Route; badge: number }) {
@@ -14,7 +14,7 @@ export function BottomNav({ current, badge }: { current: Route; badge: number })
     <nav className="nav" aria-label="Navigation principale">
       {items.map((it) => (
         <a key={it.route} href={`#/${it.route}`} className="nav-item"
-          aria-current={current === it.route ? 'page' : undefined}>
+          aria-current={current === it.route || (it.route === 'profil' && current === 'reglages') ? 'page' : undefined}>
           <span className="nav-icon">
             <Icon name={it.icon} />
             {it.route === 'devoirs' && badge > 0 && <span className="badge" role="img" aria-label={`${badge} à faire`} />}
