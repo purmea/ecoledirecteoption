@@ -1,5 +1,6 @@
 import type { Route } from '../hooks/useHashRoute'
 import { Icon, type IconName } from './Icon'
+import { haptic } from '../fx'
 
 const items: { route: Route; label: string; icon: IconName }[] = [
   { route: 'accueil', label: 'Accueil', icon: 'home' },
@@ -13,7 +14,7 @@ export function BottomNav({ current, badge }: { current: Route; badge: number })
   return (
     <nav className="nav" aria-label="Navigation principale">
       {items.map((it) => (
-        <a key={it.route} href={`#/${it.route}`} className="nav-item"
+        <a key={it.route} href={`#/${it.route}`} className="nav-item" onClick={() => haptic(6)}
           aria-current={current === it.route || (it.route === 'profil' && current === 'reglages') ? 'page' : undefined}>
           <span className="nav-icon">
             <Icon name={it.icon} />

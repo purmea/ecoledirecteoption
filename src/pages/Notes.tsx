@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useData } from '../state/session'
-import { averageTimeline, fmt, generalAverage, groupBySubject } from '../lib'
+import { averageTimeline, generalAverage, groupBySubject } from '../lib'
 import { Empty, PageHeader, SectionTitle, Segmented } from '../components/ui'
 import { SubjectBars, TrendChart } from '../components/charts'
+import { Simulator } from '../components/Simulator'
+import { CountUp } from '../fx'
 
 export function Notes() {
   const { grades, periods, currentPeriod } = useData()
@@ -26,7 +28,7 @@ export function Notes() {
         <>
           <section className="block">
             <span className="eyebrow">Moyenne générale</span>
-            <strong className="big">{avg !== null ? fmt(avg) : '—'}<small>/20</small></strong>
+            <strong className="big">{avg !== null ? <CountUp value={avg} /> : '—'}<small>/20</small></strong>
             <TrendChart points={averageTimeline(list)} label="Évolution de la moyenne générale" />
           </section>
 
@@ -39,6 +41,9 @@ export function Notes() {
             )
           }>Matières</SectionTitle>
           <SubjectBars subjects={subjects} />
+
+          <SectionTitle>Simulateur</SectionTitle>
+          <Simulator key={period} grades={list} subjects={subjects.map((x) => x.subject)} />
         </>
       )}
     </>

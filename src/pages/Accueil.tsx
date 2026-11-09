@@ -3,6 +3,8 @@ import { averageTimeline, fmt, formatDate, generalAverage, greeting, on20, today
 import { Empty, SectionTitle } from '../components/ui'
 import { Sparkline } from '../components/charts'
 import { Avatar, useMyProfile } from '../profile/useMyProfile'
+import { NowCard } from '../components/NowCard'
+import { CountUp } from '../fx'
 
 export function Accueil() {
   const { student, grades, lessons, homework, currentPeriod } = useData()
@@ -39,7 +41,7 @@ export function Accueil() {
       <a href="#/notes" className="hero">
         <div>
           <span className="eyebrow">Moyenne générale</span>
-          <strong className="big">{avg !== null ? fmt(avg) : '—'}<small>/20</small></strong>
+          <strong className="big">{avg !== null ? <CountUp value={avg} /> : '—'}<small>/20</small></strong>
           {delta !== null && Math.abs(delta) >= 0.01 && (
             <span className={`delta ${delta > 0 ? 'up' : 'down'}`}>
               {delta > 0 ? '+' : '−'}{fmt(Math.abs(delta))} depuis la dernière note
@@ -48,6 +50,8 @@ export function Accueil() {
         </div>
         <Sparkline points={trend} />
       </a>
+
+      <NowCard lessons={lessons} />
 
       <SectionTitle meta={summary}>{isWeekend ? DAYS[day] : 'Aujourd’hui'}</SectionTitle>
       {today.length === 0 ? <Empty>Pas de cours</Empty> : (

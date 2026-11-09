@@ -3,6 +3,7 @@ import { useHashRoute } from './hooks/useHashRoute'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { SessionProvider, useSession } from './state/session'
 import { BottomNav } from './components/BottomNav'
+import { Confetti, Toaster } from './fx'
 import { Accueil } from './pages/Accueil'
 import { Notes } from './pages/Notes'
 import { Planning } from './pages/Planning'
@@ -67,6 +68,8 @@ function Shell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void
         {route === 'reglages' && <Reglages theme={theme} setTheme={setTheme} />}
       </main>
       <BottomNav current={route} badge={todo} />
+      <Toaster />
+      <Confetti />
     </div>
   )
 }

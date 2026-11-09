@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { useData, useSession } from '../state/session'
 import { PageHeader, SectionTitle } from '../components/ui'
 import { Icon } from '../components/Icon'
+import { toast } from '../fx'
 import { ProfileView } from '../profile/ProfileCard'
 import { LINKS, LinkIcon } from '../profile/links'
 import { useDiscord } from '../profile/discord'
@@ -128,7 +129,7 @@ export function Profil() {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(publicUrl)
-      setStatus({ kind: 'ok', msg: 'Lien copié' })
+      toast('Lien copié')
     } catch {
       setStatus({ kind: 'error', msg: publicUrl })
     }

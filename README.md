@@ -59,6 +59,9 @@ Aussi inclus :
 
 - 🎨 Design **épuré** : fonds neutres, un seul bleu d'accent (contraste vérifié en clair et en sombre)
 - 📈 Graphiques en SVG faits maison, avec info-bulles au survol, au toucher et au clavier
+- ✨ Agréable à utiliser : carte « En cours / Prochain cours dans… » sur l'accueil, moyenne qui défile,
+  simulateur « et si j'avais 15 ? » sur les notes, messages courts, confettis quand tous les devoirs sont
+  faits, vibration et retours au toucher
 - 🎬 Animations d'entrée sur chaque page : fondu en cascade, courbes qui se tracent, barres qui se
   remplissent, filets qui se dessinent (désactivées si « réduire les animations » est activé)
 - 📱 **Mobile-first** : barre de navigation en bas, adapté aux encoches (safe areas)
