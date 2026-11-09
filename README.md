@@ -28,22 +28,22 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 
 **Au quotidien**
 
-- 🏠 **Accueil** : moyenne qui défile, carte « En cours · fin dans 30 min » / « Prochain cours dans… », dernières notes, devoirs à faire
-- 📊 **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix du trimestre
-- 🧮 **Simulateur** : « et si j'avais 15/20 en maths (coef 2) ? » → l'effet immédiat sur la moyenne générale
-- 📅 **Planning** : emploi du temps de la semaine, cours annulés et cours en cours mis en avant
-- 📚 **Devoirs** : consignes groupées par date, cases à cocher synchronisées avec École Directe, confettis quand tout est fait
+- **Accueil** : moyenne qui défile, carte « En cours · fin dans 30 min » / « Prochain cours dans… », dernières notes, devoirs à faire
+- **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix du trimestre
+- **Simulateur** : « et si j'avais 15/20 en maths (coef 2) ? » → l'effet immédiat sur la moyenne générale
+- **Planning** : emploi du temps de la semaine, cours annulés et cours en cours mis en avant
+- **Devoirs** : consignes groupées par date, cases à cocher synchronisées avec École Directe, confettis quand tout est fait
 
 **Profil public** (`#/u/ton-pseudo`)
 
-- 🎨 Page au style « clean » : fond image ou vidéo, musique, effets (pluie, neige, étoiles…), couleurs, réseaux, badges, widgets de moyennes
-- 🔗 Pseudo unique, photo, bio, localisation, compteur de vues, présence Discord
+- Page au style « clean » : fond image ou vidéo, musique, effets (pluie, neige, étoiles…), couleurs, réseaux, badges, widgets de moyennes
+- Pseudo unique, photo, bio, localisation, compteur de vues, présence Discord
 
 **Confort**
 
-- 🌗 Thème clair, sombre ou automatique · 📱 pensé pour le téléphone (encoches, barre du bas, PWA)
-- 🎬 Animations d'entrée, messages façon « Dynamic Island », retours au toucher
-- ♿ HTML sémantique, ARIA, focus visible, respect de « réduire les animations »
+- Thème clair, sombre ou automatique, pensé pour le téléphone (encoches, barre du bas, PWA)
+- Animations d'entrée, messages façon « Dynamic Island », retours au toucher
+- HTML sémantique, ARIA, focus visible, respect de « réduire les animations »
 
 ## Démarrage rapide
 
@@ -158,4 +158,4 @@ server/
 
 **@mea et @sofki** · [@purmea](https://github.com/purmea) · [shawtybae@atomicmail.io](mailto:shawtybae@atomicmail.io)
 
-<div align="center"><sub>Fait avec ❤️ par @mea et @sofki</sub></div>
+<div align="center"><sub>Fait par @mea et @sofki</sub></div>
