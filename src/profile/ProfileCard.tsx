@@ -156,7 +156,6 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
         </main>
       )}
 
-      {!embedded && entered && <a href="#/" className="pf-brand">EcoleDirecte Option</a>}
     </div>
   )
 }
@@ -356,7 +355,7 @@ function TrendLine({ values }: { values: number[] }) {
       <div className="pf-trend-plot">
         <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
           <path d={`${d}L${lx},${h}L4,${h}Z`} className="area" />
-          <path d={d} className="line draw" pathLength={1} />
+          <path d={d} className="line" />
         </svg>
         <span className="pf-dot after-draw" style={{ left: `${(lx / w) * 100}%`, top: `${(ly / h) * 100}%` }} />
       </div>

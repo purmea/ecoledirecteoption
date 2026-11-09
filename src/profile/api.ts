@@ -5,6 +5,8 @@ import { averageTimeline, generalAverage, groupBySubject } from '../lib'
 import { withDefaults, type Profile, type Snapshot } from './types'
 
 const LOCAL_KEY = 'edo:profile'
+/** Compteur de vues fixe du profil de démonstration (fictif, comme les notes de la démo). */
+const DEMO_VIEWS = 5371
 
 export class ProfileError extends Error {
   constructor(public status: number, message: string) {
@@ -37,7 +39,7 @@ export const local = {
   get(): Profile | null {
     try {
       const p = JSON.parse(localStorage.getItem(LOCAL_KEY) ?? 'null')
-      return p ? withDefaults(p) : null
+      return p ? withDefaults({ ...p, views: DEMO_VIEWS }) : null
     } catch { return null }
   },
   set(p: Profile) {
@@ -57,7 +59,7 @@ export async function getMyProfile(mode: 'demo' | 'live'): Promise<Profile | nul
 export async function saveProfile(mode: 'demo' | 'live', p: Profile): Promise<Profile> {
   if (mode === 'demo') {
     const prev = local.get()
-    const saved = { ...p, views: prev?.views ?? 0, createdAt: prev?.createdAt ?? new Date().toISOString(), snapshot: { ...p.snapshot, updatedAt: new Date().toISOString() } }
+    const saved = { ...p, views: DEMO_VIEWS, createdAt: prev?.createdAt ?? new Date().toISOString(), snapshot: { ...p.snapshot, updatedAt: new Date().toISOString() } }
     local.set(saved)
     return saved
   }

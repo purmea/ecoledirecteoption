@@ -21,7 +21,6 @@ export function PublicProfile({ handle }: { handle: string }) {
   return (
     <main className="pf-page pf-loading">
       <div className="pf-empty">{error ?? <span className="spinner light" />}</div>
-      <a href="#/" className="pf-brand">EcoleDirecte Option</a>
     </main>
   )
 }
