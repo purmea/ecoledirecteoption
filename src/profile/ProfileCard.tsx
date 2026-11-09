@@ -1,54 +1,227 @@
-import type { CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { fmt } from '../lib'
 import { Icon } from '../components/Icon'
-import { THEMES, type Profile, type Widget } from './types'
+import { badgesFor } from './api'
+import { useDiscord } from './discord'
+import { EffectCanvas } from './effects'
+import { LINKS, LinkIcon, brandColor } from './links'
+import type { NameEffect, Profile, Widget } from './types'
 
-/** Fond plein écran animé (halos flous aux couleurs du thème). */
-export function ProfileBackdrop({ theme }: { theme: Profile['theme'] }) {
-  const t = THEMES.find((x) => x.id === theme) ?? THEMES[0]
-  const style = { '--c1': t.colors[0], '--c2': t.colors[1], '--c3': t.colors[2] } as CSSProperties
+const rgb = (hex: string) => {
+  const n = parseInt(hex.slice(1), 16)
+  return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`
+}
+
+/** Page de profil complète (façon guns.lol). `embedded` = aperçu dans l'éditeur. */
+export function ProfileView({ profile, embedded = false }: { profile: Profile; embedded?: boolean }) {
+  const { colors, options, effects, glow } = profile
+  const wantsDiscord = options.discordAvatar || options.discordDecoration || options.discordPresence
+  const { info: discord } = useDiscord(profile.discordId, wantsDiscord)
+  const hasAudio = !!profile.audio && !embedded
+  const [entered, setEntered] = useState(!hasAudio)
+
+  useAnimatedTitle(`@${profile.handle}`, embedded ? 'off' : options.animatedTitle ? 'animated' : 'static')
+
+  const tileAlpha = Math.min(100, profile.opacity + 15)
+  const style = {
+    '--pf-text': colors.text,
+    '--pf-text-rgb': rgb(colors.text),
+    '--pf-bg': colors.background,
+    '--pf-icons': colors.icons,
+    '--pf-icons-rgb': rgb(colors.icons),
+    '--pf-block': `rgb(${rgb(colors.accent)} / ${profile.opacity / 100})`,
+    '--pf-tile': options.invertBlocks ? `rgb(${rgb(colors.text)} / 0.92)` : `rgb(${rgb(colors.accent)} / ${tileAlpha / 100})`,
+    '--pf-tile-text': options.invertBlocks ? colors.background : colors.text,
+    '--pf-tile-text-rgb': rgb(options.invertBlocks ? colors.background : colors.text),
+    '--pf-blur': `${profile.blur}px`,
+    cursor: profile.cursor ? `url(${profile.cursor}) 0 0, auto` : undefined,
+  } as CSSProperties
+
+  const avatar = (options.discordAvatar && discord?.avatarUrl) || profile.avatar
+  const badges = options.showBadges ? badgesFor(profile.snapshot) : []
+
   return (
-    <div className="pf-backdrop" style={style} aria-hidden="true">
-      <span /><span /><span />
+    <div className={`pf-page ${embedded ? 'embedded' : ''}`} style={style}>
+      <div className="pf-backdrop" aria-hidden="true">
+        {profile.background?.type === 'video' && <video src={profile.background.url} autoPlay muted loop playsInline />}
+        {profile.background?.type === 'image' && <img src={profile.background.url} alt="" />}
+        {effects.background === 'halos' && <div className="pf-halos"><span /><span /><span /></div>}
+        <EffectCanvas effect={effects.background} color={colors.text} />
+      </div>
+
+      {!entered && (
+        <button className="pf-enter" onClick={() => setEntered(true)}>
+          <span>clique pour entrer</span>
+        </button>
+      )}
+
+      <article className={`pf-card ${entered ? 'in' : 'hidden'}`}>
+        {profile.views !== undefined && !embedded && (
+          <span className="pf-views" title="Vues du profil"><Icon name="eye" size={14} />{profile.views.toLocaleString('fr-FR')}</span>
+        )}
+
+        <div className="pf-avatar-wrap">
+          <div className="pf-avatar">
+            {avatar ? <img src={avatar} alt="" /> : <span>{(profile.displayName || profile.handle).slice(0, 2).toUpperCase()}</span>}
+          </div>
+          {options.discordDecoration && discord?.decorationUrl && <img className="pf-deco" src={discord.decorationUrl} alt="" />}
+          {options.discordPresence && discord && <span className={`pf-status ${discord.status}`} title={discord.status} />}
+        </div>
+
+        <h1 className={`pf-name ${glow.username ? 'glow' : ''}`}>
+          <NameFx text={profile.displayName || profile.handle} effect={effects.username} />
+        </h1>
+        <p className="pf-handle">@{profile.handle}</p>
+
+        {badges.length > 0 && (
+          <ul className={`pf-badges ${glow.badges ? 'glow' : ''}`}>
+            {badges.map((b) => <li key={b.id} title={b.label}><Icon name={b.icon} size={14} />{b.label}</li>)}
+          </ul>
+        )}
+
+        {profile.bio && <p className="pf-bio">{profile.bio}</p>}
+        {profile.location && <p className="pf-location"><Icon name="pin" size={14} />{profile.location}</p>}
+
+        {profile.links.length > 0 && (
+          <ul className={`pf-links ${glow.icons ? 'glow' : ''}`}>
+            {profile.links.map((l, i) => {
+              const def = LINKS[l.type]
+              const href = def.url(l.value)
+              const color = options.monoIcons ? 'var(--pf-icons)' : brandColor(def.icon)
+              return (
+                <li key={i} style={{ color }}>
+                  {href
+                    ? <a href={href} target="_blank" rel="noopener noreferrer nofollow" title={`${def.label} : ${l.value}`}><LinkIcon type={l.type} /></a>
+                    : <button title={`${def.label} : ${l.value} (copier)`} onClick={() => void navigator.clipboard?.writeText(l.value)}><LinkIcon type={l.type} /></button>}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+
+        {(profile.widgets.length > 0 || (options.discordPresence && discord?.activity)) && (
+          <div className={`pf-widgets ${glow.widgets ? 'glow' : ''}`}>
+            {options.discordPresence && discord?.activity && (
+              <div className="pf-tile wide pf-presence">
+                <span className="pf-label">Discord</span>
+                <strong>{discord.activity}</strong>
+              </div>
+            )}
+            {profile.widgets.map((w, i) => <WidgetTile key={w.id} widget={w} profile={profile} wide={isWide(profile.widgets, i)} />)}
+          </div>
+        )}
+        {profile.snapshot.period && profile.widgets.length > 0 && (
+          <p className="pf-foot">{profile.snapshot.period}{profile.snapshot.updatedAt ? ` · mis à jour le ${new Date(profile.snapshot.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}` : ''}</p>
+        )}
+      </article>
+
+      {hasAudio && entered && <AudioPlayer src={profile.audio!} showControl={options.volumeControl} />}
+      {!embedded && <a href="#/" className="pf-brand">EcoleDirecte Option</a>}
     </div>
   )
 }
 
-export function ProfileCard({ profile, preview = false }: { profile: Profile; preview?: boolean }) {
-  const t = THEMES.find((x) => x.id === profile.theme) ?? THEMES[0]
-  const style = { '--glow': t.colors[1], '--glow-2': t.colors[2] } as CSSProperties
-  const initials = (profile.displayName || profile.handle).slice(0, 2).toUpperCase()
+// --- Effets du pseudo -------------------------------------------------------
+
+function NameFx({ text, effect }: { text: string; effect: NameEffect }) {
+  const typed = useTypewriter(text, effect === 'typewriter')
+  switch (effect) {
+    case 'rainbow': return <span className="fx-rainbow">{text}</span>
+    case 'glitch': return <span className="fx-glitch" data-text={text}>{text}</span>
+    case 'typewriter': return <span className="fx-type" aria-label={text}>{typed}<i aria-hidden="true">|</i></span>
+    case 'sparkles':
+      return (
+        <span className="fx-sparkles">
+          {text}
+          {[0, 1, 2, 3].map((i) => <i key={i} aria-hidden="true">✦</i>)}
+        </span>
+      )
+    default: return <>{text}</>
+  }
+}
+
+function useTypewriter(text: string, on: boolean) {
+  const [n, setN] = useState(text.length)
+  useEffect(() => {
+    if (!on || matchMedia('(prefers-reduced-motion: reduce)').matches) return setN(text.length)
+    let i = 0
+    let dir = 1
+    let pause = 0
+    const t = setInterval(() => {
+      if (pause > 0) return void pause--
+      i += dir
+      if (i >= text.length) { dir = -1; pause = 16 }
+      if (i <= 0) { dir = 1; pause = 4 }
+      setN(i)
+    }, 110)
+    return () => clearInterval(t)
+  }, [text, on])
+  return text.slice(0, n)
+}
+
+/** Titre de l'onglet qui s'écrit puis s'efface en boucle. */
+function useAnimatedTitle(title: string, mode: 'off' | 'static' | 'animated') {
+  useEffect(() => {
+    if (mode === 'off') return
+    const prev = document.title
+    if (mode === 'static') {
+      document.title = `${title} · EcoleDirecte Option`
+      return () => { document.title = prev }
+    }
+    let i = 0
+    let dir = 1
+    const t = setInterval(() => {
+      i += dir
+      if (i >= title.length + 6) dir = -1
+      if (i <= 1) dir = 1
+      document.title = title.slice(0, Math.max(1, Math.min(title.length, i)))
+    }, 300)
+    return () => { clearInterval(t); document.title = prev }
+  }, [title, mode])
+}
+
+// --- Musique ----------------------------------------------------------------
+
+function AudioPlayer({ src, showControl }: { src: string; showControl: boolean }) {
+  const ref = useRef<HTMLAudioElement>(null)
+  const [volume, setVolume] = useState(() => {
+    try { return Number(localStorage.getItem('edo:pf-volume') ?? 0.5) } catch { return 0.5 }
+  })
+  const [muted, setMuted] = useState(false)
+
+  useEffect(() => {
+    const a = ref.current
+    if (!a) return
+    a.volume = volume
+    a.muted = muted
+    try { localStorage.setItem('edo:pf-volume', String(volume)) } catch { /* ignoré */ }
+  }, [volume, muted])
+  useEffect(() => { void ref.current?.play().catch(() => {}) }, [src])
 
   return (
-    <article className={`pf-card ${preview ? 'is-preview' : ''}`} style={style}>
-      {profile.views !== undefined && !preview && (
-        <span className="pf-views" title="Vues du profil"><Icon name="eye" size={14} />{profile.views.toLocaleString('fr-FR')}</span>
-      )}
-      <div className="pf-avatar">
-        {profile.avatar ? <img src={profile.avatar} alt="" /> : <span>{initials}</span>}
-      </div>
-      <h1 className="pf-name">{profile.displayName || profile.handle}</h1>
-      <p className="pf-handle">@{profile.handle}</p>
-      {profile.bio && <p className="pf-bio">{profile.bio}</p>}
-
-      {profile.widgets.length > 0 && (
-        <div className="pf-widgets">
-          {profile.widgets.map((w, i) => <WidgetTile key={w.id} widget={w} profile={profile} wide={isWide(profile.widgets, i)} />)}
+    <>
+      <audio ref={ref} src={src} loop />
+      {showControl && (
+        <div className="pf-volume">
+          <button onClick={() => setMuted((m) => !m)} aria-label={muted ? 'Activer le son' : 'Couper le son'}>
+            <Icon name={muted || volume === 0 ? 'mute' : 'volume'} size={18} />
+          </button>
+          <input type="range" min={0} max={1} step={0.01} value={muted ? 0 : volume} aria-label="Volume"
+            onChange={(e) => { setVolume(Number(e.target.value)); setMuted(false) }} />
         </div>
       )}
-      {profile.snapshot.period && profile.widgets.length > 0 && (
-        <p className="pf-foot">{profile.snapshot.period}{profile.snapshot.updatedAt ? ` · mis à jour le ${new Date(profile.snapshot.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}` : ''}</p>
-      )}
-    </article>
+    </>
   )
 }
+
+// --- Widgets ----------------------------------------------------------------
 
 const SMALL = new Set(['average', 'subject', 'homework'])
 
 /** Les petites tuiles vont par deux ; une petite tuile sans voisine prend toute la largeur. */
 function isWide(widgets: Widget[], i: number) {
   if (!SMALL.has(widgets[i].type)) return true
-  let run = 0 // position de la tuile dans sa suite de petites tuiles
+  let run = 0
   for (let j = i - 1; j >= 0 && SMALL.has(widgets[j].type); j--) run++
   const pairedWithNext = run % 2 === 0 && i + 1 < widgets.length && SMALL.has(widgets[i + 1].type)
   return run % 2 === 0 && !pairedWithNext

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getPublicProfile } from '../profile/api'
-import { ProfileBackdrop, ProfileCard } from '../profile/ProfileCard'
+import { ProfileView } from '../profile/ProfileCard'
 import type { Profile } from '../profile/types'
 
 export function PublicProfile({ handle }: { handle: string }) {
@@ -17,18 +17,10 @@ export function PublicProfile({ handle }: { handle: string }) {
     return () => { alive = false }
   }, [handle])
 
-  useEffect(() => {
-    const prev = document.title
-    if (profile) document.title = `@${profile.handle} · EcoleDirecte Option`
-    return () => { document.title = prev }
-  }, [profile])
-
+  if (profile) return <ProfileView profile={profile} />
   return (
-    <main className="pf-page">
-      <ProfileBackdrop theme={profile?.theme ?? 'aurora'} />
-      {profile ? <ProfileCard profile={profile} /> : (
-        <div className="pf-card pf-empty">{error ?? <span className="spinner light" />}</div>
-      )}
+    <main className="pf-page pf-loading">
+      <div className="pf-empty">{error ?? <span className="spinner light" />}</div>
       <a href="#/" className="pf-brand">EcoleDirecte Option</a>
     </main>
   )

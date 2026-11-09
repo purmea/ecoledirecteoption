@@ -2,7 +2,7 @@
 import { proxySession } from '../api/client'
 import type { SchoolData } from '../types'
 import { averageTimeline, generalAverage, groupBySubject } from '../lib'
-import type { Profile, Snapshot } from './types'
+import { withDefaults, type Profile, type Snapshot } from './types'
 
 const LOCAL_KEY = 'edo:profile'
 
@@ -35,7 +35,10 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
 /** Local (démo) : le profil vit uniquement sur cet appareil. */
 export const local = {
   get(): Profile | null {
-    try { return JSON.parse(localStorage.getItem(LOCAL_KEY) ?? 'null') } catch { return null }
+    try {
+      const p = JSON.parse(localStorage.getItem(LOCAL_KEY) ?? 'null')
+      return p ? withDefaults(p) : null
+    } catch { return null }
   },
   set(p: Profile) {
     try { localStorage.setItem(LOCAL_KEY, JSON.stringify(p)) } catch { throw new ProfileError(0, 'Stockage plein : essaie une photo plus légère.') }
@@ -45,8 +48,10 @@ export const local = {
   },
 }
 
-export function getMyProfile(mode: 'demo' | 'live'): Promise<Profile | null> {
-  return mode === 'demo' ? Promise.resolve(local.get()) : call<Profile | null>('/me/profile')
+export async function getMyProfile(mode: 'demo' | 'live'): Promise<Profile | null> {
+  if (mode === 'demo') return local.get()
+  const p = await call<Profile | null>('/me/profile')
+  return p ? withDefaults(p) : null
 }
 
 export async function saveProfile(mode: 'demo' | 'live', p: Profile): Promise<Profile> {
@@ -55,7 +60,7 @@ export async function saveProfile(mode: 'demo' | 'live', p: Profile): Promise<Pr
     local.set(saved)
     return saved
   }
-  return call<Profile>('/me/profile', { method: 'PUT', body: JSON.stringify(p) })
+  return withDefaults(await call<Profile>('/me/profile', { method: 'PUT', body: JSON.stringify(p) }))
 }
 
 export function deleteProfile(mode: 'demo' | 'live') {
@@ -72,7 +77,7 @@ export async function checkHandle(mode: 'demo' | 'live', handle: string): Promis
 /** Profil public : serveur d'abord, sinon profil local si le pseudo correspond. */
 export async function getPublicProfile(handle: string): Promise<Profile> {
   try {
-    return await call<Profile>(`/u/${encodeURIComponent(handle)}`)
+    return withDefaults(await call<Profile>(`/u/${encodeURIComponent(handle)}`))
   } catch (e) {
     const mine = local.get()
     if (mine?.handle === handle) return mine
@@ -119,4 +124,95 @@ export async function imageToAvatar(file: File, size = 320): Promise<string> {
   } finally {
     URL.revokeObjectURL(url)
   }
+}
+
+// --- Médias ----------------------------------------------------------------
+
+const DEMO_MAX = 2e6
+
+function fileToDataUrl(file: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onload = () => resolve(String(r.result))
+    r.onerror = () => reject(new ProfileError(0, 'Lecture du fichier impossible.'))
+    r.readAsDataURL(file)
+  })
+}
+
+function loadImage(file: Blob): Promise<HTMLImageElement> {
+  const url = URL.createObjectURL(file)
+  return new Promise((resolve, reject) => {
+    const i = new Image()
+    i.onload = () => { URL.revokeObjectURL(url); resolve(i) }
+    i.onerror = () => { URL.revokeObjectURL(url); reject(new ProfileError(0, 'Image illisible.')) }
+    i.src = url
+  })
+}
+
+/** Redimensionne une image (sans recadrage) et la convertit en WebP. Les GIF restent animés. */
+async function shrinkImage(file: File, maxSide: number): Promise<Blob> {
+  if (file.type === 'image/gif') return file
+  const img = await loadImage(file)
+  const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(img.naturalWidth * scale)
+  canvas.height = Math.round(img.naturalHeight * scale)
+  canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+  return new Promise((resolve) => canvas.toBlob((b) => resolve(b ?? file), 'image/webp', 0.82))
+}
+
+/** Envoie un média : sur le serveur (compte réel) ou en data URL (démo, 2 Mo max). */
+async function upload(mode: 'demo' | 'live', blob: Blob): Promise<string> {
+  if (mode === 'demo') {
+    if (blob.size > DEMO_MAX) throw new ProfileError(0, 'En mode démo, les fichiers sont limités à 2 Mo (ils restent sur ton appareil).')
+    return fileToDataUrl(blob)
+  }
+  let res: Response
+  try {
+    res = await fetch('./api/media', { method: 'POST', headers: { 'Content-Type': blob.type, 'X-Session': proxySession() }, body: blob })
+  } catch {
+    throw new ProfileError(0, 'Envoi impossible : serveur injoignable.')
+  }
+  const json = await res.json().catch(() => ({}))
+  if (!res.ok) throw new ProfileError(res.status, json.error ?? `Envoi refusé (${res.status})`)
+  return json.url
+}
+
+export async function uploadBackground(mode: 'demo' | 'live', file: File): Promise<Profile['background']> {
+  if (file.type.startsWith('video/')) {
+    if (!['video/mp4', 'video/webm'].includes(file.type)) throw new ProfileError(0, 'Vidéo : MP4 ou WebM uniquement.')
+    return { url: await upload(mode, file), type: 'video' }
+  }
+  if (!file.type.startsWith('image/')) throw new ProfileError(0, 'Choisis une image ou une vidéo.')
+  return { url: await upload(mode, await shrinkImage(file, 1920)), type: 'image' }
+}
+
+export async function uploadAudio(mode: 'demo' | 'live', file: File) {
+  if (!file.type.startsWith('audio/')) throw new ProfileError(0, 'Choisis un fichier audio (MP3, M4A, OGG, WAV).')
+  return upload(mode, file)
+}
+
+/** Curseur : 32 px maximum, en PNG (data URL, toujours léger). */
+export async function cursorFromImage(file: File) {
+  if (!file.type.startsWith('image/')) throw new ProfileError(0, 'Choisis une image.')
+  const img = await loadImage(file)
+  const scale = Math.min(1, 32 / Math.max(img.naturalWidth, img.naturalHeight))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * scale))
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * scale))
+  canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+  return canvas.toDataURL('image/png')
+}
+
+/** Badges gagnés automatiquement à partir des moyennes. */
+export function badgesFor(s: Snapshot) {
+  const out: { id: string; label: string; icon: 'trophy' | 'star' | 'check' | 'trend' }[] = []
+  if (s.average !== null) {
+    if (s.average >= 16) out.push({ id: 'felicitations', label: 'Félicitations', icon: 'trophy' })
+    else if (s.average >= 14) out.push({ id: 'compliments', label: 'Compliments', icon: 'star' })
+    else if (s.average >= 12) out.push({ id: 'encouragements', label: 'Encouragements', icon: 'star' })
+  }
+  if (s.trend.length > 2 && s.trend[s.trend.length - 1] - s.trend[0] >= 0.5) out.push({ id: 'progression', label: 'En progression', icon: 'trend' })
+  if (s.homeworkLeft === 0) out.push({ id: 'a-jour', label: 'Devoirs à jour', icon: 'check' })
+  return out
 }

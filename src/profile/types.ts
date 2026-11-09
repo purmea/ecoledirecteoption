@@ -1,5 +1,7 @@
-export type ProfileTheme = 'aurora' | 'ocean' | 'sunset' | 'forest' | 'mono'
 export type WidgetType = 'average' | 'subject' | 'trend' | 'subjects' | 'homework'
+export type BgEffect = 'none' | 'halos' | 'rain' | 'snow' | 'stars' | 'particles'
+export type NameEffect = 'none' | 'rainbow' | 'typewriter' | 'glitch' | 'sparkles'
+export type LinkType = 'instagram' | 'tiktok' | 'snapchat' | 'youtube' | 'x' | 'discord' | 'github' | 'twitch' | 'spotify' | 'soundcloud' | 'pinterest' | 'telegram' | 'website'
 
 export interface Widget {
   id: string
@@ -21,19 +23,75 @@ export interface Profile {
   handle: string
   displayName: string
   bio: string
+  location: string
   avatar: string | null
-  theme: ProfileTheme
+  background: { url: string; type: 'image' | 'video' } | null
+  audio: string | null
+  cursor: string | null
+  links: { type: LinkType; value: string }[]
+  colors: { accent: string; text: string; background: string; icons: string }
+  effects: { background: BgEffect; username: NameEffect }
+  opacity: number // 0–100, opacité des blocs
+  blur: number // 0–80 px, flou derrière la carte
+  glow: { username: boolean; icons: boolean; badges: boolean; widgets: boolean }
+  options: {
+    monoIcons: boolean
+    animatedTitle: boolean
+    invertBlocks: boolean
+    volumeControl: boolean
+    showBadges: boolean
+    discordAvatar: boolean
+    discordDecoration: boolean
+    discordPresence: boolean
+  }
+  discordId: string
   widgets: Widget[]
   snapshot: Snapshot
   views?: number
 }
 
-export const THEMES: { id: ProfileTheme; label: string; colors: [string, string, string] }[] = [
-  { id: 'aurora', label: 'Aurore', colors: ['#6d5bff', '#2a78d6', '#19c3b2'] },
-  { id: 'ocean', label: 'Océan', colors: ['#0b4f9c', '#2a78d6', '#7cc4ff'] },
-  { id: 'sunset', label: 'Couchant', colors: ['#ff6a3d', '#e3366f', '#7a3ce0'] },
-  { id: 'forest', label: 'Forêt', colors: ['#0f5c3d', '#1f9d63', '#b7e36b'] },
-  { id: 'mono', label: 'Mono', colors: ['#3a3a3a', '#8a8a8a', '#e8e8e8'] },
+export const DEFAULTS: Omit<Profile, 'handle' | 'displayName' | 'snapshot' | 'widgets'> = {
+  bio: '',
+  location: '',
+  avatar: null,
+  background: null,
+  audio: null,
+  cursor: null,
+  links: [],
+  colors: { accent: '#1b1b1b', text: '#f5f5f7', background: '#08080a', icons: '#f5f5f7' },
+  effects: { background: 'halos', username: 'none' },
+  opacity: 40,
+  blur: 20,
+  glow: { username: true, icons: false, badges: false, widgets: false },
+  options: {
+    monoIcons: true, animatedTitle: false, invertBlocks: false, volumeControl: true, showBadges: true,
+    discordAvatar: false, discordDecoration: false, discordPresence: false,
+  },
+  discordId: '',
+}
+
+/** Complète un profil (ancien format ou incomplet) avec les valeurs par défaut. */
+export function withDefaults(p: Partial<Profile> & { theme?: string }): Profile {
+  const legacy = PALETTES.find((x) => x.id === p.theme)
+  return {
+    ...DEFAULTS,
+    ...p,
+    colors: { ...DEFAULTS.colors, ...(legacy ? legacy.colors : {}), ...p.colors },
+    effects: { ...DEFAULTS.effects, ...p.effects },
+    glow: { ...DEFAULTS.glow, ...p.glow },
+    options: { ...DEFAULTS.options, ...p.options },
+    links: p.links ?? [],
+    widgets: p.widgets ?? [],
+  } as Profile
+}
+
+/** Palettes rapides (remplissent les 4 couleurs d'un coup). */
+export const PALETTES: { id: string; label: string; colors: Profile['colors'] }[] = [
+  { id: 'aurora', label: 'Aurore', colors: { accent: '#1b1b2e', text: '#f5f5f7', background: '#0a0716', icons: '#b7a8ff' } },
+  { id: 'ocean', label: 'Océan', colors: { accent: '#0f1d33', text: '#eaf4ff', background: '#030b18', icons: '#7cc4ff' } },
+  { id: 'sunset', label: 'Couchant', colors: { accent: '#2a1220', text: '#fff1ec', background: '#12060c', icons: '#ff8a65' } },
+  { id: 'forest', label: 'Forêt', colors: { accent: '#0f2119', text: '#ecfff4', background: '#04100a', icons: '#8fe3a8' } },
+  { id: 'mono', label: 'Mono', colors: { accent: '#1b1b1b', text: '#f5f5f7', background: '#08080a', icons: '#f5f5f7' } },
 ]
 
 export const WIDGETS: { type: WidgetType; label: string; hint: string }[] = [
@@ -42,4 +100,21 @@ export const WIDGETS: { type: WidgetType; label: string; hint: string }[] = [
   { type: 'subjects', label: 'Meilleures matières', hint: 'Tes 3 meilleures moyennes' },
   { type: 'subject', label: 'Une matière', hint: 'La moyenne d’une matière au choix' },
   { type: 'homework', label: 'Devoirs restants', hint: 'Combien il t’en reste à faire' },
+]
+
+export const BG_EFFECTS: { id: BgEffect; label: string }[] = [
+  { id: 'none', label: 'Aucun' },
+  { id: 'halos', label: 'Halos' },
+  { id: 'rain', label: 'Pluie' },
+  { id: 'snow', label: 'Neige' },
+  { id: 'stars', label: 'Étoiles' },
+  { id: 'particles', label: 'Particules' },
+]
+
+export const NAME_EFFECTS: { id: NameEffect; label: string }[] = [
+  { id: 'none', label: 'Aucun' },
+  { id: 'rainbow', label: 'Arc-en-ciel' },
+  { id: 'typewriter', label: 'Machine à écrire' },
+  { id: 'glitch', label: 'Glitch' },
+  { id: 'sparkles', label: 'Étincelles' },
 ]

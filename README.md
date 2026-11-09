@@ -51,8 +51,8 @@ Connecte-toi avec ton compte École Directe et retrouve tes notes (avec graphiqu
 | 📊 **Notes** | Courbe d'évolution de la moyenne, barres par matière comparées à la classe, détail de chaque note, choix du trimestre |
 | 📅 **Planning** | Emploi du temps de la semaine, cours annulés et cours en cours mis en avant |
 | 📚 **Devoirs** | Consignes groupées par date, filtres, cases à cocher synchronisées avec École Directe |
-| 👤 **Profil** | Photo, pseudo unique, nom, bio, thème et widgets (moyennes, évolution…) ; aperçu en direct |
-| ✨ **Profil public** | Page `#/u/ton-pseudo` façon guns.lol : fond animé, carte en verre, widgets, compteur de vues |
+| 👤 **Profil** | Éditeur façon guns.lol avec aperçu en direct (voir [Profils publics](#profils-publics)) |
+| ✨ **Profil public** | Page `#/u/ton-pseudo` : fond image/vidéo, musique, effets, réseaux, badges, widgets, vues |
 | ⚙️ **Réglages** | Thème clair / sombre / automatique, actualisation, déconnexion |
 
 Aussi inclus :
@@ -132,16 +132,29 @@ Téléphone / navigateur  ──►  /ed/v3/...  (serveur de l'app)  ──►  
 
 Chaque élève peut publier un profil à la guns.lol, partageable par un lien `…/#/u/pseudo`.
 
+| Catégorie | Options |
+| --- | --- |
+| **Médias** | Arrière-plan (image, GIF ou vidéo MP4/WebM), avatar, musique (MP3/M4A/OGG/WAV) avec écran « clique pour entrer », curseur personnalisé |
+| **Identité** | Pseudo unique, nom affiché, description, localisation |
+| **Réseaux** | Instagram, TikTok, Snapchat, YouTube, X, Discord, GitHub, Twitch, Spotify, SoundCloud, Pinterest, Telegram, site web |
+| **Personnalisation** | Effets d'arrière-plan (halos, pluie, neige, étoiles, particules), effets du pseudo (arc-en-ciel, machine à écrire, glitch, étincelles), opacité et flou du profil, effet lumineux (pseudo, réseaux, badges, widgets) |
+| **Couleurs** | Accentuation (blocs), texte, arrière-plan, icônes + 5 palettes rapides |
+| **Widgets** | Moyenne générale, une matière, évolution, meilleures matières, devoirs restants |
+| **Badges** | Gagnés automatiquement : Félicitations / Compliments / Encouragements, En progression, Devoirs à jour |
+| **Discord** | Avatar, décoration d'avatar et présence en direct via [Lanyard](https://github.com/Phineas/lanyard) (il faut rejoindre son serveur Discord) |
+| **Autres** | Icônes monochromes, titre d'onglet animé, inversion des couleurs des blocs, contrôle du volume, affichage des badges |
+
 - **Pseudo unique** : 3 à 20 caractères (`a-z`, `0-9`, `_`, `.`), vérifié en direct ; changer de pseudo
   libère l'ancien.
-- **Photo** recadrée en carré et compressée dans le navigateur (WebP, ~30 Ko) avant l'envoi.
-- **Widgets** : moyenne générale, une matière au choix, évolution, meilleures matières, devoirs restants.
-  Ils affichent un **instantané** des moyennes, mis à jour à chaque publication et à chaque
-  actualisation des données. Rien n'est public tant que tu ne publies pas.
+- **Images** redimensionnées et converties en WebP dans le navigateur avant l'envoi (les GIF restent animés).
+- **Widgets** : instantané des moyennes, mis à jour à chaque publication et à chaque actualisation des
+  données. Rien n'est public tant que tu ne publies pas.
 - **Sécurité** : un profil appartient à un compte élève. Quand un login École Directe réussit, le serveur
-  lie la session de l'appareil à ce compte ; seule une session liée peut modifier le profil de ce compte.
-- **Stockage** : `data/profiles.json` (ignoré par git), ou `$DATA_DIR/profiles.json`.
-- En **mode démo**, le profil reste sur l'appareil (pas de pseudo réservé côté serveur).
+  lie la session de l'appareil à ce compte ; seule une session liée peut modifier ce profil ou envoyer des
+  fichiers. Un profil ne peut utiliser que ses propres médias ; les SVG sont refusés ; les médias servis
+  ont un type fixe (`nosniff`). Les médias inutilisés sont supprimés automatiquement.
+- **Stockage** : `data/profiles.json` et `data/media/` (ignorés par git), ou `$DATA_DIR`.
+- En **mode démo**, le profil reste sur l'appareil (fichiers limités à 2 Mo).
 
 API (servie par `npm run dev`, `npm run preview` et `npm start`) :
 
@@ -150,6 +163,8 @@ API (servie par `npm run dev`, `npm run preview` et `npm start`) :
 | `GET /api/u/:pseudo` | Profil public (+1 vue) |
 | `GET /api/handles/:pseudo` | Disponibilité d'un pseudo |
 | `GET` / `PUT` / `DELETE /api/me/profile` | Lire, créer ou modifier, supprimer son profil |
+| `POST /api/media` | Envoyer un média (corps brut + `Content-Type`) |
+| `GET /api/media/:fichier` | Lire un média |
 
 ## Structure du projet
 
@@ -165,7 +180,7 @@ API (servie par `npm run dev`, `npm run preview` et `npm start`) :
 │   ├── lib.ts              # Calculs de moyennes, formatage des dates
 │   ├── api/                # Client École Directe + conversion des données
 │   ├── state/session.tsx   # Connexion, QCM, démo, chargement des données
-│   ├── profile/            # Profils publics : types, API, carte façon guns.lol
+│   ├── profile/            # Profils publics : types, API, page, effets, réseaux, Discord
 │   ├── data/demo.ts        # Données de démonstration
 │   ├── hooks/              # useHashRoute, useLocalStorage
 │   ├── components/         # Graphiques, navigation, composants UI
@@ -184,7 +199,7 @@ API (servie par `npm run dev`, `npm run preview` et `npm start`) :
 - [x] Thème sombre et manifest PWA
 - [x] Connexion à un compte École Directe (élève), QCM de vérification
 - [x] Graphiques : évolution de la moyenne, comparaison à la classe
-- [x] Profils publics façon guns.lol : photo, pseudo unique, widgets de moyennes
+- [x] Profils publics façon guns.lol : médias, effets, couleurs, réseaux, badges, Discord, widgets
 - [ ] Comptes parents (plusieurs enfants)
 - [ ] Messagerie et vie scolaire (absences, retards)
 - [ ] Mode hors-ligne (service worker)
