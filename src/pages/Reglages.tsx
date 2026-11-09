@@ -1,5 +1,5 @@
 import { useData, useSession } from '../state/session'
-import { Card, PageHeader, SectionTitle, Segmented } from '../components/ui'
+import { PageHeader, SectionTitle, Segmented } from '../components/ui'
 
 export type Theme = 'system' | 'light' | 'dark'
 
@@ -9,28 +9,28 @@ export function Reglages({ theme, setTheme }: { theme: Theme; setTheme: (t: Them
   return (
     <>
       <PageHeader title="Réglages" />
-      <Card className="profile">
+      <section className="profile">
         <div className="avatar">{student.firstName[0]}{student.lastName[0]}</div>
         <div className="grow">
           <strong>{student.firstName} {student.lastName}</strong>
           <small>{[student.className, student.school].filter(Boolean).join(' · ')}</small>
         </div>
-        <span className="tag">{mode === 'demo' ? 'Démo' : 'Connecté'}</span>
-      </Card>
+        {mode === 'demo' && <span className="tag">Démo</span>}
+      </section>
 
       <SectionTitle>Apparence</SectionTitle>
       <Segmented label="Thème" value={theme} onChange={setTheme}
         options={[['system', 'Auto'], ['light', 'Clair'], ['dark', 'Sombre']] as const} />
 
       <SectionTitle>Compte</SectionTitle>
-      <Card className="actions">
+      <div className="list actions">
         <button className="row-action" onClick={() => void refresh()} disabled={refreshing}>
           {refreshing ? 'Actualisation…' : mode === 'demo' ? 'Réinitialiser la démo' : 'Actualiser les données'}
         </button>
         <button className="row-action danger" onClick={signOut}>
           {mode === 'demo' ? 'Quitter la démo' : 'Se déconnecter'}
         </button>
-      </Card>
+      </div>
 
       <p className="footer muted small">
         EcoleDirecte Option v{__APP_VERSION__} · projet non officiel, sans lien avec Aplim.

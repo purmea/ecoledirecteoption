@@ -1,26 +1,19 @@
 import type { ReactNode } from 'react'
 
-export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={`card ${className}`}>{children}</section>
-}
-
-export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
+export function SectionTitle({ children, meta }: { children: ReactNode; meta?: ReactNode }) {
   return (
     <div className="section-title">
       <h2>{children}</h2>
-      {action}
+      {meta && <span>{meta}</span>}
     </div>
   )
 }
 
-export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
+export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <header className="page-header">
-      <div>
-        <h1>{title}</h1>
-        {subtitle && <p>{subtitle}</p>}
-      </div>
-      {action}
+      <h1>{title}</h1>
+      {subtitle && <p className="subtitle">{subtitle}</p>}
     </header>
   )
 }

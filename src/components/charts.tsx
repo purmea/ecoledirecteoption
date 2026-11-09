@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { fmt, formatDate } from '../lib'
+import type { Grade } from '../types'
 
 function useWidth<T extends HTMLElement>() {
   const ref = useRef<T>(null)
@@ -102,51 +103,55 @@ export function TrendChart({ points, label }: { points: { date: string; value: n
 }
 
 // ---------------------------------------------------------------------------
-// Barres horizontales : moyenne de l'élève (barre) vs moyenne de classe (repère)
+// Barres par matière : moyenne de l'élève (barre) vs moyenne de classe (repère).
+// Chaque ligne se déplie pour montrer le détail des notes (vue tableau du graphique).
 
 export interface SubjectRow {
   subject: string
   average: number
   classAverage: number | null
+  items: Grade[]
 }
 
-export function SubjectBars({ rows }: { rows: SubjectRow[] }) {
-  const [active, setActive] = useState<string | null>(null)
-  const hasClass = rows.some((r) => r.classAverage !== null)
-
+export function SubjectBars({ subjects }: { subjects: SubjectRow[] }) {
+  const [open, setOpen] = useState<string | null>(null)
   return (
-    <div className="bars">
-      {hasClass && (
-        <div className="legend" aria-hidden="true">
-          <span><i className="key-bar" /> Toi</span>
-          <span><i className="key-tick" /> Classe</span>
-        </div>
-      )}
-      <ul>
-        {rows.map((r) => {
-          const on = active === r.subject
-          return (
-            <li key={r.subject} tabIndex={0} className={on ? 'on' : ''}
-              aria-label={`${r.subject} : ${fmt(r.average)} sur 20${r.classAverage !== null ? `, classe ${fmt(r.classAverage)}` : ''}`}
-              onPointerEnter={() => setActive(r.subject)} onPointerLeave={() => setActive(null)}
-              onFocus={() => setActive(r.subject)} onBlur={() => setActive(null)}>
+    <ul className="bars">
+      {subjects.map((r) => {
+        const isOpen = open === r.subject
+        return (
+          <li key={r.subject} className={isOpen ? 'open' : ''}>
+            <button className="bar-row" onClick={() => setOpen(isOpen ? null : r.subject)} aria-expanded={isOpen}
+              aria-label={`${r.subject} : ${fmt(r.average)} sur 20${r.classAverage !== null ? `, classe ${fmt(r.classAverage)}` : ''}`}>
               <span className="bar-label">{r.subject}</span>
-              <span className="bar-track">
+              <span className={`bar-value ${r.average < 10 ? 'low' : ''}`}>{fmt(r.average)}</span>
+              <span className="bar-track" aria-hidden="true">
                 <span className="bar-fill" style={{ width: `${(r.average / 20) * 100}%` }} />
                 {r.classAverage !== null && <span className="bar-tick" style={{ left: `${(r.classAverage / 20) * 100}%` }} />}
-                {on && r.classAverage !== null && (
-                  <span className="tooltip bar-tip" style={{ left: `${(r.average / 20) * 100}%` }}>
-                    <strong>{fmt(r.average)}</strong>
-                    <span>Classe {fmt(r.classAverage)} · {r.average >= r.classAverage ? '+' : '−'}{fmt(Math.abs(r.average - r.classAverage))}</span>
-                  </span>
-                )}
               </span>
-              <span className="bar-value">{fmt(r.average)}</span>
-            </li>
-          )
-        })}
-      </ul>
-    </div>
+            </button>
+            {isOpen && (
+              <ul className="bar-detail">
+                {r.classAverage !== null && (
+                  <li className="muted small">
+                    Moyenne de classe {fmt(r.classAverage)} · {r.average >= r.classAverage ? '+' : '−'}{fmt(Math.abs(r.average - r.classAverage))}
+                  </li>
+                )}
+                {r.items.map((g) => (
+                  <li key={g.id}>
+                    <div className="grow">
+                      <span>{g.label}</span>
+                      <small>{formatDate(g.date)} · coef {fmt(g.coef)}{g.classAvg !== null ? ` · classe ${fmt(g.classAvg)}` : ''}</small>
+                    </div>
+                    <span className="score">{fmt(g.value)}<small>/{g.outOf}</small></span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 

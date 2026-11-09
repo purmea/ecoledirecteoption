@@ -18,28 +18,26 @@ export function Planning() {
 
   return (
     <>
-      <PageHeader title="Emploi du temps" subtitle="Cette semaine" />
+      <PageHeader title="Emploi du temps" />
       <Segmented label="Jour" value={String(day)} onChange={(v) => setDay(Number(v))}
         options={DAYS.map((d, i) => [String(i), d.slice(0, 3)] as const)} />
       {list.length === 0 ? <Empty>Aucun cours</Empty> : (
-        <ol className="timeline">
+        <ul className="list schedule">
           {list.map((l) => {
             const current = isToday && !l.cancelled && l.start <= now && now < l.end
             return (
               <li key={l.id} className={`${l.cancelled ? 'cancelled' : ''} ${current ? 'current' : ''}`}>
-                <div className="tl-time"><strong>{l.start}</strong><small>{l.end}</small></div>
-                <div className="tl-card">
-                  <div className="grow">
-                    <strong>{l.subject}</strong>
-                    <small>{[l.room, l.teacher].filter(Boolean).join(' · ')}</small>
-                  </div>
-                  {l.cancelled && <span className="pill bad">Annulé</span>}
-                  {current && <span className="pill accent">En cours</span>}
+                <span className="time">{l.start}<small>{l.end}</small></span>
+                <div className="grow">
+                  <strong>{l.subject}</strong>
+                  <small>{[l.room, l.teacher].filter(Boolean).join(' · ')}</small>
                 </div>
+                {l.cancelled && <span className="status bad">Annulé</span>}
+                {current && <span className="status accent">En cours</span>}
               </li>
             )
           })}
-        </ol>
+        </ul>
       )}
     </>
   )

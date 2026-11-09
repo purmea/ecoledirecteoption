@@ -38,13 +38,13 @@ export function Login() {
   return (
     <main className="login">
       <div className="login-brand">
-        <img src="./icon.svg" width="56" height="56" alt="" />
+        <img src="./icon.svg" width="48" height="48" alt="" />
         <h1>EcoleDirecte Option</h1>
         <p className="muted">Tes notes, ton emploi du temps et tes devoirs, au même endroit.</p>
       </div>
 
       {pendingQcm ? (
-        <form className="card login-card" onSubmit={onQcm}>
+        <form className="login-card" onSubmit={onQcm}>
           <h2>Vérification du compte</h2>
           <p className="muted small">École Directe demande de confirmer ton identité sur ce nouvel appareil.</p>
           <fieldset className="qcm">
@@ -61,8 +61,7 @@ export function Login() {
           <button type="button" className="btn ghost" onClick={cancelQcm}>Annuler</button>
         </form>
       ) : (
-        <form className="card login-card" onSubmit={onSubmit}>
-          <h2>Connexion</h2>
+        <form className="login-card" onSubmit={onSubmit}>
           {offline && (
             <p className="notice" role="status">
               La connexion à École Directe n’est pas disponible sur cette version en ligne. Lance l’app avec
@@ -89,7 +88,6 @@ export function Login() {
           </label>
           {error && <p className="error" role="alert">{error}</p>}
           <button className="btn primary" disabled={busy || offline}>{busy ? 'Connexion…' : 'Se connecter'}</button>
-          <div className="or"><span>ou</span></div>
           <button type="button" className={`btn ${offline ? 'primary' : 'ghost'}`} onClick={startDemo}>Essayer avec la démo</button>
         </form>
       )}

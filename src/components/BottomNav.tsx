@@ -17,7 +17,7 @@ export function BottomNav({ current, badge }: { current: Route; badge: number })
           aria-current={current === it.route ? 'page' : undefined}>
           <span className="nav-icon">
             <Icon name={it.icon} />
-            {it.route === 'devoirs' && badge > 0 && <span className="badge">{badge}</span>}
+            {it.route === 'devoirs' && badge > 0 && <span className="badge" role="img" aria-label={`${badge} à faire`} />}
           </span>
           <span>{it.label}</span>
         </a>
