@@ -79,7 +79,7 @@ export function TrendChart({ points, label }: { points: { date: string; value: n
         onFocus={() => setActive(points.length - 1)} onBlur={() => setActive(null)}>
         {ticks.map((t) => (
           <g key={t}>
-            <line className="grid" x1={m.l} x2={m.l + iw} y1={y(t)} y2={y(t)} />
+            <line className="grid draw" pathLength={1} x1={m.l} x2={m.l + iw} y1={y(t)} y2={y(t)} />
             <text className="axis" x={m.l - 8} y={y(t)} dy="0.32em" textAnchor="end">{t}</text>
           </g>
         ))}
@@ -87,10 +87,10 @@ export function TrendChart({ points, label }: { points: { date: string; value: n
           <text key={p.date} className="axis" x={x(p.date)} y={height - 6}
             textAnchor={i === 0 ? 'start' : i === xLabels.length - 1 ? 'end' : 'middle'}>{formatDate(p.date)}</text>
         ))}
-        <path className="series-line" d={path} />
+        <path className="series-line draw" pathLength={1} d={path} />
         {a && <line className="crosshair" x1={x(a.date)} x2={x(a.date)} y1={m.t} y2={m.t + ih} />}
-        <circle className="series-dot" cx={x((a ?? last).date)} cy={y((a ?? last).value)} r={4.5} />
-        {!a && <text className="direct-label" x={x(last.date) + 9} y={y(last.value)} dy="0.32em">{fmt(last.value)}</text>}
+        <circle className="series-dot after-draw" cx={x((a ?? last).date)} cy={y((a ?? last).value)} r={4.5} />
+        {!a && <text className="direct-label after-draw" x={x(last.date) + 9} y={y(last.value)} dy="0.32em">{fmt(last.value)}</text>}
       </svg>
       {a && (
         <div className="tooltip" style={{ left: Math.min(Math.max(x(a.date), 60), width - 60), top: Math.max(0, y(a.value) - 58) }}>
@@ -169,7 +169,7 @@ export function Sparkline({ points }: { points: { value: number }[] }) {
   const d = vs.map((v, i) => `${i ? 'L' : 'M'}${((i / (vs.length - 1)) * (w - 6) + 3).toFixed(1)},${(h - 3 - ((v - lo) / span) * (h - 6)).toFixed(1)}`).join('')
   return (
     <svg className="sparkline" width={w} height={h} aria-hidden="true">
-      <path d={d} />
+      <path className="draw" pathLength={1} d={d} />
     </svg>
   )
 }

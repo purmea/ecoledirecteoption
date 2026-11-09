@@ -13,6 +13,7 @@
     "start": "node server/serve.mjs"
   },
   "dependencies": {
+    "@fontsource/quicksand": "^5.3.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "simple-icons": "^16.37.0"

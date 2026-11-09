@@ -52,13 +52,15 @@ Connecte-toi avec ton compte École Directe et retrouve tes notes (avec graphiqu
 | 📅 **Planning** | Emploi du temps de la semaine, cours annulés et cours en cours mis en avant |
 | 📚 **Devoirs** | Consignes groupées par date, filtres, cases à cocher synchronisées avec École Directe |
 | 👤 **Profil** | Éditeur façon guns.lol avec aperçu en direct (voir [Profils publics](#profils-publics)) |
-| ✨ **Profil public** | Page `#/u/ton-pseudo` : fond image/vidéo, musique, effets, réseaux, badges, widgets, vues |
+| ✨ **Profil public** | Page `#/u/ton-pseudo` au style « clean » de guns.lol : fond image/vidéo, musique, effets, réseaux, badges, widgets, vues |
 | ⚙️ **Réglages** | Thème clair / sombre / automatique, actualisation, déconnexion |
 
 Aussi inclus :
 
 - 🎨 Design **épuré** : fonds neutres, un seul bleu d'accent (contraste vérifié en clair et en sombre)
 - 📈 Graphiques en SVG faits maison, avec info-bulles au survol, au toucher et au clavier
+- 🎬 Animations d'entrée sur chaque page : fondu en cascade, courbes qui se tracent, barres qui se
+  remplissent, filets qui se dessinent (désactivées si « réduire les animations » est activé)
 - 📱 **Mobile-first** : barre de navigation en bas, adapté aux encoches (safe areas)
 - 📲 **Manifest PWA** : l'app peut être ajoutée à l'écran d'accueil
 - ♿ Accessibilité : HTML sémantique, ARIA, focus visible, `prefers-reduced-motion`
@@ -130,19 +132,22 @@ Téléphone / navigateur  ──►  /ed/v3/...  (serveur de l'app)  ──►  
 
 ## Profils publics
 
-Chaque élève peut publier un profil à la guns.lol, partageable par un lien `…/#/u/pseudo`.
+Chaque élève peut publier un profil à la guns.lol, partageable par un lien `…/#/u/pseudo`. La mise en
+page s'inspire de [guns.lol/clean](https://guns.lol/clean) : pas de carte, avatar et nom côte à côte,
+badges en pastille, widgets en pastilles translucides, icônes lumineuses, vues et localisation en pied
+de page, police arrondie (Quicksand, embarquée).
 
 | Catégorie | Options |
 | --- | --- |
-| **Médias** | Arrière-plan (image, GIF ou vidéo MP4/WebM), avatar, musique (MP3/M4A/OGG/WAV) avec écran « clique pour entrer », curseur personnalisé |
-| **Identité** | Pseudo unique, nom affiché, description, localisation |
+| **Médias** | Arrière-plan (image, GIF ou vidéo MP4/WebM), avatar, musique (MP3/M4A/OGG/WAV) avec écran d'entrée personnalisable, curseur personnalisé |
+| **Identité** | Pseudo unique, nom affiché, description (animée ou non), localisation, « membre depuis » |
 | **Réseaux** | Instagram, TikTok, Snapchat, YouTube, X, Discord, GitHub, Twitch, Spotify, SoundCloud, Pinterest, Telegram, site web |
-| **Personnalisation** | Effets d'arrière-plan (halos, pluie, neige, étoiles, particules), effets du pseudo (arc-en-ciel, machine à écrire, glitch, étincelles), opacité et flou du profil, effet lumineux (pseudo, réseaux, badges, widgets) |
+| **Personnalisation** | Effets d'arrière-plan (halos, pluie, neige, étoiles, particules), effets du pseudo (arc-en-ciel, machine à écrire, glitch, étincelles), opacité et flou des blocs, effet lumineux (pseudo, réseaux, badges, widgets) |
 | **Couleurs** | Accentuation (blocs), texte, arrière-plan, icônes + 5 palettes rapides |
 | **Widgets** | Moyenne générale, une matière, évolution, meilleures matières, devoirs restants |
 | **Badges** | Gagnés automatiquement : Félicitations / Compliments / Encouragements, En progression, Devoirs à jour |
 | **Discord** | Avatar, décoration d'avatar et présence en direct via [Lanyard](https://github.com/Phineas/lanyard) (il faut rejoindre son serveur Discord) |
-| **Autres** | Icônes monochromes, titre d'onglet animé, inversion des couleurs des blocs, contrôle du volume, affichage des badges |
+| **Autres** | Icônes monochromes, description animée, titre d'onglet animé, inversion des couleurs des blocs, contrôle du volume, affichage des badges |
 
 - **Pseudo unique** : 3 à 20 caractères (`a-z`, `0-9`, `_`, `.`), vérifié en direct ; changer de pseudo
   libère l'ancien.

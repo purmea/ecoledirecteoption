@@ -24,6 +24,8 @@ export interface Profile {
   displayName: string
   bio: string
   location: string
+  /** Texte de l'écran d'entrée (affiché quand il y a de la musique). */
+  enterText: string
   avatar: string | null
   background: { url: string; type: 'image' | 'video' } | null
   audio: string | null
@@ -31,12 +33,13 @@ export interface Profile {
   links: { type: LinkType; value: string }[]
   colors: { accent: string; text: string; background: string; icons: string }
   effects: { background: BgEffect; username: NameEffect }
-  opacity: number // 0–100, opacité des blocs
-  blur: number // 0–80 px, flou derrière la carte
+  opacity: number // 0–100, opacité des blocs (widgets, badges)
+  blur: number // 0–80 px, flou derrière les blocs
   glow: { username: boolean; icons: boolean; badges: boolean; widgets: boolean }
   options: {
     monoIcons: boolean
     animatedTitle: boolean
+    animatedBio: boolean
     invertBlocks: boolean
     volumeControl: boolean
     showBadges: boolean
@@ -48,23 +51,25 @@ export interface Profile {
   widgets: Widget[]
   snapshot: Snapshot
   views?: number
+  createdAt?: string
 }
 
 export const DEFAULTS: Omit<Profile, 'handle' | 'displayName' | 'snapshot' | 'widgets'> = {
   bio: '',
   location: '',
+  enterText: 'clique pour entrer',
   avatar: null,
   background: null,
   audio: null,
   cursor: null,
   links: [],
-  colors: { accent: '#1b1b1b', text: '#f5f5f7', background: '#08080a', icons: '#f5f5f7' },
-  effects: { background: 'halos', username: 'none' },
-  opacity: 40,
-  blur: 20,
-  glow: { username: true, icons: false, badges: false, widgets: false },
+  colors: { accent: '#ffffff', text: '#ffffff', background: '#0a0a0a', icons: '#ffffff' },
+  effects: { background: 'none', username: 'none' },
+  opacity: 7,
+  blur: 8,
+  glow: { username: true, icons: true, badges: true, widgets: false },
   options: {
-    monoIcons: true, animatedTitle: false, invertBlocks: false, volumeControl: true, showBadges: true,
+    monoIcons: true, animatedTitle: false, animatedBio: true, invertBlocks: false, volumeControl: true, showBadges: true,
     discordAvatar: false, discordDecoration: false, discordPresence: false,
   },
   discordId: '',
@@ -87,11 +92,11 @@ export function withDefaults(p: Partial<Profile> & { theme?: string }): Profile 
 
 /** Palettes rapides (remplissent les 4 couleurs d'un coup). */
 export const PALETTES: { id: string; label: string; colors: Profile['colors'] }[] = [
-  { id: 'aurora', label: 'Aurore', colors: { accent: '#1b1b2e', text: '#f5f5f7', background: '#0a0716', icons: '#b7a8ff' } },
-  { id: 'ocean', label: 'Océan', colors: { accent: '#0f1d33', text: '#eaf4ff', background: '#030b18', icons: '#7cc4ff' } },
-  { id: 'sunset', label: 'Couchant', colors: { accent: '#2a1220', text: '#fff1ec', background: '#12060c', icons: '#ff8a65' } },
-  { id: 'forest', label: 'Forêt', colors: { accent: '#0f2119', text: '#ecfff4', background: '#04100a', icons: '#8fe3a8' } },
-  { id: 'mono', label: 'Mono', colors: { accent: '#1b1b1b', text: '#f5f5f7', background: '#08080a', icons: '#f5f5f7' } },
+  { id: 'clean', label: 'Clean', colors: { accent: '#ffffff', text: '#ffffff', background: '#0a0a0a', icons: '#ffffff' } },
+  { id: 'aurora', label: 'Aurore', colors: { accent: '#b7a8ff', text: '#f5f3ff', background: '#0a0716', icons: '#c9bdff' } },
+  { id: 'ocean', label: 'Océan', colors: { accent: '#7cc4ff', text: '#eaf4ff', background: '#030b18', icons: '#9fd3ff' } },
+  { id: 'sunset', label: 'Couchant', colors: { accent: '#ff8a65', text: '#fff1ec', background: '#12060c', icons: '#ffb199' } },
+  { id: 'forest', label: 'Forêt', colors: { accent: '#8fe3a8', text: '#ecfff4', background: '#04100a', icons: '#b2efc4' } },
 ]
 
 export const WIDGETS: { type: WidgetType; label: string; hint: string }[] = [

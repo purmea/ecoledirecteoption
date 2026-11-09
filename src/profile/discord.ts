@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 
 export interface DiscordInfo {
+  name: string
   avatarUrl: string | null
   decorationUrl: string | null
   status: 'online' | 'idle' | 'dnd' | 'offline'
@@ -10,7 +11,7 @@ export interface DiscordInfo {
 }
 
 interface LanyardData {
-  discord_user: { id: string; avatar: string | null; avatar_decoration_data?: { asset: string } | null }
+  discord_user: { id: string; username: string; global_name?: string | null; avatar: string | null; avatar_decoration_data?: { asset: string } | null }
   discord_status: DiscordInfo['status']
   listening_to_spotify?: boolean
   spotify?: { song: string; artist: string } | null
@@ -23,6 +24,7 @@ function toInfo(d: LanyardData): DiscordInfo {
   const custom = d.activities?.find((a) => a.type === 4)?.state
   const playing = d.activities?.find((a) => a.type === 0)
   return {
+    name: u.global_name || u.username,
     avatarUrl: u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${ext}?size=256` : null,
     decorationUrl: u.avatar_decoration_data?.asset
       ? `https://cdn.discordapp.com/avatar-decoration-presets/${u.avatar_decoration_data.asset}.png?size=240&passthrough=true` : null,

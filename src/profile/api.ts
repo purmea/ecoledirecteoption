@@ -56,7 +56,8 @@ export async function getMyProfile(mode: 'demo' | 'live'): Promise<Profile | nul
 
 export async function saveProfile(mode: 'demo' | 'live', p: Profile): Promise<Profile> {
   if (mode === 'demo') {
-    const saved = { ...p, views: local.get()?.views ?? 0, snapshot: { ...p.snapshot, updatedAt: new Date().toISOString() } }
+    const prev = local.get()
+    const saved = { ...p, views: prev?.views ?? 0, createdAt: prev?.createdAt ?? new Date().toISOString(), snapshot: { ...p.snapshot, updatedAt: new Date().toISOString() } }
     local.set(saved)
     return saved
   }

@@ -161,6 +161,14 @@ export function Profil() {
           onClear={() => set({ cursor: null })} />
       </div>
 
+      {draft.audio && (
+        <label className="field">
+          <span>Texte de l’écran d’entrée</span>
+          <input value={draft.enterText} maxLength={40} placeholder="clique pour entrer" onChange={(e) => set({ enterText: e.target.value })} />
+          <small>Affiché avant de lancer ta musique, entouré de ★｡°✩ … ★˚.★</small>
+        </label>
+      )}
+
       {/* ---------------------------------------------------------- Identité */}
       <SectionTitle>Identité</SectionTitle>
       <label className="field">
@@ -229,8 +237,8 @@ export function Profil() {
           {NAME_EFFECTS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
         </select>
       </label>
-      <Range label="Opacité du profil" value={draft.opacity} max={100} unit="%" onChange={(v) => set({ opacity: v })} />
-      <Range label="Flou du profil" value={draft.blur} max={80} unit="px" onChange={(v) => set({ blur: v })} />
+      <Range label="Opacité des blocs" value={draft.opacity} max={100} unit="%" onChange={(v) => set({ opacity: v })} />
+      <Range label="Flou des blocs" value={draft.blur} max={80} unit="px" onChange={(v) => set({ blur: v })} />
       <div className="field">
         <span>Effet lumineux</span>
         <div className="glow-grid">
@@ -253,7 +261,7 @@ export function Profil() {
           </button>
         ))}
       </div>
-      <ColorField label="Couleur d’accentuation (blocs)" value={draft.colors.accent} onChange={(v) => setIn('colors', { accent: v })} />
+       <ColorField label="Couleur d’accentuation (blocs)" value={draft.colors.accent} onChange={(v) => setIn('colors', { accent: v })} />
       <ColorField label="Couleur du texte" value={draft.colors.text} onChange={(v) => setIn('colors', { text: v })} />
       <ColorField label="Couleur d’arrière-plan" value={draft.colors.background} onChange={(v) => setIn('colors', { background: v })} />
       <ColorField label="Couleur des icônes" value={draft.colors.icons} onChange={(v) => setIn('colors', { icons: v })} />
@@ -305,6 +313,7 @@ export function Profil() {
       {/* ------------------------------------------------------------- Autres */}
       <SectionTitle>Autres personnalisations</SectionTitle>
       <Toggle label="Icônes monochromes" hint="Réseaux dans la couleur des icônes" on={draft.options.monoIcons} onChange={(v) => setIn('options', { monoIcons: v })} />
+ <Toggle label="Description animée" hint="Ta description s’écrit lettre par lettre" on={draft.options.animatedBio} onChange={(v) => setIn('options', { animatedBio: v })} />
       <Toggle label="Titre animé" hint="Le titre de l’onglet s’écrit en boucle" on={draft.options.animatedTitle} onChange={(v) => setIn('options', { animatedTitle: v })} />
       <Toggle label="Inverser les couleurs des blocs" hint="Widgets clairs, texte foncé" on={draft.options.invertBlocks} onChange={(v) => setIn('options', { invertBlocks: v })} />
       <Toggle label="Contrôle du volume" hint="Bouton son sur ton profil" on={draft.options.volumeControl} onChange={(v) => setIn('options', { volumeControl: v })} />
