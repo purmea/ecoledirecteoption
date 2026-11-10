@@ -51,7 +51,6 @@ export function TrendChart({ points, label, tone }: { points: { date: string; va
   const t1 = +new Date(points[points.length - 1].date)
   const x = (d: string) => m.l + (t1 === t0 ? iw / 2 : ((+new Date(d) - t0) / (t1 - t0)) * iw)
   const y = (v: number) => m.t + (1 - (v - lo) / (hi - lo)) * ih
-  const path = points.map((p, i) => `${i ? 'L' : 'M'}${x(p.date).toFixed(1)},${y(p.value).toFixed(1)}`).join('')
   const last = points[points.length - 1]
   const xLabels = [points[0], points[Math.floor((points.length - 1) / 2)], last]
     .filter((p, i, a) => a.findIndex((q) => q.date === p.date) === i)
@@ -87,9 +86,13 @@ export function TrendChart({ points, label, tone }: { points: { date: string; va
           <text key={p.date} className="axis" x={x(p.date)} y={height - 6}
             textAnchor={i === 0 ? 'start' : i === xLabels.length - 1 ? 'end' : 'middle'}>{formatDate(p.date)}</text>
         ))}
-        <path className="series-line draw" pathLength={1} d={path} />
+        {points.slice(1).map((p, i) => {
+          const d = p.value - points[i].value
+          return <path key={p.date} className={`seg draw ${Math.abs(d) < 0.005 ? 'flat' : d > 0 ? 'up' : 'down'}`} pathLength={1} style={{ animationDelay: `${i * 70}ms` }}
+            d={`M${x(points[i].date).toFixed(1)},${y(points[i].value).toFixed(1)}L${x(p.date).toFixed(1)},${y(p.value).toFixed(1)}`} />
+        })}
         {a && <line className="crosshair" x1={x(a.date)} x2={x(a.date)} y1={m.t} y2={m.t + ih} />}
-        <circle className="series-dot after-draw" cx={x((a ?? last).date)} cy={y((a ?? last).value)} r={4.5} />
+        <circle className={`series-dot after-draw ${tone ?? ''}`} cx={x((a ?? last).date)} cy={y((a ?? last).value)} r={4.5} />
         {!a && <text className="direct-label after-draw" x={x(last.date) + 9} y={y(last.value)} dy="0.32em">{fmt(last.value)}</text>}
       </svg>
       {a && (

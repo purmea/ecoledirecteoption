@@ -26,6 +26,7 @@ export type PlanAction =
   | { type: 'add'; lesson: CustomLesson }
   | { type: 'remove'; id: string }
   | { type: 'reset' }
+  | { type: 'set'; plan: PlanEdits }
 
 /** Identifiant d'un cours ajouté, pour une semaine donnée (les cours hebdomadaires ont une occurrence par semaine). */
 export const occurrenceId = (c: CustomLesson, monday: string) => (c.week ? c.id : `${c.id}@${monday}`)
@@ -46,6 +47,7 @@ export function reducePlan(e: PlanEdits, a: PlanAction): PlanEdits {
     case 'add': return { ...e, added: [...e.added, a.lesson] }
     case 'remove': return { ...e, added: e.added.filter((c) => c.id !== baseId(a.id)) }
     case 'reset': return EMPTY_PLAN
+    case 'set': return a.plan
   }
 }
 

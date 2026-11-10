@@ -34,7 +34,6 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
   const { info: discord } = useDiscord(profile.discordId, wantsDiscord)
   const hasAudio = !!profile.audio && !embedded
   const [entered, setEntered] = useState(!hasAudio)
-  const bio = useTypewriter(profile.bio, options.animatedBio && entered)
 
   useAnimatedTitle(`@${profile.handle}`, embedded ? 'off' : options.animatedTitle ? 'animated' : 'static')
 
@@ -101,11 +100,6 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
                 )}
               </div>
               <p className="pf-sub">@{profile.handle}</p>
-              {profile.bio && (
-                <p className="pf-bio">
-                  {options.animatedBio ? <>{bio}<i className="pf-caret" aria-hidden="true">|</i></> : profile.bio}
-                </p>
-              )}
             </div>
           </header>
 

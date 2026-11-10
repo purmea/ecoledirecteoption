@@ -35,7 +35,7 @@ export function Notes() {
       {options.length > 1 && <Segmented label="Période" value={period} onChange={setPeriod} options={options} />}
 
       {list.length === 0 ? <Empty>Aucune note sur cette période</Empty> : (
-        <>
+        <div className="swap-in" key={period}>
           <section className="block">
             <span className="eyebrow">Moyenne générale</span>
             <strong className={`big ${tone ? `trend-${tone}` : ''}`}>{avg !== null ? <CountUp value={avg} /> : '—'}<small>/20</small></strong>
@@ -58,8 +58,8 @@ export function Notes() {
           <SubjectBars subjects={subjects} />
 
           <SectionTitle>Simulateur</SectionTitle>
-          <Simulator key={period} grades={list} subjects={subjects.map((x) => x.subject)} />
-        </>
+          <Simulator grades={list} subjects={subjects.map((x) => x.subject)} />
+        </div>
       )}
     </>
   )

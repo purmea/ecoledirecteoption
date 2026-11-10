@@ -36,7 +36,6 @@ export interface Profile {
   glow: { username: boolean; badges: boolean; widgets: boolean }
   options: {
     animatedTitle: boolean
-    animatedBio: boolean
     invertBlocks: boolean
     volumeControl: boolean
     showBadges: boolean
@@ -68,7 +67,7 @@ export const DEFAULTS: Omit<Profile, 'handle' | 'displayName' | 'snapshot' | 'wi
   blur: 8,
   glow: { username: true, badges: true, widgets: false },
   options: {
-    animatedTitle: false, animatedBio: true, invertBlocks: false, volumeControl: true, showBadges: true,
+    animatedTitle: false, invertBlocks: false, volumeControl: true, showBadges: true,
     discordAvatar: false, discordDecoration: false, discordPresence: false,
   },
   discordId: '',

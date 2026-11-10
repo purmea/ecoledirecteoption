@@ -8,7 +8,6 @@ import { usePullToRefresh } from './hooks/usePullToRefresh'
 import { Accueil } from './pages/Accueil'
 import { Notes } from './pages/Notes'
 import { Planning } from './pages/Planning'
-import { PlanningEditor } from './pages/PlanningEditor'
 import { Devoirs } from './pages/Devoirs'
 import { Login } from './pages/Login'
 import { MessageView, Messages } from './pages/Messages'
@@ -79,7 +78,7 @@ function Shell() {
         {error && <p className="banner" role="alert">{error}</p>}
         {route === 'accueil' && <Accueil />}
         {route === 'notes' && <Notes />}
-        {route === 'planning' && (param === 'edit' ? <PlanningEditor /> : <Planning />)}
+        {route === 'planning' && <Planning />}
         {route === 'devoirs' && <Devoirs />}
         {route === 'messages' && (param ? <MessageView id={param} key={param} /> : <Messages />)}
         {route === 'profil' && <Profil />}

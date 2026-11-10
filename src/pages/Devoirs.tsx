@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useData, useSession } from '../state/session'
+import { useData } from '../state/session'
+import { useHomeworkCheck } from '../hooks/useHomeworkCheck'
 import { formatDate } from '../lib'
 import { Empty, PageHeader } from '../components/ui'
-import { celebrate, haptic, toast } from '../fx'
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const mondayOf = (isoDate: string) => {
@@ -11,18 +11,9 @@ const mondayOf = (isoDate: string) => {
   return iso(d)
 }
 
-/** « aujourd'hui », « demain », « mardi », ou « mardi 17 » au-delà de la semaine. */
-function dayLabel(due: string, now = new Date()) {
-  const days = Math.round((new Date(due + 'T12:00:00').getTime() - new Date(iso(now) + 'T12:00:00').getTime()) / 864e5)
-  if (days === 0) return 'aujourd’hui'
-  if (days === 1) return 'demain'
-  if (days > 1 && days < 7) return formatDate(due, { weekday: 'long' })
-  return formatDate(due, { weekday: 'long', day: 'numeric' })
-}
-
 export function Devoirs() {
   const { homework } = useData()
-  const { toggleHomework } = useSession()
+  const onCheck = useHomeworkCheck()
   const stripRef = useRef<HTMLDivElement>(null)
 
   // Jours qui ont des devoirs (triés), avec le nombre restant à faire pour chacun.
@@ -52,23 +43,6 @@ export function Devoirs() {
   const total = homework.length
   const doneCount = homework.filter((h) => h.done).length
   const current = days.find((d) => d.due === day)
-
-  const onCheck = (id: string, due: string, wasDone: boolean) => {
-    haptic()
-    toggleHomework(id)
-    // Restant pour CE jour, après le changement.
-    const dayItems = homework.filter((h) => h.due === due)
-    const left = dayItems.filter((h) => (h.id === id ? wasDone : !h.done)).length
-    const when = dayLabel(due)
-    if (wasDone) return toast(`${left} à faire pour ${when}`)
-    const allLeft = homework.filter((h) => (h.id === id ? false : !h.done)).length
-    if (allLeft === 0) {
-      celebrate()
-      return toast('Tout est fait, bravo !', 'party')
-    }
-    if (left === 0) return toast(`Tout est fait pour ${when}`, 'party')
-    toast(`Plus que ${left} devoir${left > 1 ? 's' : ''} pour ${when}`)
-  }
 
   let lastWeek = ''
   return (

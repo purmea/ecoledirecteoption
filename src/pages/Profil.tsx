@@ -257,11 +257,6 @@ export function Profil() {
         <span>Nom affiché</span>
         <input value={draft.displayName} maxLength={32} onChange={(e) => set({ displayName: e.target.value })} />
       </label>
-      <label className="field">
-        <span>Description <em>{draft.bio.length}/140</em></span>
-        <textarea value={draft.bio} maxLength={140} rows={2} placeholder="c’est ma description"
-          onChange={(e) => set({ bio: e.target.value })} />
-      </label>
       </Group>
       {/* ------------------------------------------- Personnalisation générale */}
       <Group title="Personnalisation générale">
@@ -340,7 +335,6 @@ export function Profil() {
       </Group>
       {/* ------------------------------------------------------------- Autres */}
       <Group title="Autres personnalisations">
- <Toggle label="Description animée" hint="Ta description s’écrit lettre par lettre" on={draft.options.animatedBio} onChange={(v) => setIn('options', { animatedBio: v })} />
       <Toggle label="Titre animé" hint="Le titre de l’onglet s’écrit en boucle" on={draft.options.animatedTitle} onChange={(v) => setIn('options', { animatedTitle: v })} />
       <Toggle label="Inverser les couleurs des blocs" hint="Widgets clairs, texte foncé" on={draft.options.invertBlocks} onChange={(v) => setIn('options', { invertBlocks: v })} />
       <Toggle label="Badges" hint="Félicitations, compliments, en progression…" on={draft.options.showBadges} onChange={(v) => setIn('options', { showBadges: v })} />

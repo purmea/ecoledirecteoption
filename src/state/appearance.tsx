@@ -13,7 +13,7 @@ export interface Custom { bg: string; accent: string }
 /** Fonds proposés. `bg` / `text` servent aussi à colorer la page de profil publique (doit rester aligné avec styles.css). */
 export const THEMES: { id: Exclude<Theme, 'perso'>; label: string; bg: string; fill: string; text: string }[] = [
   { id: 'marine', label: 'Marine', bg: '#050c20', fill: '#0d1836', text: '#f0f4ff' },
-  { id: 'nuit', label: 'Nuit', bg: '#0f0f13', fill: '#1b1b22', text: '#f1f1f5' },
+  { id: 'nuit', label: 'Nuit', bg: '#08080b', fill: '#17171d', text: '#f1f1f5' },
   { id: 'clair', label: 'Clair', bg: '#f8f8fa', fill: '#eeeef3', text: '#0d0d12' },
   { id: 'auto', label: 'Auto', bg: 'linear-gradient(135deg, #f8f8fa 50%, #0f0f13 50%)', fill: '#8884', text: '#888' },
 ]
@@ -74,9 +74,9 @@ interface Ctx {
 const AppearanceContext = createContext<Ctx | null>(null)
 
 export function AppearanceProvider({ children }: { children: ReactNode }) {
-  // Nouvelles clés : le nouveau défaut (marine + rouge) s'applique à tout le monde.
-  const [theme, setTheme] = useLocalStorage<Theme>('edo:theme2', 'marine')
-  const [accent, setAccent] = useLocalStorage<Accent>('edo:accent2', 'rouge')
+  // Nouvelles clés : le nouveau défaut (fond noir + turquoise) s'applique à tout le monde.
+  const [theme, setTheme] = useLocalStorage<Theme>('edo:theme3', 'nuit')
+  const [accent, setAccent] = useLocalStorage<Accent>('edo:accent3', 'turquoise')
   const [custom, setCustomState] = useLocalStorage<Custom>('edo:custom', DEFAULT_CUSTOM)
   const systemDark = typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches
   const colors = useMemo(() => resolveColors(theme, accent, custom, systemDark), [theme, accent, custom, systemDark])

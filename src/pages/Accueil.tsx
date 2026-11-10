@@ -6,11 +6,13 @@ import { Avatar, useMyProfile } from '../profile/useMyProfile'
 import { displayedMonday, isoDate } from '../api/ecoledirecte'
 import { NowCard } from '../components/NowCard'
 import { CountUp } from '../fx'
+import { useHomeworkCheck } from '../hooks/useHomeworkCheck'
 
 export function Accueil() {
   const { student, grades, lessons, homework, currentPeriod } = useData()
   const { mode, applyPlan } = useSession()
   const me = useMyProfile()
+  const onCheck = useHomeworkCheck()
   const periodGrades = grades.filter((g) => g.period === currentPeriod)
   const avg = generalAverage(periodGrades)
   const trend = averageTimeline(periodGrades)
@@ -60,16 +62,21 @@ export function Accueil() {
         </div>
       )}
 
-      <SectionTitle>À faire</SectionTitle>
+      <SectionTitle meta={<a href="#/devoirs" className="link">Tout voir</a>}>À faire</SectionTitle>
       {todo.length === 0 ? <Empty>Tout est fait</Empty> : (
-        <ul className="list">
+        <ul className="list todo">
           {todo.slice(0, 3).map((h) => (
             <li key={h.id}>
-              <div className="grow">
-                <strong>{h.subject}{h.test && <span className="status">Éval</span>}</strong>
-                <small className="clamp">{h.title}</small>
-              </div>
-              <span className="muted small nowrap">{formatDate(h.due, { weekday: 'short', day: 'numeric' })}</span>
+              <button className="check" onClick={() => onCheck(h.id, h.due, h.done)} aria-label="Marquer comme fait" aria-pressed={false}>
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength={1} /></svg>
+              </button>
+              <a href="#/devoirs" className="todo-link">
+                <div className="grow">
+                  <strong>{h.subject}{h.test && <span className="status">Éval</span>}</strong>
+                  <small className="clamp">{h.title}</small>
+                </div>
+                <span className="muted small nowrap">{formatDate(h.due, { weekday: 'short', day: 'numeric' })}</span>
+              </a>
             </li>
           ))}
         </ul>
