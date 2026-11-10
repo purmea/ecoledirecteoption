@@ -11,6 +11,7 @@ import { Notes } from './pages/Notes'
 import { Planning } from './pages/Planning'
 import { Devoirs } from './pages/Devoirs'
 import { Login } from './pages/Login'
+import { MessageView, Messages } from './pages/Messages'
 import { Profil } from './pages/Profil'
 import { PublicProfile } from './pages/PublicProfile'
 import { Reglages, type Theme } from './pages/Reglages'
@@ -33,7 +34,7 @@ export default function App() {
 function Shell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
   const { status, data, error, mode, refresh } = useSession()
   const { route, param } = useHashRoute()
-  const order = ['accueil', 'notes', 'planning', 'devoirs', 'profil', 'reglages']
+  const order = ['accueil', 'notes', 'planning', 'devoirs', 'messages', 'profil', 'reglages']
   const idx = Math.max(0, order.indexOf(route))
   const prevIdx = useRef(idx)
   const dir = idx === prevIdx.current ? 0 : idx > prevIdx.current ? 1 : -1
@@ -47,7 +48,7 @@ function Shell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void
     window.addEventListener('scroll', on, { passive: true })
     return () => window.removeEventListener('scroll', on)
   }, [])
-  const titles: Record<string, string> = { accueil: 'Accueil', notes: 'Notes', planning: 'Emploi du temps', devoirs: 'Devoirs', profil: 'Profil', reglages: 'Réglages' }
+  const titles: Record<string, string> = { accueil: 'Accueil', notes: 'Notes', planning: 'Emploi du temps', devoirs: 'Devoirs', messages: 'Messages', profil: 'Profil', reglages: 'Réglages' }
 
   const ptr = usePullToRefresh(async () => { await refresh(); toast('Données à jour') }, mode === 'live' && status === 'ready')
 
@@ -68,6 +69,7 @@ function Shell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void
   if (status === 'loading' || !data) return <Skeleton />
 
   const todo = data.homework.filter((h) => !h.done).length
+  const unread = (data.messages ?? []).filter((m) => !m.read).length
   return (
     <div className="app">
       <div className={`ptr ${ptr.busy ? 'busy' : ''} ${ptr.ready ? 'ready' : ''}`} style={{ transform: `translateY(${ptr.pull - 44}px)`, opacity: Math.min(1, ptr.pull / 50) }} aria-hidden="true">
@@ -81,10 +83,11 @@ function Shell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void
         {route === 'notes' && <Notes />}
         {route === 'planning' && <Planning />}
         {route === 'devoirs' && <Devoirs />}
+        {route === 'messages' && (param ? <MessageView id={param} key={param} /> : <Messages />)}
         {route === 'profil' && <Profil />}
         {route === 'reglages' && <Reglages theme={theme} setTheme={setTheme} />}
       </main>
-      <BottomNav current={route} badge={todo} />
+      <BottomNav current={route} badges={{ devoirs: todo, messages: unread }} />
       <Toaster />
       <Confetti />
     </div>

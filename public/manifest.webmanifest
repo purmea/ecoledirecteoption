@@ -3,7 +3,7 @@
   "short_name": "ED Option",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f4f2",
-  "theme_color": "#2a78d6",
+  "background_color": "#f8f8fa",
+  "theme_color": "#5656d6",
   "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
 }

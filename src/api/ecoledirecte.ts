@@ -1,6 +1,6 @@
 // Connexion et récupération des données École Directe, converties au format de l'app.
 // Référence (non officielle) : https://github.com/EduWireApps/ecoledirecte-api-docs
-import type { Grade, Homework, Lesson, Period, SchoolData, Student } from '../types'
+import type { Grade, Homework, Lesson, Message, MessageDetail, Period, SchoolData, Student } from '../types'
 import { b64decode, edRequest } from './client'
 
 export interface Account {
@@ -9,6 +9,7 @@ export interface Account {
   prenom: string
   nom: string
   nomEtablissement?: string
+  anneeScolaireCourante?: string
   profile?: { classe?: { libelle?: string }; photo?: string; nomEtablissement?: string }
 }
 
@@ -198,9 +199,6 @@ export async function fetchLessonsFor(s: Session, monday: Date) {
 type RawHomeworkList = Record<string, { matiere: string; idDevoir: number; effectue: boolean; interrogation: boolean }[]>
 interface RawHomeworkDay { matieres?: { id: number; aFaire?: { contenu?: string } }[] }
 
-const htmlToText = (html: string) =>
-  (new DOMParser().parseFromString(html, 'text/html').body.textContent ?? '').replace(/\s+/g, ' ').trim()
-
 async function fetchHomework(s: Session) {
   const r = await edRequest<RawHomeworkList>(`/v3/Eleves/${s.account.id}/cahierdetexte.awp`, {}, { token: s.token, twoFa: s.twoFa })
   const list = r.data && typeof r.data === 'object' ? r.data : {}
@@ -232,7 +230,7 @@ async function fetchHomework(s: Session) {
 
 /** Charge toutes les données. Renvoie aussi le dernier jeton reçu (École Directe le renouvelle). */
 export async function fetchAll(s: Session): Promise<{ data: SchoolData; token: string }> {
-  const [g, l, h] = await Promise.all([fetchGrades(s), fetchLessonsFor(s, displayedMonday()), fetchHomework(s)])
+  const [g, l, h, m] = await Promise.all([fetchGrades(s), fetchLessonsFor(s, displayedMonday()), fetchHomework(s), fetchMessages(s)])
   return {
     data: {
       student: toStudent(s.account),
@@ -241,6 +239,7 @@ export async function fetchAll(s: Session): Promise<{ data: SchoolData; token: s
       grades: g.grades,
       lessons: l.lessons,
       homework: h.homework,
+      ...('messages' in m ? { messages: m.messages } : { messagesError: m.error }),
     },
     token: h.token ?? l.token ?? g.token ?? s.token,
   }
@@ -251,4 +250,100 @@ export async function setHomeworkDone(s: Session, id: string, done: boolean) {
     ? { idDevoirsEffectues: [Number(id)], idDevoirsNonEffectues: [] }
     : { idDevoirsEffectues: [], idDevoirsNonEffectues: [Number(id)] }
   return edRequest(`/v3/Eleves/${s.account.id}/cahierdetexte.awp`, body, { verbe: 'put', token: s.token, twoFa: s.twoFa })
+}
+
+// --- Messagerie ------------------------------------------------------------------------------
+// La liste des messages n'est pas décrite dans la documentation communautaire du dépôt ; la forme lue ici
+// (messages.received[…]) est celle utilisée par d'autres bibliothèques. La lecture est volontairement
+// tolérante : une réponse inattendue donne un message d'erreur clair, jamais un plantage.
+
+/** « 2025-2026 » : année scolaire du compte, sinon calculée (rentrée en septembre). */
+function schoolYear(s: Session, now = new Date()) {
+  if (s.account.anneeScolaireCourante) return s.account.anneeScolaireCourante
+  const start = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1
+  return `${start}-${start + 1}`
+}
+
+type Person = string | { name?: string; nom?: string; prenom?: string; civilite?: string } | null | undefined
+function personName(p: Person): string {
+  if (!p) return ''
+  if (typeof p === 'string') return p.trim()
+  return (p.name || [p.civilite, p.prenom, p.nom].filter(Boolean).join(' ')).trim()
+}
+
+/** Transforme le HTML d'un message en texte : jamais de HTML injecté dans la page. */
+export function htmlToText(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  doc.querySelectorAll('script, style, head').forEach((n) => n.remove())
+  doc.querySelectorAll('br').forEach((n) => n.replaceWith('\n'))
+  doc.querySelectorAll('p, h1, h2, h3, h4, blockquote, ul, ol').forEach((n) => n.append('\n\n'))
+  doc.querySelectorAll('div, li, tr').forEach((n) => n.append('\n'))
+  doc.querySelectorAll('li').forEach((n) => n.prepend('• '))
+  doc.querySelectorAll('a[href]').forEach((a) => {
+    const href = a.getAttribute('href') ?? ''
+    if (/^https?:\/\//i.test(href) && a.textContent?.trim() !== href) a.append(` (${href})`)
+  })
+  return (doc.body.textContent ?? '').replace(/\u00a0/g, ' ').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
+}
+
+/** Corps de message : base64 (cas général) ou HTML brut. */
+function messageBody(content: unknown): string {
+  if (typeof content !== 'string' || !content) return ''
+  return htmlToText(content.includes('<') ? content : b64decode(content))
+}
+
+export function parseMessages(data: unknown): Message[] | null {
+  const d = data as { messages?: { received?: unknown[] } | unknown[] } | null
+  const list = Array.isArray(d?.messages) ? d.messages
+    : Array.isArray((d?.messages as { received?: unknown[] } | undefined)?.received) ? (d!.messages as { received: unknown[] }).received
+    : null
+  if (!list) return null
+  return list.flatMap((raw) => {
+    const m = raw as { id?: number | string; subject?: string; from?: Person; date?: string; read?: boolean; files?: unknown[] }
+    if (m?.id === undefined || m.id === null) return []
+    return [{
+      id: String(m.id),
+      subject: (typeof m.subject === 'string' && m.subject.trim()) || '(sans objet)',
+      from: personName(m.from) || 'Expéditeur inconnu',
+      date: typeof m.date === 'string' ? m.date : '',
+      read: m.read !== false,
+      hasFiles: Array.isArray(m.files) && m.files.length > 0,
+    }]
+  })
+}
+
+/** Liste des messages reçus, ou { error } si la messagerie n'a pas pu être lue. */
+export async function fetchMessages(s: Session): Promise<{ messages: Message[] } | { error: string }> {
+  try {
+    const q = new URLSearchParams({
+      force: 'false', typeRecuperation: 'received', idClasseur: '0', orderBy: 'date', order: 'DESC',
+      query: '', onlyRead: '', page: '0', itemsPerPage: '100', getAll: '0',
+    })
+    const r = await edRequest<unknown>(`/v3/eleves/${s.account.id}/messages.awp?${q}`,
+      { anneeMessages: schoolYear(s) }, { token: s.token, twoFa: s.twoFa })
+    const messages = parseMessages(r.data)
+    return messages ? { messages } : { error: 'réponse inattendue d’École Directe.' }
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Messagerie indisponible.' }
+  }
+}
+
+/** Ouvre un message (École Directe le marque comme lu). */
+export async function fetchMessageDetail(s: Session, id: string): Promise<MessageDetail> {
+  const r = await edRequest<Record<string, unknown>>(`/v3/eleves/${s.account.id}/messages/${encodeURIComponent(id)}.awp?mode=destinataire`,
+    { anneeMessages: schoolYear(s) }, { token: s.token, twoFa: s.twoFa })
+  const d = r.data ?? {}
+  const to = Array.isArray(d.to) ? (d.to as Person[]).map(personName).filter(Boolean) : []
+  const files = Array.isArray(d.files)
+    ? (d.files as { libelle?: string; name?: string }[]).map((f) => f.libelle || f.name || 'Pièce jointe')
+    : []
+  return {
+    id,
+    subject: (typeof d.subject === 'string' && d.subject.trim()) || '(sans objet)',
+    from: personName(d.from as Person) || 'Expéditeur inconnu',
+    to,
+    date: typeof d.date === 'string' ? d.date : '',
+    body: messageBody(d.content),
+    files,
+  }
 }

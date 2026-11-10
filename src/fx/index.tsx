@@ -97,7 +97,7 @@ export function Confetti() {
     const w = (c.width = innerWidth * dpr)
     const h = (c.height = innerHeight * dpr)
     const ctx = c.getContext('2d')!
-    const colors = ['#2a78d6', '#1baf7a', '#eda100', '#e87ba4', '#6250d6', '#eb6834']
+    const colors = ['#5656d6', '#1baf7a', '#eda100', '#e87ba4', '#8484ee', '#eb6834']
     const parts = Array.from({ length: 140 }, () => ({
       x: w / 2 + (Math.random() - 0.5) * w * 0.2, y: h * 0.62,
       vx: (Math.random() - 0.5) * 22 * dpr, vy: -(10 + Math.random() * 16) * dpr,

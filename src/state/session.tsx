@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { demoData } from '../data/demo'
-import type { Lesson, SchoolData } from '../types'
-import { displayedMonday, fetchAll, fetchLessonsFor, isoDate, login as edLogin, answerQcm, setHomeworkDone, type DeviceTrust, type Qcm, type Session } from '../api/ecoledirecte'
+import { demoData, demoMessageDetails } from '../data/demo'
+import type { Lesson, MessageDetail, SchoolData } from '../types'
+import { displayedMonday, fetchAll, fetchLessonsFor, fetchMessageDetail, isoDate, login as edLogin, answerQcm, setHomeworkDone, type DeviceTrust, type Qcm, type Session } from '../api/ecoledirecte'
 import { isAuthError } from '../api/client'
 
 const SESSION_KEY = 'edo:session'
@@ -31,6 +31,8 @@ interface Ctx {
   updatedAt: number | null
   /** Lundi (ISO) de la semaine affichée par défaut + décalage en semaines. */
   loadWeek: (offset: number) => Promise<{ lessons: Lesson[]; monday: string }>
+  /** Ouvre un message (le marque comme lu, ici et sur École Directe). */
+  openMessage: (id: string) => Promise<MessageDetail>
   signIn: (identifiant: string, motdepasse: string, remember: boolean) => Promise<void>
   submitQcm: (choice: string) => Promise<void>
   cancelQcm: () => void
@@ -97,7 +99,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const s = session.current
     if (!s) return
     try {
-      const { data, token } = await fetchAll(s.session)
+      const fetched = await fetchAll(s.session)
+      const token = fetched.token
+      // Messagerie illisible cette fois-ci : on garde la dernière liste connue (avec l'erreur signalée).
+      const data = fetched.data.messages ? fetched.data : { ...fetched.data, messages: dataRef.current?.messages }
       s.session = { ...s.session, token }
       saveSession(s.session, s.remember)
       const at = Date.now()
@@ -229,10 +234,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return { lessons: r.lessons, monday: iso }
   }, [mode])
 
+  const openMessage = useCallback(async (id: string) => {
+    const detail = mode === 'demo' || !session.current
+      ? (demoMessageDetails[id] ?? Promise.reject(new Error('Message introuvable')))
+      : await fetchMessageDetail(session.current.session, id)
+    setData((d) => d && { ...d, messages: d.messages?.map((m) => (m.id === id ? { ...m, read: true } : m)) })
+    return detail
+  }, [mode])
+
   const value = useMemo<Ctx>(() => ({
-    status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek,
+    status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage,
     signIn, submitQcm, cancelQcm: () => setPendingQcm(null), startDemo, signOut, refresh, toggleHomework,
-  }), [status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
+  }), [status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }

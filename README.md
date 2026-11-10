@@ -32,6 +32,7 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 - **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix du trimestre
 - **Simulateur** : « et si j'avais 15/20 en maths (coef 2) ? » → l'effet immédiat sur la moyenne générale
 - **Planning** : emploi du temps navigable semaine par semaine (flèches ou glissement du doigt), cours annulés et cours en cours mis en avant
+- **Messages** : boîte de réception avec non lus, ouverture d'un message (marqué comme lu), pièces jointes listées
 - **Devoirs** : consignes groupées par date, cases à cocher synchronisées avec École Directe, confettis quand tout est fait
 
 **Profil public** (`#/u/ton-pseudo`)
@@ -95,6 +96,9 @@ navigateur ──► /ed/v3/…  (serveur de l'app) ──► api.ecoledirecte.c
 - Il ne relaie que les routes `/v3/*.awp` et **n'enregistre jamais** les identifiants.
 - Sans le serveur (version statique seule), seule la démo fonctionne : l'écran de connexion le détecte et le dit.
 - Seuls les **comptes élèves** sont pris en charge pour l'instant.
+- **Messagerie** : la liste des messages n'est pas décrite dans la documentation communautaire ; sa lecture est
+  tolérante (une réponse inattendue affiche un message d'erreur clair, jamais un plantage). Le contenu des
+  messages est converti en texte : aucun HTML d'École Directe n'est injecté dans la page.
 - Derrière un proxy d'entreprise : `NODE_USE_ENV_PROXY=1 npm run dev`.
 
 ### Profils publics
@@ -120,7 +124,7 @@ navigateur ──► /ed/v3/…  (serveur de l'app) ──► api.ecoledirecte.c
 
 ```
 src/
-├── pages/        Accueil, Notes, Planning, Devoirs, Profil, Profil public, Réglages, Connexion
+├── pages/        Accueil, Notes, Planning, Devoirs, Messages, Profil, Profil public, Réglages, Connexion
 ├── components/   Graphiques, navigation, simulateur, carte « maintenant »
 ├── profile/      Profils publics : types, API, page, effets, réseaux, Discord
 ├── api/          Client École Directe + conversion des données
@@ -141,7 +145,9 @@ server/
 - [x] Notes en graphiques, simulateur, planning, devoirs
 - [x] Profils publics : médias, effets, couleurs, réseaux, badges, Discord, widgets
 - [ ] Comptes parents (plusieurs enfants)
-- [ ] Messagerie et vie scolaire (absences, retards)
+- [x] Messagerie : lecture des messages reçus
+- [ ] Messagerie : répondre, envoyer, télécharger les pièces jointes
+- [ ] Vie scolaire (absences, retards)
 - [ ] Mode hors-ligne (service worker)
 - [ ] Notifications de nouvelles notes
 - [ ] Application mobile native (iOS)

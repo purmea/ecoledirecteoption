@@ -45,6 +45,25 @@ export interface Homework {
   test?: boolean
 }
 
+export interface Message {
+  id: string
+  subject: string
+  from: string
+  date: string // « 2026-11-09 10:05:03 »
+  read: boolean
+  hasFiles: boolean
+}
+
+export interface MessageDetail {
+  id: string
+  subject: string
+  from: string
+  to: string[]
+  date: string
+  body: string // texte brut (le HTML des messages n'est jamais injecté dans la page)
+  files: string[]
+}
+
 export interface SchoolData {
   student: Student
   periods: Period[]
@@ -52,4 +71,8 @@ export interface SchoolData {
   grades: Grade[]
   lessons: Lesson[]
   homework: Homework[]
+  /** Messagerie (absente des anciennes copies gardées sur l'appareil). */
+  messages?: Message[]
+  /** Renseigné si la messagerie n'a pas pu être lue (réponse inattendue, droit manquant…). */
+  messagesError?: string
 }

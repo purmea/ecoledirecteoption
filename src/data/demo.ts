@@ -1,5 +1,5 @@
 // Données de démonstration, utilisées par le mode « Essayer la démo ».
-import type { Grade, Homework, Lesson, SchoolData } from '../types'
+import type { Grade, Homework, Lesson, Message, MessageDetail, SchoolData } from '../types'
 
 const student = {
   firstName: 'Camille',
@@ -47,6 +47,27 @@ const homework: Homework[] = [
   { id: 'h5', subject: 'Histoire-Géo', title: 'Fiche de révision — 1ère GM', due: '2026-11-17', done: false },
 ]
 
+const messages: Message[] = [
+  { id: 'm1', subject: 'Sortie au musée d’Orsay — autorisation', from: 'Mme PETIT Claire', date: '2026-11-09 08:12:00', read: false, hasFiles: true },
+  { id: 'm2', subject: 'Contrôle de mathématiques décalé', from: 'M. BERNARD Paul', date: '2026-11-08 17:40:00', read: false, hasFiles: false },
+  { id: 'm3', subject: 'Réunion parents-professeurs du 3 décembre', from: 'Vie scolaire', date: '2026-11-06 11:05:00', read: true, hasFiles: true },
+  { id: 'm4', subject: 'Résultats du concours de lecture', from: 'Mme PETIT Claire', date: '2026-11-03 09:30:00', read: true, hasFiles: false },
+  { id: 'm5', subject: 'Menus de la semaine', from: 'Restauration scolaire', date: '2026-10-30 07:55:00', read: true, hasFiles: false },
+]
+
+export const demoMessageDetails: Record<string, MessageDetail> = {
+  m1: { id: 'm1', subject: messages[0].subject, from: messages[0].from, to: ['Camille MARTIN'], date: messages[0].date, files: ['Autorisation_sortie.pdf'],
+    body: 'Bonjour,\n\nLa classe de 3ème B se rendra au musée d’Orsay le jeudi 20 novembre.\n\nMerci de rapporter l’autorisation signée avant le mardi 18 novembre.\n\nCordialement,\nMme Petit' },
+  m2: { id: 'm2', subject: messages[1].subject, from: messages[1].from, to: ['Camille MARTIN'], date: messages[1].date, files: [],
+    body: 'Bonjour à tous,\n\nLe contrôle sur les fonctions est décalé au vendredi 14 novembre.\nPensez à réviser :\n• le vocabulaire (image, antécédent)\n• les exercices 12 à 15 p. 84\n\nBon courage !' },
+  m3: { id: 'm3', subject: messages[2].subject, from: messages[2].from, to: ['Parents et élèves de 3ème B'], date: messages[2].date, files: ['Planning_reunions.pdf'],
+    body: 'Chers parents,\n\nLa réunion parents-professeurs aura lieu le mercredi 3 décembre de 17 h à 19 h 30.\nLes créneaux sont à réserver auprès de la vie scolaire.' },
+  m4: { id: 'm4', subject: messages[3].subject, from: messages[3].from, to: ['Camille MARTIN'], date: messages[3].date, files: [],
+    body: 'Félicitations à tous les participants du concours de lecture ! Les résultats seront affichés au CDI.' },
+  m5: { id: 'm5', subject: messages[4].subject, from: messages[4].from, to: ['Élèves demi-pensionnaires'], date: messages[4].date, files: [],
+    body: 'Les menus de la semaine sont disponibles à l’accueil du restaurant scolaire.' },
+}
+
 export const demoData: SchoolData = {
   student,
   periods: [
@@ -58,4 +79,5 @@ export const demoData: SchoolData = {
   grades,
   lessons,
   homework,
+  messages,
 }

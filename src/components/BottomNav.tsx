@@ -8,10 +8,11 @@ const items: { route: Route; label: string; icon: IconName }[] = [
   { route: 'notes', label: 'Notes', icon: 'chart' },
   { route: 'planning', label: 'Planning', icon: 'calendar' },
   { route: 'devoirs', label: 'Devoirs', icon: 'book' },
+  { route: 'messages', label: 'Messages', icon: 'mail' },
   { route: 'profil', label: 'Profil', icon: 'user' },
 ]
 
-export function BottomNav({ current, badge }: { current: Route; badge: number }) {
+export function BottomNav({ current, badges }: { current: Route; badges: Partial<Record<Route, number>> }) {
   const active = Math.max(0, items.findIndex((it) => it.route === current || (it.route === 'profil' && current === 'reglages')))
   return (
     <nav className="nav" aria-label="Navigation principale" style={{ '--n': items.length, '--i': active } as CSSProperties}>
@@ -21,7 +22,7 @@ export function BottomNav({ current, badge }: { current: Route; badge: number })
           aria-current={current === it.route || (it.route === 'profil' && current === 'reglages') ? 'page' : undefined}>
           <span className="nav-icon">
             <Icon name={it.icon} />
-            {it.route === 'devoirs' && badge > 0 && <span className="badge" role="img" aria-label={`${badge} à faire`} />}
+            {(badges[it.route] ?? 0) > 0 && <span className="badge" role="img" aria-label={`${badges[it.route]} ${it.route === 'messages' ? 'non lus' : 'à faire'}`} />}
           </span>
           <span>{it.label}</span>
         </a>
