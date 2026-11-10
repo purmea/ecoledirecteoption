@@ -22,7 +22,9 @@ export function BottomNav({ current, badges }: { current: Route; badges: Partial
           aria-current={current === it.route || (it.route === 'profil' && current === 'reglages') ? 'page' : undefined}>
           <span className="nav-icon">
             <Icon name={it.icon} />
-            {(badges[it.route] ?? 0) > 0 && <span className="badge" role="img" aria-label={`${badges[it.route]} ${it.route === 'messages' ? 'non lus' : 'à faire'}`} />}
+            {(badges[it.route] ?? 0) > 0 && (it.route === 'devoirs'
+              ? <span className="badge count" role="img" aria-label={`${badges[it.route]} devoir${badges[it.route]! > 1 ? 's' : ''} à faire pour le prochain jour`}>{badges[it.route]}</span>
+              : <span className="badge" role="img" aria-label={`${badges[it.route]} non lus`} />)}
           </span>
           <span>{it.label}</span>
         </a>

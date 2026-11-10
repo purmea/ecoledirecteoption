@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Icon, type IconName } from './Icon'
+import { homeworkForNextDay } from '../lib'
 import { useMessages, useSession } from '../state/session'
 
 const items: { route: string; label: string; icon: IconName }[] = [
@@ -15,7 +16,7 @@ const items: { route: string; label: string; icon: IconName }[] = [
 export function Drawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data } = useSession()
   const unread = useMessages().filter((m) => !m.read && !m.archived).length
-  const todo = data?.homework.filter((h) => !h.done).length ?? 0
+  const todo = homeworkForNextDay(data?.homework ?? [])
   useEffect(() => {
     if (!open) return
     const on = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
