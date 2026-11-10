@@ -87,39 +87,6 @@ export function withDefaults(p: Partial<Profile>): Profile {
   } as Profile
 }
 
-/** Thèmes complets du profil : un seul geste applique couleurs, effets, lueurs et transparence. */
-export interface ProfileTheme {
-  id: string
-  label: string
-  apply: Pick<Profile, 'colors' | 'effects' | 'glow' | 'opacity' | 'blur'>
-}
-
-const theme = (
-  id: string, label: string, colors: Profile['colors'],
-  effects: Partial<Profile['effects']> = {}, glow: Partial<Profile['glow']> = {}, opacity = 7, blur = 8,
-): ProfileTheme => ({
-  id, label,
-  apply: {
-    colors,
-    effects: { background: 'none', username: 'none', ...effects },
-    glow: { username: true, badges: true, widgets: false, ...glow },
-    opacity, blur,
-  },
-})
-
-export const PROFILE_THEMES: ProfileTheme[] = [
-  theme('clean', 'Clean', { accent: '#ffffff', text: '#ffffff', background: '#0a0a0a', icons: '#ffffff' }),
-  theme('marine', 'Marine', { accent: '#7f9bff', text: '#f2f5ff', background: '#0a1a3a', icons: '#ee2d46' }, { background: 'halos' }, { widgets: true }, 12, 12),
-  theme('rouge', 'Rouge', { accent: '#ffffff', text: '#ffffff', background: '#14070a', icons: '#ff3b52' }, { background: 'particles', username: 'glitch' }, { widgets: true }, 8, 10),
-  theme('aurore', 'Aurore', { accent: '#b7a8ff', text: '#f5f3ff', background: '#0a0716', icons: '#c9bdff' }, { background: 'halos' }, {}, 10, 14),
-  theme('ocean', 'Océan', { accent: '#7cc4ff', text: '#eaf4ff', background: '#030b18', icons: '#9fd3ff' }, { background: 'halos' }, {}, 10, 14),
-  theme('couchant', 'Couchant', { accent: '#ff8a65', text: '#fff1ec', background: '#12060c', icons: '#ffb199' }, { background: 'halos' }, {}, 10, 14),
-  theme('foret', 'Forêt', { accent: '#8fe3a8', text: '#ecfff4', background: '#04100a', icons: '#b2efc4' }, { background: 'particles' }, {}, 10, 10),
-  theme('neon', 'Néon', { accent: '#ff2dd1', text: '#ffffff', background: '#05010f', icons: '#ff2dd1' }, { background: 'stars', username: 'rainbow' }, { widgets: true }, 10, 16),
-  theme('pluie', 'Pluie', { accent: '#9db4d6', text: '#e8eef8', background: '#0b0f14', icons: '#9db4d6' }, { background: 'rain' }, {}, 10, 14),
-  theme('neige', 'Neige', { accent: '#ffffff', text: '#ffffff', background: '#0c1220', icons: '#cfe4ff' }, { background: 'snow', username: 'sparkles' }, {}, 10, 14),
-]
-
 export const WIDGETS: { type: WidgetType; label: string; hint: string }[] = [
   { type: 'average', label: 'Moyenne générale', hint: 'Ta moyenne du trimestre en grand' },
   { type: 'trend', label: 'Évolution', hint: 'La courbe de ta moyenne' },

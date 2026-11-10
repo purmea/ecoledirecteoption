@@ -1,14 +1,15 @@
 import { useData, useSession } from '../state/session'
-import { averageTimeline, fmt, formatDate, generalAverage, greeting, on20 } from '../lib'
+import { averageTimeline, fmt, formatDate, generalAverage, greeting } from '../lib'
 import { Empty, SectionTitle } from '../components/ui'
 import { Sparkline } from '../components/charts'
 import { Avatar, useMyProfile } from '../profile/useMyProfile'
+import { displayedMonday, isoDate } from '../api/ecoledirecte'
 import { NowCard } from '../components/NowCard'
 import { CountUp } from '../fx'
 
 export function Accueil() {
   const { student, grades, lessons, homework, currentPeriod } = useData()
-  const { mode } = useSession()
+  const { mode, applyPlan } = useSession()
   const me = useMyProfile()
   const periodGrades = grades.filter((g) => g.period === currentPeriod)
   const avg = generalAverage(periodGrades)
@@ -36,7 +37,7 @@ export function Accueil() {
           <span className="eyebrow">Moyenne générale</span>
           <strong className="big">{avg !== null ? <CountUp value={avg} /> : '—'}<small>/20</small></strong>
           {delta !== null && Math.abs(delta) >= 0.01 && (
-            <span className={`delta ${delta > 0 ? 'up' : 'down'}`}>
+            <span className="delta">
               {delta > 0 ? '+' : '−'}{fmt(Math.abs(delta))} depuis la dernière note
             </span>
           )}
@@ -44,13 +45,13 @@ export function Accueil() {
         <Sparkline points={trend} />
       </a>
 
-      <NowCard lessons={lessons} />
+      <NowCard lessons={applyPlan(lessons, isoDate(displayedMonday()))} />
 
       <SectionTitle meta={<a href="#/notes" className="link">Tout voir</a>}>Dernières notes</SectionTitle>
       {latest.length === 0 ? <Empty>Aucune note</Empty> : (
         <div className="notes-row">
           {latest.map((g) => (
-            <a href="#/notes" key={g.id} className={`note-tile ${on20(g) < 10 ? 'low' : ''}`} aria-label={`${g.subject} : ${fmt(g.value)} sur ${g.outOf}`}>
+            <a href="#/notes" key={g.id} className="note-tile" aria-label={`${g.subject} : ${fmt(g.value)} sur ${g.outOf}`}>
               <strong>{fmt(g.value)}<small>/{g.outOf}</small></strong>
               <span className="note-subject">{g.subject}</span>
               <small>{formatDate(g.date)}</small>

@@ -9,6 +9,7 @@ const read = (): Location => {
   const [name, param] = location.hash.replace(/^#\/?/, '').split('/')
   if (name === 'u' && param) return { route: 'u', param: decodeURIComponent(param) }
   if (name === 'messages' && param) return { route: 'messages', param: decodeURIComponent(param) }
+  if (name === 'planning' && param) return { route: 'planning', param: decodeURIComponent(param) }
   return { route: ROUTES.includes(name as Route) && name !== 'u' ? (name as Route) : 'accueil' }
 }
 

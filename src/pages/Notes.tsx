@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../state/session'
-import { averageTimeline, generalAverage, groupBySubject, periodShort } from '../lib'
+import { averageTimeline, fmt, generalAverage, groupBySubject, periodShort } from '../lib'
 import { Empty, PageHeader, SectionTitle, Segmented } from '../components/ui'
 import { SubjectBars, TrendChart } from '../components/charts'
 import { Simulator } from '../components/Simulator'
@@ -22,6 +22,10 @@ export function Notes() {
   const list = period === ALL ? grades : grades.filter((g) => g.period === period)
   const subjects = groupBySubject(list).sort((a, b) => a.subject.localeCompare(b.subject, 'fr'))
   const avg = generalAverage(list)
+  const timeline = averageTimeline(list)
+  // Évolution de la moyenne avec la dernière note : vert si elle monte, rouge si elle baisse (onglet Notes uniquement).
+  const delta = timeline.length > 1 ? timeline[timeline.length - 1].value - timeline[timeline.length - 2].value : null
+  const tone = delta === null || Math.abs(delta) < 0.005 ? undefined : delta > 0 ? 'up' : 'down'
   const raw = period === ALL ? 'Toute l’année' : periods.find((p) => p.code === period)?.label ?? ''
   const label = raw.charAt(0).toUpperCase() + raw.slice(1)
 
@@ -34,8 +38,13 @@ export function Notes() {
         <>
           <section className="block">
             <span className="eyebrow">Moyenne générale</span>
-            <strong className="big">{avg !== null ? <CountUp value={avg} /> : '—'}<small>/20</small></strong>
-            <TrendChart points={averageTimeline(list)} label="Évolution de la moyenne générale" />
+            <strong className={`big ${tone ? `trend-${tone}` : ''}`}>{avg !== null ? <CountUp value={avg} /> : '—'}<small>/20</small></strong>
+            {delta !== null && tone && (
+              <span className={`trend-note trend-${tone}`}>
+                <i aria-hidden="true">{tone === 'up' ? '▲' : '▼'}</i>{tone === 'up' ? '+' : '−'}{fmt(Math.abs(delta))} depuis la dernière note
+              </span>
+            )}
+            <TrendChart points={timeline} label="Évolution de la moyenne générale" tone={tone} />
           </section>
 
           <SectionTitle meta={

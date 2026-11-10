@@ -25,9 +25,9 @@ function when(u: Upcoming, today: number) {
 
 /** « En cours · fin dans… » ou « Prochain cours dans… », puis les 3 prochains cours. */
 export function NowCard({ lessons }: { lessons: Lesson[] }) {
-  const { loadWeek } = useSession()
+  const { loadWeek, applyPlan } = useSession()
   const [now, setNow] = useState(() => new Date())
-  const [nextWeek, setNextWeek] = useState<Lesson[] | null>(null)
+  const [nextWeek, setNextWeek] = useState<{ lessons: Lesson[]; monday: string } | null>(null)
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 30_000)
     return () => clearInterval(t)
@@ -50,11 +50,11 @@ export function NowCard({ lessons }: { lessons: Lesson[] }) {
   useEffect(() => {
     if (!needMore || nextWeek) return
     let alive = true
-    loadWeek(1).then((w) => alive && setNextWeek(w.lessons)).catch(() => alive && setNextWeek([]))
+    loadWeek(1).then((w) => alive && setNextWeek(w)).catch(() => alive && setNextWeek({ lessons: [], monday: '' }))
     return () => { alive = false }
   }, [needMore, nextWeek, loadWeek])
 
-  const following: Upcoming[] = (nextWeek ?? [])
+  const following: Upcoming[] = (nextWeek ? applyPlan(nextWeek.lessons, nextWeek.monday) : [])
     .filter((l) => !l.cancelled)
     .sort((a, b) => a.day - b.day || a.start.localeCompare(b.start))
     .map((l) => ({ lesson: l, days: l.day + 7 - day }))

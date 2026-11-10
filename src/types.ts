@@ -34,6 +34,14 @@ export interface Lesson {
   room: string
   teacher: string
   cancelled?: boolean
+  /** Annulé par toi dans l'app (pas par l'école). */
+  byYou?: boolean
+  /** Annulé par l'école (information d'origine). */
+  official?: boolean
+  /** Ajouté à la main. */
+  custom?: boolean
+  /** Modifié, annulé ou ajouté dans l'app. */
+  modified?: boolean
 }
 
 export interface Homework {

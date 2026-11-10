@@ -20,15 +20,15 @@ export const THEMES: { id: Exclude<Theme, 'perso'>; label: string; bg: string; f
 
 /** Couleurs d'accent : version pour fond clair (l) et pour fond sombre (d), contrastes validés. */
 export const ACCENTS: { id: Exclude<Accent, 'perso'>; label: string; l: string; d: string }[] = [
-  { id: 'rouge', label: 'Rouge', l: '#d01f3a', d: '#ee2d46' },
-  { id: 'orange', label: 'Orange', l: '#c9501a', d: '#e56a30' },
-  { id: 'jaune', label: 'Jaune', l: '#9a6400', d: '#f2c230' },
-  { id: 'vert', label: 'Vert', l: '#17894f', d: '#22a56c' },
-  { id: 'turquoise', label: 'Turquoise', l: '#00809a', d: '#1ea3bd' },
-  { id: 'bleu', label: 'Bleu', l: '#2a78d6', d: '#4b95ee' },
-  { id: 'violet', label: 'Violet', l: '#7340d8', d: '#9272ee' },
-  { id: 'rose', label: 'Rose', l: '#d23f78', d: '#e64a83' },
-  { id: 'blanc', label: 'Blanc', l: '#2c2c34', d: '#f1f1f5' },
+  { id: 'rouge', label: 'Rouge', l: '#e5102e', d: '#ff2d46' },
+  { id: 'orange', label: 'Orange', l: '#ee4a00', d: '#ff5a1f' },
+  { id: 'jaune', label: 'Jaune', l: '#b07d00', d: '#ffc61a' },
+  { id: 'vert', label: 'Vert', l: '#0a9d56', d: '#1fdb82' },
+  { id: 'turquoise', label: 'Turquoise', l: '#008ea6', d: '#14d4e8' },
+  { id: 'bleu', label: 'Bleu', l: '#1d6bff', d: '#3b86ff' },
+  { id: 'violet', label: 'Violet', l: '#7b3ff2', d: '#9a5cff' },
+  { id: 'rose', label: 'Rose', l: '#e0197f', d: '#ff3fa4' },
+  { id: 'blanc', label: 'Blanc', l: '#1a1a22', d: '#ffffff' },
 ]
 
 export const DEFAULT_CUSTOM: Custom = { bg: '#0a1230', accent: '#ff5a1f' }
@@ -45,8 +45,8 @@ const contrast = (a: string, b: string) => {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
   return (hi + 0.05) / (lo + 0.05)
 }
-/** Texte lisible sur une couleur : blanc ou encre foncée, au meilleur contraste. */
-export const onColor = (hex: string) => (contrast('#ffffff', hex) >= contrast('#0f0f13', hex) ? '#ffffff' : '#0f0f13')
+/** Texte sur une couleur : blanc si le contraste est correct pour du texte gras (≥ 3,5), sinon encre foncée. */
+export const onColor = (hex: string) => (contrast('#ffffff', hex) >= 3.5 ? '#ffffff' : '#0f0f13')
 const isDarkBg = (hex: string) => luminance(hex) < 0.18
 
 /** Couleurs effectives (fond, texte, accent) pour un réglage donné : sert au rendu et à la page de profil. */

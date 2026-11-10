@@ -36,7 +36,7 @@ function niceDomain(values: number[]) {
 // ---------------------------------------------------------------------------
 // Courbe d'évolution (une seule série : le titre de la carte la nomme)
 
-export function TrendChart({ points, label }: { points: { date: string; value: number }[]; label: string }) {
+export function TrendChart({ points, label, tone }: { points: { date: string; value: number }[]; label: string; tone?: 'up' | 'down' }) {
   const [ref, width] = useWidth<HTMLDivElement>()
   const [active, setActive] = useState<number | null>(null)
 
@@ -73,7 +73,7 @@ export function TrendChart({ points, label }: { points: { date: string; value: n
   const a = active !== null ? points[active] : null
 
   return (
-    <div className="chart" ref={ref}>
+    <div className="chart" ref={ref} data-tone={tone}>
       <svg width={width} height={height} role="img" aria-label={`${label} : ${fmt(last.value)} au ${formatDate(last.date)}`}
         tabIndex={0} onPointerMove={onMove} onPointerLeave={() => setActive(null)} onKeyDown={onKey}
         onFocus={() => setActive(points.length - 1)} onBlur={() => setActive(null)}>
@@ -110,6 +110,8 @@ export interface SubjectRow {
   subject: string
   average: number
   classAverage: number | null
+  /** Évolution avec la dernière note : sert à colorer la moyenne (vert / rouge). */
+  delta?: number | null
   items: Grade[]
 }
 
@@ -124,7 +126,10 @@ export function SubjectBars({ subjects }: { subjects: SubjectRow[] }) {
             <button className="bar-row" onClick={() => setOpen(isOpen ? null : r.subject)} aria-expanded={isOpen}
               aria-label={`${r.subject} : ${fmt(r.average)} sur 20${r.classAverage !== null ? `, classe ${fmt(r.classAverage)}` : ''}`}>
               <span className="bar-label">{r.subject}</span>
-              <span className={`bar-value ${r.average < 10 ? 'low' : ''}`}>{fmt(r.average)}</span>
+              <span className={`bar-value ${r.delta == null || Math.abs(r.delta) < 0.005 ? '' : r.delta > 0 ? 'trend-up' : 'trend-down'}`}>
+                {r.delta != null && Math.abs(r.delta) >= 0.005 && <i className="arrow" aria-hidden="true">{r.delta > 0 ? '▲' : '▼'}</i>}
+                {fmt(r.average)}
+              </span>
               <span className="bar-track" aria-hidden="true">
                 <span className="bar-fill" style={{ width: `${(r.average / 20) * 100}%` }} />
                 {r.classAverage !== null && <span className="bar-tick" style={{ left: `${(r.classAverage / 20) * 100}%` }} />}

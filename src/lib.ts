@@ -26,6 +26,8 @@ export function groupBySubject(list: Grade[]) {
       subject,
       items: [...items].sort((a, b) => b.date.localeCompare(a.date)),
       average: weightedAverage(items)!,
+      /** Évolution de la moyenne de la matière avec la dernière note (null s'il n'y a qu'une note). */
+      delta: items.length > 1 ? weightedAverage(items)! - weightedAverage([...items].sort((a, b) => b.date.localeCompare(a.date)).slice(1))! : null,
       classAverage: classTotal
         ? withClass.reduce((s, g) => s + ((g.classAvg! / g.outOf) * 20) * g.coef, 0) / classTotal
         : null,

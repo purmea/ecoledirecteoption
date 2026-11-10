@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type TouchEvent } from 'react'
-import { useData, useSession } from '../state/session'
+import { useSession } from '../state/session'
+import { useWeek } from '../hooks/useWeek'
+import { hasEdits } from '../planning/edits'
 import { DAYS, todayIndex } from '../lib'
-import type { Lesson } from '../types'
 import { Empty, PageHeader, Segmented } from '../components/ui'
 import { Icon } from '../components/Icon'
-import { displayedMonday, isoDate } from '../api/ecoledirecte'
 
 const nowHHMM = () => new Date().toTimeString().slice(0, 5)
 
@@ -20,38 +20,19 @@ function weekLabel(mondayIso: string) {
 }
 
 export function Planning() {
-  const { lessons: current } = useData()
-  const { loadWeek } = useSession()
   const [offset, setOffset] = useState(0)
   const [day, setDay] = useState(todayIndex())
   const [now, setNow] = useState(nowHHMM)
-  const [weeks, setWeeks] = useState<Record<number, { lessons: Lesson[]; monday: string }>>({})
-  const [loading, setLoading] = useState(false)
-  const [failed, setFailed] = useState(false)
   const touch = useRef<{ x: number; y: number } | null>(null)
+  const { lessons, monday, loading, failed } = useWeek(offset)
+  const { planEdits } = useSession()
 
   useEffect(() => {
     const t = setInterval(() => setNow(nowHHMM()), 30_000)
     return () => clearInterval(t)
   }, [])
 
-  // Semaine affichée : celle des données déjà chargées (décalage 0), sinon chargée à la demande.
-  useEffect(() => {
-    if (offset === 0 || weeks[offset]) return
-    let alive = true
-    setLoading(true)
-    setFailed(false)
-    loadWeek(offset)
-      .then((w) => alive && setWeeks((x) => ({ ...x, [offset]: w })))
-      .catch(() => alive && setFailed(true))
-      .finally(() => alive && setLoading(false))
-    return () => { alive = false }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [offset])
-
-  // Semaine courante : toujours les données de l'app (actualisées avec elle) ; les autres : chargées à la demande.
-  const week = offset === 0 ? { lessons: current, monday: isoDate(displayedMonday()) } : weeks[offset]
-  const lessons = week?.lessons ?? []
+  const week = monday ? { monday } : undefined
   const isToday = offset === 0 && day === (new Date().getDay() + 6) % 7
   const list = lessons.filter((l) => l.day === day).sort((a, b) => a.start.localeCompare(b.start))
 
@@ -82,7 +63,7 @@ export function Planning() {
         options={DAYS.map((d, i) => [String(i), d.slice(0, 3)] as const)} />
       <div className="swipe-area" onTouchStart={onStart} onTouchEnd={onEnd}>
         {failed ? <Empty>Impossible de charger cette semaine.</Empty>
-          : loading && !week ? <div className="spinner" style={{ margin: '40px auto' }} />
+          : loading ? <div className="spinner" style={{ margin: '40px auto' }} />
           : list.length === 0 ? <Empty>Aucun cours</Empty> : (
           <ul className="list schedule" key={`${offset}-${day}`}>
             {list.map((l) => {
@@ -94,7 +75,8 @@ export function Planning() {
                     <strong>{l.subject}</strong>
                     <small>{[l.room, l.teacher].filter(Boolean).join(' · ')}</small>
                   </div>
-                  {l.cancelled && <span className="status bad">Annulé</span>}
+                  {l.cancelled && <span className="status bad">{l.byYou ? 'Annulé par toi' : 'Annulé'}</span>}
+                  {l.custom && !l.cancelled && <span className="status">Ajouté</span>}
                   {live && <span className="status accent">En cours</span>}
                 </li>
               )
@@ -102,6 +84,15 @@ export function Planning() {
           </ul>
         )}
       </div>
+
+      <section className="plan-tools">
+        <a href="#/planning/edit" className="btn primary">Vue semaine et modifications</a>
+        <p className="muted small">
+          Vois ta semaine en grille, annule ou masque un cours, change une salle ou un horaire, ajoute un cours.
+          {hasEdits(planEdits) ? ' Tu as des modifications en cours.' : ''} Elles restent dans cette app : l’école ne les voit pas.
+        </p>
+        <a href="https://www.ecoledirecte.com" target="_blank" rel="noopener noreferrer" className="text-btn">Ouvrir le site École Directe ↗</a>
+      </section>
     </>
   )
 }

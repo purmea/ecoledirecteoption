@@ -33,7 +33,7 @@ export function Simulator({ grades, subjects }: { grades: Grade[]; subjects: str
       </label>
       <p className="sim-result">
         Moyenne générale : <strong>{fmt(after)}</strong>
-        <span className={`delta ${delta > 0.004 ? 'up' : delta < -0.004 ? 'down' : ''}`}>
+        <span className={`sim-delta ${delta > 0.004 ? 'trend-up' : delta < -0.004 ? 'trend-down' : ''}`}>
           {Math.abs(delta) < 0.005 ? 'inchangée' : `${delta > 0 ? '+' : '−'}${fmt(Math.abs(delta))}`}
         </span>
       </p>

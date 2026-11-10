@@ -28,12 +28,13 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 
 **Au quotidien**
 
+- **Notes** : la moyenne passe en vert quand elle monte et en rouge quand elle baisse (uniquement dans cet onglet).
 - **Accueil** : moyenne qui défile, carte « En cours · fin dans 30 min » avec les **3 prochains cours** (même sur la semaine suivante), les **3 dernières notes en grand**, devoirs à faire
 - **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix de la période (**trimestres ou semestres**, selon l'établissement, plus « Année »)
 - **Simulateur** : « et si j'avais 15/20 en maths (Coef 2) ? » → l'effet immédiat sur la moyenne générale
-- **Planning** : emploi du temps navigable semaine par semaine (flèches ou glissement du doigt), cours annulés et cours en cours mis en avant
+- **Planning** : emploi du temps navigable semaine par semaine (flèches ou glissement du doigt), cours annulés et cours en cours mis en avant ; en bas, un bouton ouvre la **vue semaine** où tu peux annuler, déplacer, modifier ou ajouter des cours (modifications enregistrées uniquement dans l'app, l'école ne les voit pas)
 - **Messages** : boîte de réception, ouverture d'un message (marqué comme lu), et raccourcis en haut du message : **épingler, archiver, supprimer, marquer comme non lu** (avec « Annuler »), filtres Tous / Non lus / Épinglés / Archivés
-- **Devoirs** : consignes groupées par date, cases à cocher synchronisées avec École Directe, confettis quand tout est fait
+- **Devoirs** : barre de jours en haut (comme le planning) avec le nombre restant par jour, notification « Plus que N devoirs pour mardi », cases à cocher synchronisées avec École Directe, confettis quand tout est fait
 
 **Profil public** (`#/u/ton-pseudo`)
 
@@ -42,7 +43,7 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 
 **Confort**
 
-- **Thème et couleurs** (dans Profil, pour toute l'app) : fond marine (presque noir, par défaut), nuit, clair, auto ou **fond exact** ; **9 couleurs d'accent** (rouge par défaut, violet, jaune…) ou **couleur exacte** saisie en hexadécimal, appliquées aussitôt ; pensé pour le téléphone (encoches, barre du bas, PWA)
+- **Thème et couleurs** (dans Profil, pour toute l'app) : fond marine (presque noir, par défaut), nuit, clair, auto ou **fond exact** ; **9 couleurs d'accent flashy** (rouge vif par défaut, orange #ff5a1f, jaune, vert, turquoise, bleu, violet, rose, blanc) ou **couleur exacte** saisie en hexadécimal, appliquées aussitôt ; pensé pour le téléphone (encoches, barre du bas, PWA)
 - Animations façon Apple : ressorts physiques, pages qui glissent dans le sens de la navigation, barre du bas à bulle mobile, onglets qui glissent, titre qui se réduit au défilement, messages « Dynamic Island »
 - **Hors connexion** : l'app s'ouvre instantanément avec tes dernières données (gardées sur l'appareil) puis se met à jour ; tirer vers le bas pour actualiser
 - HTML sémantique, ARIA, focus visible, respect de « réduire les animations »

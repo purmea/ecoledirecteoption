@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { demoData, demoMessageDetails } from '../data/demo'
+import { applyEdits, EMPTY_PLAN, reducePlan, type PlanAction, type PlanEdits } from '../planning/edits'
 import type { Lesson, MessageDetail, SchoolData } from '../types'
 import { displayedMonday, fetchAll, fetchLessonsFor, fetchMessageDetail, isoDate, login as edLogin, answerQcm, setHomeworkDone, type DeviceTrust, type Qcm, type Session } from '../api/ecoledirecte'
 import { isAuthError } from '../api/client'
@@ -34,6 +35,11 @@ interface Ctx {
   /** Ouvre un message (le marque comme lu, ici et sur École Directe). */
   openMessage: (id: string) => Promise<MessageDetail>
   messageMeta: MessageMeta
+  /** Modifications de l'emploi du temps faites dans l'app (locales à l'appareil). */
+  planEdits: PlanEdits
+  editPlan: (action: PlanAction) => void
+  /** Cours d'une semaine (lundi ISO) avec tes modifications appliquées. */
+  applyPlan: (lessons: Lesson[], monday: string) => Lesson[]
   /** Épingler, archiver, supprimer (masquer) ou remettre en non lu un message. */
   messageAction: (id: string, action: MessageAction) => void
   signIn: (identifiant: string, motdepasse: string, remember: boolean) => Promise<void>
@@ -68,6 +74,7 @@ export interface MessageMeta { pinned: string[]; archived: string[]; hidden: str
 export type MessageAction = 'pin' | 'unpin' | 'archive' | 'unarchive' | 'delete' | 'restore' | 'unread'
 const EMPTY_META: MessageMeta = { pinned: [], archived: [], hidden: [], unread: [] }
 const metaKey = (mode: string) => `edo:msgmeta:${mode}`
+const planKey = (mode: string) => `edo:plan:${mode}`
 
 function loadSaved(): Saved | null {
   return store.get<Saved>(SESSION_KEY) ?? store.get<Saved>(SESSION_KEY, sessionStorage)
@@ -90,6 +97,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [refreshing, setRefreshing] = useState(false)
   const [updatedAt, setUpdatedAt] = useState<number | null>(null)
   const [messageMeta, setMessageMeta] = useState<MessageMeta>(EMPTY_META)
+  const [planEdits, setPlanEdits] = useState<PlanEdits>(EMPTY_PLAN)
   const dataRef = useRef<SchoolData | null>(null)
   dataRef.current = data
   const session = useRef<{ session: Session; remember: boolean } | null>(saved && 'session' in saved ? saved : null)
@@ -97,7 +105,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     store.del(SESSION_KEY)
     store.del(metaKey('live'))
+    store.del(planKey('live'))
     setMessageMeta(EMPTY_META)
+    setPlanEdits(EMPTY_PLAN)
     store.del(CACHE_KEY)
     setUpdatedAt(null)
     session.current = null
@@ -250,6 +260,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setMessageMeta(mode ? { ...EMPTY_META, ...store.get<MessageMeta>(metaKey(mode)) } : EMPTY_META)
   }, [mode])
 
+  useEffect(() => {
+    setPlanEdits(mode ? { ...EMPTY_PLAN, ...store.get<PlanEdits>(planKey(mode)) } : EMPTY_PLAN)
+  }, [mode])
+
+  const editPlan = useCallback((action: PlanAction) => {
+    if (!mode) return
+    setPlanEdits((e) => {
+      const next = reducePlan(e, action)
+      store.set(planKey(mode), next)
+      return next
+    })
+  }, [mode])
+
+  const applyPlan = useCallback((lessons: Lesson[], monday: string) => applyEdits(lessons, monday, planEdits), [planEdits])
+
   const messageAction = useCallback((id: string, action: MessageAction) => {
     if (!mode) return
     setMessageMeta((m) => {
@@ -284,9 +309,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [mode])
 
   const value = useMemo<Ctx>(() => ({
-    status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction,
+    status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, planEdits, editPlan, applyPlan,
     signIn, submitQcm, cancelQcm: () => setPendingQcm(null), startDemo, signOut, refresh, toggleHomework,
-  }), [status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
+  }), [status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, planEdits, editPlan, applyPlan, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }
