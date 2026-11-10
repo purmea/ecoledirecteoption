@@ -118,7 +118,7 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
             </section>
           )}
 
-          {footer.length > 0 && (
+          {!embedded && footer.length > 0 && (
             <footer className="pf-foot pf-in">
               {footer.map((f, i) => (
                 <span key={f.key} title={f.title}>
