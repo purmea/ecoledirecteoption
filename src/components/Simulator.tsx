@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import type { Grade } from '../types'
-import { fmt, generalAverage } from '../lib'
+import { fmt, generalAverage, weightedAverage } from '../lib'
 import { Segmented } from './ui'
 
 /** « Et si j'avais… » : ajoute une note fictive et montre l'effet sur la moyenne générale. */
@@ -14,6 +14,12 @@ export function Simulator({ grades, subjects }: { grades: Grade[]; subjects: str
   const fake: Grade = { id: 'sim', period: grades[0].period, subject: subject || subjects[0], label: 'Simulation', value, outOf: 20, coef, classAvg: null, date: '9999-12-31' }
   const after = generalAverage([...grades, fake])!
   const delta = after - before
+  const name = fake.subject
+  const subjBefore = weightedAverage(grades.filter((g) => g.subject === name))
+  const subjAfter = weightedAverage([...grades, fake].filter((g) => g.subject === name))!
+  const subjDelta = subjBefore === null ? null : subjAfter - subjBefore
+  const tone = (d: number | null) => (d === null ? '' : d > 0.004 ? 'trend-up' : d < -0.004 ? 'trend-down' : '')
+  const change = (d: number | null) => (d === null ? 'nouvelle' : Math.abs(d) < 0.005 ? 'inchangée' : `${d > 0 ? '+' : '−'}${fmt(Math.abs(d))}`)
 
   return (
     <div className="sim">
@@ -31,10 +37,12 @@ export function Simulator({ grades, subjects }: { grades: Grade[]; subjects: str
           onChange={(e) => setValue(Number(e.target.value))} style={{ '--p': `${(value / 20) * 100}%` } as CSSProperties} />
       </label>
       <p className="sim-result">
+        Moyenne {name} : <strong>{fmt(subjAfter)}</strong>
+        <span className={`sim-delta ${tone(subjDelta)}`}>{change(subjDelta)}</span>
+      </p>
+      <p className="sim-result">
         Moyenne générale : <strong>{fmt(after)}</strong>
-        <span className={`sim-delta ${delta > 0.004 ? 'trend-up' : delta < -0.004 ? 'trend-down' : ''}`}>
-          {Math.abs(delta) < 0.005 ? 'inchangée' : `${delta > 0 ? '+' : '−'}${fmt(Math.abs(delta))}`}
-        </span>
+        <span className={`sim-delta ${tone(delta)}`}>{change(delta)}</span>
       </p>
       </div>
     </div>

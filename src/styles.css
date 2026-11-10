@@ -868,3 +868,4 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .sim-row .tabs { margin: 0; }
 /* Planning : changements de cours instantanés, sans animation */
 .wk-block, .wk-block * { animation: none !important; transition: none !important; }
+.sim-result + .sim-result { margin-top: 6px; }
