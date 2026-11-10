@@ -73,18 +73,19 @@ function Shell() {
         <span className="ptr-spin" style={{ transform: ptr.busy ? undefined : `rotate(${ptr.pull * 5}deg)` }} />
       </div>
       <div className={`topbar ${scrolled ? 'on' : ''}`} aria-hidden="true"><span>{titles[route]}</span></div>
+      {route === 'planning' ? <Planning /> : (
       <main className="page" key={route} data-dir={dir}
         style={ptr.pull > 0 ? { transform: `translateY(${ptr.pull * 0.35}px)` } : undefined}>
         {error && <p className="banner" role="alert">{error}</p>}
         {route === 'accueil' && <Accueil />}
         {route === 'notes' && <Notes />}
-        {route === 'planning' && <Planning />}
         {route === 'devoirs' && <Devoirs />}
         {route === 'messages' && (param ? <MessageView id={param} key={param} /> : <Messages />)}
         {route === 'profil' && <Profil />}
         {route === 'reglages' && <Reglages />}
       </main>
-      <BottomNav current={route} badges={{ devoirs: todo, messages: unread }} />
+      )}
+      {route !== 'planning' && <BottomNav current={route} badges={{ devoirs: todo, messages: unread }} />}
       <Toaster />
       <Confetti />
     </div>

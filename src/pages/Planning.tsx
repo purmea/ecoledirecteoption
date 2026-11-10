@@ -1,23 +1,35 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from 'react'
 import { useSession } from '../state/session'
 import { useWeek } from '../hooks/useWeek'
-import { DAYS, todayIndex } from '../lib'
+import { displayedMonday } from '../api/ecoledirecte'
+import { DAYS } from '../lib'
 import type { Lesson } from '../types'
-import { hasEdits, subjectHue, type CustomLesson } from '../planning/edits'
+import { hasEdits, type CustomLesson } from '../planning/edits'
 import { Icon } from '../components/Icon'
-import { PageHeader } from '../components/ui'
 import { Sheet } from '../components/Sheet'
+import { Drawer } from '../components/Drawer'
 import { toast } from '../fx'
 
-const HOUR = 62 // hauteur d'une heure dans la grille (px)
+type View = 'day' | 'week' | 'month'
 const toMin = (hhmm: string) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m }
+const parse = (iso: string) => new Date(iso + 'T12:00:00')
+const mondayOf = (d: Date) => { const m = new Date(d); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return m }
+const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x }
+const dayIdx = (d: Date) => (d.getDay() + 6) % 7
+const weekOffset = (d: Date) => Math.round((mondayOf(d).getTime() - mondayOf(displayedMonday()).getTime()) / (7 * 864e5))
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
-function weekLabel(mondayIso: string) {
-  const mon = new Date(mondayIso + 'T12:00:00')
-  const fri = new Date(mon)
-  fri.setDate(mon.getDate() + 4)
-  const m = (d: Date) => d.toLocaleDateString('fr-FR', { month: 'short' })
-  return mon.getMonth() === fri.getMonth() ? `${mon.getDate()} – ${fri.getDate()} ${m(fri)}` : `${mon.getDate()} ${m(mon)} – ${fri.getDate()} ${m(fri)}`
+/** Nom de matière façon École Directe : majuscules, sans accents. */
+const upper = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase()
+const PALETTE = ['#f7c6a0', '#d9b8f2', '#9fe3e0', '#f5a9b8', '#cde7a0', '#ffd08a', '#b7c4ff', '#e9c9a6']
+function colorOf(subject: string) {
+  const s = upper(subject)
+  if (s.startsWith('FRANC')) return '#bdd1f7'
+  if (s.startsWith('ANGLAIS')) return '#f9f28a'
+  if (s.startsWith('MATH')) return '#66cc55'
+  let h = 0
+  for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) % 997
+  return PALETTE[h % PALETTE.length]
 }
 
 /** Répartit en colonnes les cours qui se chevauchent dans une même journée. */
@@ -39,97 +51,157 @@ function layout(items: Lesson[]) {
   return out
 }
 
+const Svg = ({ children, size = 26 }: { children: React.ReactNode; size?: number }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
+)
+
 export function Planning() {
-  const { editPlan, planEdits } = useSession()
-  const [offset, setOffset] = useState(0)
-  const { lessons, monday, loading, failed } = useWeek(offset)
+  const { editPlan, planEdits, refresh, refreshing, applyPlan, loadWeek } = useSession()
+  const [view, setView] = useState<View>('day')
+  const [date, setDate] = useState(() => new Date())
+  const [menu, setMenu] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
+  const { lessons, monday, loading, failed } = useWeek(weekOffset(date))
 
   const selected = lessons.find((l) => l.id === openId) ?? null
-  const { from, to } = useMemo(() => {
-    const starts = lessons.map((l) => toMin(l.start)); const ends = lessons.map((l) => toMin(l.end))
-    return { from: Math.min(8, Math.floor(Math.min(...starts, 480) / 60)), to: Math.max(17, Math.ceil(Math.max(...ends, 1020) / 60)) }
-  }, [lessons])
-  const todayCol = offset === 0 ? todayIndex() : -1
-  const dates = useMemo(() => (monday ? DAYS.map((_, i) => { const d = new Date(monday + 'T12:00:00'); d.setDate(d.getDate() + i); return d.getDate() }) : []), [monday])
+  const today = new Date()
+  const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString()
 
-  const act = (_label: string, run: () => void) => {
-    run()
-    setOpenId(null)
+  const label = view === 'day' ? cap(date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }))
+    : view === 'week' ? (() => { const m = mondayOf(date); const f = addDays(m, 4); return `Du ${m.getDate()} ${m.getMonth() === f.getMonth() ? '' : m.toLocaleDateString('fr-FR', { month: 'long' }) + ' '}au ${f.getDate()} ${f.toLocaleDateString('fr-FR', { month: 'long' })}` })()
+    : cap(date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }))
+  const step = (n: number) => setDate((d) => {
+    if (view === 'day') return addDays(d, n)
+    if (view === 'week') return addDays(d, 7 * n)
+    const x = new Date(d); x.setDate(1); x.setMonth(x.getMonth() + n); return x
+  })
+
+  // Mois : on charge les semaines du mois pour montrer les jours qui ont des cours.
+  const [weeks, setWeeks] = useState<Record<number, { lessons: Lesson[]; monday: string }>>({})
+  const first = useMemo(() => { const x = new Date(date); x.setDate(1); return x }, [date])
+  const cells = useMemo(() => { const s = mondayOf(first); return Array.from({ length: 42 }, (_, i) => addDays(s, i)) }, [first])
+  useEffect(() => {
+    if (view !== 'month') return
+    let alive = true
+    const offs = [...new Set(cells.filter((c) => dayIdx(c) === 0).map(weekOffset))].filter((o) => !weeks[o])
+    offs.forEach((o) => loadWeek(o).then((w) => alive && setWeeks((x) => ({ ...x, [o]: w }))).catch(() => {}))
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, first])
+  const countOn = (c: Date) => {
+    const w = weeks[weekOffset(c)]
+    if (!w || dayIdx(c) > 4) return 0
+    return applyPlan(w.lessons, w.monday).filter((l) => l.day === dayIdx(c) && !l.cancelled).length
   }
 
-  return (
-    <>
-      <PageHeader title="Emploi du temps" />
+  const act = (_label: string, run: () => void) => { run(); setOpenId(null) }
+  const day0 = Math.min(4, dayIdx(date))
 
-      <div className="week-nav">
-        <button className="icon-btn flip" onClick={() => setOffset((o) => o - 1)} aria-label="Semaine précédente"><Icon name="chevron" size={18} /></button>
-        <button className="week-label" onClick={() => setOffset(0)} disabled={offset === 0}>
-          <strong>{monday ? weekLabel(monday) : '…'}</strong>
-          <small>{offset === 0 ? 'Cette semaine' : 'Revenir à cette semaine'}</small>
-        </button>
-        <button className="icon-btn" onClick={() => setOffset((o) => o + 1)} aria-label="Semaine suivante"><Icon name="chevron" size={18} /></button>
+  return (
+    <div className="ed">
+      <div className="ed-top">
+      <header className="ed-bar">
+        <button className="ed-icon" onClick={() => setMenu(true)} aria-label="Menu"><Svg size={30}><path d="M3 6h18M3 12h18M3 18h18" strokeWidth="2.6" /></Svg></button>
+        <h1>Emploi du temps</h1>
+        <div className="ed-actions">
+          <button className="ed-icon" onClick={() => setAdding(true)} aria-label="Ajouter un cours"><Svg size={30}><path d="M12 4v16M4 12h16" strokeWidth="2.6" /></Svg></button>
+          <button className={`ed-icon ${refreshing ? 'spin' : ''}`} onClick={() => { void refresh(); setWeeks({}) }} aria-label="Actualiser"><Svg size={30}><path d="M20 12a8 8 0 1 1-2.6-5.9" /><path d="M20 4v5h-5" /></Svg></button>
+        </div>
+      </header>
+
+      <div className="ed-seg" role="tablist" aria-label="Affichage" style={{ '--i': ['day', 'week', 'month'].indexOf(view) } as CSSProperties}>
+        {([['day', 'Jour'], ['week', 'Semaine'], ['month', 'Mois']] as const).map(([k, t]) => (
+          <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)}>{t}</button>
+        ))}
       </div>
 
-      <p className="pe-note">Touche un cours pour l’annuler, le masquer ou le modifier. Ces changements restent dans l’app.</p>
+      <div className="ed-date">
+        <button onClick={() => step(-1)} aria-label="Précédent"><Svg size={22}><path d="M15 5l-7 7 7 7" /></Svg></button>
+        <button className="ed-date-label" onClick={() => setDate(new Date())} aria-label="Revenir à aujourd’hui">
+          <span className="ed-cal" aria-hidden="true">31</span>{label}
+        </button>
+        <button onClick={() => step(1)} aria-label="Suivant"><Svg size={22}><path d="M9 5l7 7-7 7" /></Svg></button>
+      </div>
+      </div>
 
-      {failed ? <p className="error">Impossible de charger cette semaine.</p> : loading ? <div className="spinner" style={{ margin: '40px auto' }} /> : (
-        <div className="wk-scroll">
-          <div className="wk" style={{ '--hh': `${HOUR}px`, '--hours': to - from } as React.CSSProperties}>
-            <div className="wk-head">
-              <span />
-              {DAYS.map((d, i) => (
-                <span key={d} className={i === todayCol ? 'today' : ''}>{d.slice(0, 3)}<b>{dates[i]}</b></span>
-              ))}
-            </div>
-            <div className="wk-body">
-              <div className="wk-hours">
-                {Array.from({ length: to - from }, (_, i) => <span key={i} style={{ top: i * HOUR }}>{from + i}h</span>)}
-              </div>
-              {DAYS.map((d, i) => (
-                <div key={d} className={`wk-col ${i === todayCol ? 'today' : ''}`}>
-                  {layout(lessons.filter((l) => l.day === i)).map(({ l, col, cols }) => {
-                    const hue = subjectHue(l.subject)
-                    return (
-                      <button key={l.id} className={`wk-block ${l.cancelled ? 'cancelled' : ''} ${l.modified ? 'modified' : ''}`}
-                        style={{
-                          top: ((toMin(l.start) - from * 60) / 60) * HOUR, height: Math.max(22, ((toMin(l.end) - toMin(l.start)) / 60) * HOUR - 2),
-                          left: `calc(${(col / cols) * 100}% + 2px)`, width: `calc(${100 / cols}% - 4px)`, '--hue': hue,
-                        } as React.CSSProperties}
-                        onClick={() => setOpenId(l.id)} aria-label={`${l.subject}, ${DAYS[l.day]} ${l.start} à ${l.end}${l.cancelled ? ', annulé' : ''}`}>
-                        <strong>{l.subject}</strong>
-                        <small>{l.room}</small>
-                        <small>{l.start}–{l.end}</small>
-                      </button>
-                    )
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
+      {view === 'month' ? (
+        <div className="ed-month">
+          {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <span key={i} className="ed-mh">{d}</span>)}
+          {cells.map((c) => {
+            const n = countOn(c)
+            return (
+              <button key={c.toISOString()} className={`ed-mc ${c.getMonth() !== first.getMonth() ? 'out' : ''} ${sameDay(c, today) ? 'today' : ''} ${sameDay(c, date) ? 'sel' : ''}`}
+                onClick={() => { setDate(c); setView('day') }} aria-label={c.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) + (n ? `, ${n} cours` : '')}>
+                <b>{c.getDate()}</b>
+                <i>{Array.from({ length: Math.min(3, n) }, (_, k) => <u key={k} />)}</i>
+              </button>
+            )
+          })}
         </div>
+      ) : failed ? <p className="ed-empty">Impossible de charger cette semaine.</p> : loading ? <div className="spinner" style={{ margin: '40px auto' }} /> : (
+        <Grid view={view} date={date} lessons={lessons} monday={monday} today={today} onOpen={setOpenId} />
       )}
 
-      <div className="pe-actions">
-        <button className="btn primary" onClick={() => setAdding(true)}><Icon name="plus" size={16} /> Ajouter un cours</button>
-        {hasEdits(planEdits) && (
-          <button className="btn ghost danger" onClick={() => editPlan({ type: 'reset' })}>
-            Effacer toutes mes modifications
-          </button>
-        )}
-      </div>
+      {hasEdits(planEdits) && <button className="ed-reset" onClick={() => editPlan({ type: 'reset' })}>Effacer mes modifications</button>}
 
-      {/* Détail d'un cours */}
-      <Sheet open={!!selected} title="Cours" onClose={() => setOpenId(null)}>
+      <Drawer open={menu} onClose={() => setMenu(false)} />
+
+      <Sheet open={!!selected} title="Cours" light onClose={() => setOpenId(null)}>
         {selected && <LessonPanel key={selected.id} l={selected} close={() => setOpenId(null)} act={act} />}
       </Sheet>
-
-      {/* Ajout d'un cours */}
-      <Sheet open={adding} title="Ajouter un cours" onClose={() => setAdding(false)}>
-        {monday && <AddPanel monday={monday} close={() => setAdding(false)} />}
+      <Sheet open={adding} title="Ajouter un cours" light onClose={() => setAdding(false)}>
+        {monday && <AddPanel monday={monday} day0={day0} close={() => setAdding(false)} />}
       </Sheet>
-    </>
+    </div>
+  )
+}
+
+/** Grille horaire : un jour (comme l'app École Directe) ou toute la semaine. */
+function Grid({ view, date, lessons, monday, today, onOpen }: { view: View; date: Date; lessons: Lesson[]; monday?: string; today: Date; onOpen: (id: string) => void }) {
+  const H = view === 'day' ? 38 : 46
+  const dayList = view === 'day' ? [dayIdx(date)] : [0, 1, 2, 3, 4]
+  const shown = lessons.filter((l) => dayList.includes(l.day))
+  const from = 7
+  const to = view === 'day' ? 23 : Math.max(18, Math.ceil(Math.max(0, ...shown.map((l) => toMin(l.end))) / 60))
+  const hours = Array.from({ length: to - from + 1 }, (_, i) => from + i)
+  const dates = monday ? dayList.map((i) => addDays(parse(monday), i)) : []
+
+  return (
+    <div className={`ed-grid ${view}`} style={{ '--H': `${H}px`, '--cols': dayList.length } as CSSProperties}>
+      {view === 'week' && (
+        <div className="ed-wk-head">
+          <span />
+          {dates.map((d) => <span key={d.toISOString()} className={d.toDateString() === today.toDateString() ? 'today' : ''}>{DAYS[dayIdx(d)].slice(0, 3)}<b>{d.getDate()}</b></span>)}
+        </div>
+      )}
+      {view === 'day' && <div className="ed-allday"><span>Journée</span><i /></div>}
+      <div className="ed-body" style={{ height: hours.length * H }}>
+        <div className="ed-hours">{hours.map((h) => <span key={h} style={{ height: H }}>{String(h).padStart(2, '0')}</span>)}</div>
+        <div className="ed-cols">
+          {dayList.map((d) => (
+            <div key={d} className="ed-col">
+              {layout(shown.filter((l) => l.day === d)).map(({ l, col, cols }) => (
+                <button key={l.id} className={`ed-block ${l.cancelled ? 'cancelled' : ''}`}
+                  style={{
+                    top: ((toMin(l.start) - from * 60) / 60) * H + 1, height: Math.max(20, ((toMin(l.end) - toMin(l.start)) / 60) * H - 3),
+                    left: `calc(${(col / cols) * 100}% + 3px)`, width: `calc(${100 / cols}% - 6px)`, background: l.cancelled ? undefined : colorOf(l.subject),
+                  } as CSSProperties}
+                  onClick={() => onOpen(l.id)} aria-label={`${l.subject}, ${DAYS[l.day]} ${l.start} à ${l.end}${l.cancelled ? ', annulé' : ''}`}>
+                  <span className="ed-l1">
+                    {view === 'day' && <span>{l.start} - {l.end}{l.cancelled && <b className="ed-x"> · ANNULÉ</b>}</span>}
+                    <strong>{upper(l.subject)}</strong>
+                  </span>
+                  {l.cancelled && <em className="ed-cancel">ANNULÉ</em>}
+                  {l.room && <span className="ed-room">{l.modified && <i aria-hidden="true">i</i>}{l.room}</span>}
+                  {l.teacher && <span className="ed-prof">{l.teacher}</span>}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -199,10 +271,10 @@ function LessonPanel({ l, close, act }: { l: Lesson; close: () => void; act: (la
   )
 }
 
-function AddPanel({ monday, close }: { monday: string; close: () => void }) {
+function AddPanel({ monday, day0, close }: { monday: string; day0: number; close: () => void }) {
   const { editPlan } = useSession()
   const [subject, setSubject] = useState('')
-  const [day, setDay] = useState(todayIndex())
+  const [day, setDay] = useState(day0)
   const [start, setStart] = useState('14:00')
   const [end, setEnd] = useState('15:00')
   const [room, setRoom] = useState('')
