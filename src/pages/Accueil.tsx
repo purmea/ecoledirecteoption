@@ -8,8 +8,10 @@ import { NowCard } from '../components/NowCard'
 import { CountUp } from '../fx'
 import { useHomeworkCheck } from '../hooks/useHomeworkCheck'
 
+const KIND = { absence: 'Absence', retard: 'Retard', punition: 'Punition', sanction: 'Sanction', exclusion: 'Exclusion' } as const
+
 export function Accueil() {
-  const { student, grades, lessons, homework, currentPeriod } = useData()
+  const { student, grades, lessons, homework, currentPeriod, incidents = [] } = useData()
   const { mode, applyPlan } = useSession()
   const me = useMyProfile()
   const onCheck = useHomeworkCheck()
@@ -18,6 +20,7 @@ export function Accueil() {
   const trend = averageTimeline(periodGrades)
   const delta = trend.length > 1 ? trend[trend.length - 1].value - trend[trend.length - 2].value : null
   const todo = homework.filter((h) => !h.done).sort((a, b) => a.due.localeCompare(b.due))
+  const unjustified = incidents.filter((i) => (i.kind === 'absence' || i.kind === 'retard') && !i.justified).length
   const latest = [...grades].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3)
 
 
@@ -80,6 +83,25 @@ export function Accueil() {
             </li>
           ))}
         </ul>
+      )}
+
+      {incidents.length > 0 && (
+        <>
+          <SectionTitle meta={unjustified > 0 ? <span className="status bad">{unjustified} non justifiée{unjustified > 1 ? 's' : ''}</span> : undefined}>Vie scolaire</SectionTitle>
+          <ul className="list">
+            {incidents.slice(0, 4).map((i) => (
+              <li key={i.id}>
+                <div className="grow">
+                  <strong>{KIND[i.kind]}{(i.kind === 'absence' || i.kind === 'retard') && (
+                    <span className={`status ${i.justified ? '' : 'bad'}`}>{i.justified ? 'Justifiée' : 'Non justifiée'}</span>
+                  )}</strong>
+                  <small className="clamp">{[i.label, i.detail].filter(Boolean).join(' · ') || '—'}</small>
+                </div>
+                <span className="muted small nowrap">{formatDate(i.date, { day: 'numeric', month: 'short' })}</span>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </>
   )

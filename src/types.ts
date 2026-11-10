@@ -72,6 +72,19 @@ export interface MessageDetail {
   files: string[]
 }
 
+/** Vie scolaire : absences, retards, punitions, sanctions et exclusions. */
+export interface Incident {
+  id: string
+  kind: 'absence' | 'retard' | 'punition' | 'sanction' | 'exclusion'
+  date: string // ISO
+  /** Motif ou intitulé tel que donné par l'école. */
+  label: string
+  /** Absence ou retard justifié(e). */
+  justified?: boolean
+  /** Durée ou précision (« 8 min », « 2 h »…). */
+  detail?: string
+}
+
 export interface SchoolData {
   student: Student
   periods: Period[]
@@ -79,6 +92,8 @@ export interface SchoolData {
   grades: Grade[]
   lessons: Lesson[]
   homework: Homework[]
+  /** Vie scolaire (absente des anciennes copies ou si l'école ne la partage pas). */
+  incidents?: Incident[]
   /** Messagerie (absente des anciennes copies gardées sur l'appareil). */
   messages?: Message[]
   /** Renseigné si la messagerie n'a pas pu être lue (réponse inattendue, droit manquant…). */

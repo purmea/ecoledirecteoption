@@ -1,5 +1,5 @@
 // Données de démonstration, utilisées par le mode « Essayer la démo ».
-import type { Grade, Homework, Lesson, Message, MessageDetail, SchoolData } from '../types'
+import type { Incident, Grade, Homework, Lesson, Message, MessageDetail, SchoolData } from '../types'
 
 const student = {
   firstName: 'Camille',
@@ -89,8 +89,15 @@ export const demoMessageDetails: Record<string, MessageDetail> = {
     body: 'Les menus de la semaine sont disponibles à l’accueil du restaurant scolaire.' },
 }
 
+const incidents: Incident[] = [
+  { id: 'v1', kind: 'retard', date: '2026-11-03', label: 'Transports en commun', detail: '8 min', justified: true },
+  { id: 'v2', kind: 'absence', date: '2026-10-21', label: 'Rendez-vous médical', detail: 'Journée', justified: true },
+  { id: 'v3', kind: 'punition', date: '2026-10-09', label: 'Bavardages en cours', detail: 'Travail supplémentaire' },
+]
+
 export const demoData: SchoolData = {
   student,
+  incidents,
   periods: [
     { code: 'A001', label: '1er trimestre', start: '2026-09-01', end: '2026-11-30' },
     { code: 'A002', label: '2e trimestre', start: '2026-12-01', end: '2027-03-06' },

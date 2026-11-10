@@ -29,7 +29,7 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 **Au quotidien**
 
 - **Notes** : courbe façon bourse (chaque segment vert s'il monte, rouge s'il baisse), uniquement dans cet onglet.
-- **Accueil** : moyenne qui défile, carte « En cours · fin dans 30 min » avec les **3 prochains cours** (même sur la semaine suivante), les **3 dernières notes en grand**, devoirs à faire
+- **Accueil** : moyenne qui défile, carte « En cours · fin dans 30 min » avec les **3 prochains cours** (même sur la semaine suivante), les **3 dernières notes en grand**, devoirs à faire, vie scolaire (absences, retards, punitions, exclusions, seulement s'il y en a)
 - **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix de la période (**trimestres ou semestres**, selon l'établissement, plus « Année »)
 - **Simulateur** : « et si j'avais 15/20 en maths (Coef 2) ? » → l'effet immédiat sur la moyenne générale
 - **Planning** : la même interface que l'app École Directe, toujours sur fond blanc : barre bleue avec les trois traits (menu de navigation, la barre du bas disparaît sur cet écran), vues **Jour / Semaine / Mois**, grille horaire et blocs colorés par matière ; touche un cours pour l'annuler, le masquer, changer salle, prof ou horaire, ou ajoute un cours avec « + » (modifications gardées dans l'app, l'école ne les voit pas)

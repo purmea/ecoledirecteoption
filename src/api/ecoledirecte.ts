@@ -1,6 +1,6 @@
 // Connexion et récupération des données École Directe, converties au format de l'app.
 // Référence (non officielle) : https://github.com/EduWireApps/ecoledirecte-api-docs
-import type { Grade, Homework, Lesson, Message, MessageDetail, Period, SchoolData, Student } from '../types'
+import type { Grade, Homework, Incident, Lesson, Message, MessageDetail, Period, SchoolData, Student } from '../types'
 import { b64decode, edRequest } from './client'
 
 export interface Account {
@@ -228,9 +228,48 @@ async function fetchHomework(s: Session) {
   return { homework, token: r.token }
 }
 
+interface RawLife {
+  absencesRetards?: Record<string, unknown>[]
+  sanctionsEncouragements?: Record<string, unknown>[]
+}
+const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
+
+/** Absences, retards, punitions, sanctions et exclusions (les encouragements sont ignorés). Jamais bloquant. */
+export async function fetchLife(s: Session): Promise<{ incidents: Incident[] } | null> {
+  try {
+    const r = await edRequest<RawLife>(`/v3/eleves/${s.account.id}/viescolaire.awp`, {}, { token: s.token, twoFa: s.twoFa })
+    const incidents: Incident[] = []
+    for (const a of r.data.absencesRetards ?? []) {
+      const type = text(a.typeElement).toLowerCase()
+      const date = text(a.date).slice(0, 10)
+      if (!date) continue
+      incidents.push({
+        id: `a${text(a.id) || date + incidents.length}`, kind: type.startsWith('retard') ? 'retard' : 'absence', date,
+        label: text(a.motif) || text(a.libelle), justified: a.justifie === true,
+        detail: text(a.motif) && text(a.libelle) && text(a.libelle) !== text(a.motif) ? text(a.libelle) : undefined,
+      })
+    }
+    for (const a of r.data.sanctionsEncouragements ?? []) {
+      const type = text(a.typeElement).toLowerCase()
+      if (type.startsWith('encouragement')) continue
+      const date = text(a.date).slice(0, 10)
+      if (!date) continue
+      const label = text(a.motif) || text(a.libelle)
+      incidents.push({
+        id: `s${text(a.id) || date + incidents.length}`, date, label,
+        kind: /exclu/i.test(`${a.libelle} ${a.motif}`) ? 'exclusion' : type.startsWith('punition') ? 'punition' : 'sanction',
+        detail: text(a.motif) && text(a.libelle) && text(a.libelle) !== label ? text(a.libelle) : undefined,
+      })
+    }
+    return { incidents: incidents.sort((x, y) => y.date.localeCompare(x.date)) }
+  } catch {
+    return null // droit manquant ou route indisponible : la section est simplement masquée
+  }
+}
+
 /** Charge toutes les données. Renvoie aussi le dernier jeton reçu (École Directe le renouvelle). */
 export async function fetchAll(s: Session): Promise<{ data: SchoolData; token: string }> {
-  const [g, l, h, m] = await Promise.all([fetchGrades(s), fetchLessonsFor(s, displayedMonday()), fetchHomework(s), fetchMessages(s)])
+  const [g, l, h, m, life] = await Promise.all([fetchGrades(s), fetchLessonsFor(s, displayedMonday()), fetchHomework(s), fetchMessages(s), fetchLife(s)])
   return {
     data: {
       student: toStudent(s.account),
@@ -239,6 +278,7 @@ export async function fetchAll(s: Session): Promise<{ data: SchoolData; token: s
       grades: g.grades,
       lessons: l.lessons,
       homework: h.homework,
+      ...(life ? { incidents: life.incidents } : {}),
       ...('messages' in m ? { messages: m.messages } : { messagesError: m.error }),
     },
     token: h.token ?? l.token ?? g.token ?? s.token,
