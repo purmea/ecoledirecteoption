@@ -14,24 +14,34 @@ import { Login } from './pages/Login'
 import { MessageView, Messages } from './pages/Messages'
 import { Profil } from './pages/Profil'
 import { PublicProfile } from './pages/PublicProfile'
-import { Reglages, type Theme } from './pages/Reglages'
+import { Reglages, type Accent, type Theme } from './pages/Reglages'
 import { buildSnapshot, getMyProfile, saveProfile } from './profile/api'
 
 export default function App() {
   const [theme, setTheme] = useLocalStorage<Theme>('edo:theme', 'system')
+  const [accent, setAccent] = useLocalStorage<Accent>('edo:accent', 'turquoise')
   useEffect(() => {
     if (theme === 'system') delete document.documentElement.dataset.theme
     else document.documentElement.dataset.theme = theme
   }, [theme])
+  useEffect(() => {
+    const root = document.documentElement
+    if (accent === 'turquoise') delete root.dataset.accent
+    else root.dataset.accent = accent
+    // La barre du navigateur (téléphone) prend la couleur choisie.
+    const meta = document.querySelector('meta[name="theme-color"]')
+    const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+    meta?.setAttribute('content', dark ? '#0f0f13' : getComputedStyle(root).getPropertyValue('--accent').trim() || '#00809a')
+  }, [accent, theme])
 
   return (
     <SessionProvider>
-      <Shell theme={theme} setTheme={setTheme} />
+      <Shell theme={theme} setTheme={setTheme} accent={accent} setAccent={setAccent} />
     </SessionProvider>
   )
 }
 
-function Shell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
+function Shell({ theme, setTheme, accent, setAccent }: { theme: Theme; setTheme: (t: Theme) => void; accent: Accent; setAccent: (a: Accent) => void }) {
   const { status, data, error, mode, refresh } = useSession()
   const { route, param } = useHashRoute()
   const order = ['accueil', 'notes', 'planning', 'devoirs', 'messages', 'profil', 'reglages']
@@ -85,7 +95,7 @@ function Shell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void
         {route === 'devoirs' && <Devoirs />}
         {route === 'messages' && (param ? <MessageView id={param} key={param} /> : <Messages />)}
         {route === 'profil' && <Profil />}
-        {route === 'reglages' && <Reglages theme={theme} setTheme={setTheme} />}
+        {route === 'reglages' && <Reglages theme={theme} setTheme={setTheme} accent={accent} setAccent={setAccent} />}
       </main>
       <BottomNav current={route} badges={{ devoirs: todo, messages: unread }} />
       <Toaster />

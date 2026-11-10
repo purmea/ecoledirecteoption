@@ -1,16 +1,18 @@
 /* ------------------------------------------------------------------
-   Design tokens — fond uni très légèrement bleuté, encre neutre, un seul accent indigo.
-   L'indigo est validé (contraste ≥ 3:1 sur le fond) en clair comme en sombre.
+   Design tokens — fond uni, encre neutre, un seul accent au choix (Réglages).
+   Chaque accent a une version claire et une version sombre, validées (contraste ≥ 3:1 sur le fond).
 ------------------------------------------------------------------- */
 :root {
+  --accent-l: #00809a;   /* turquoise (par défaut) */
+  --accent-d: #1ea3bd;
   --bg: #f8f8fa;
   --text: #0d0d12;
   --text-2: #4f4f5a;
   --muted: #74747f;
   --line: #e6e6ec;
   --fill: #eeeef3;
-  --accent: #5656d6;
-  --accent-soft: #ececfc;
+  --accent: var(--accent-l);
+  --accent-soft: color-mix(in srgb, var(--accent) 11%, var(--bg));
   --on-accent: #ffffff;
   --bad: #c93434;
   --good: #1c7f55;
@@ -18,6 +20,11 @@
   --nav-h: 60px;
   color-scheme: light;
 }
+:root[data-accent='bleu'] { --accent-l: #2a78d6; --accent-d: #4b95ee; }
+:root[data-accent='vert'] { --accent-l: #17894f; --accent-d: #22a56c; }
+:root[data-accent='orange'] { --accent-l: #c9501a; --accent-d: #e56a30; }
+:root[data-accent='rose'] { --accent-l: #d23f78; --accent-d: #e64a83; }
+:root[data-accent='graphite'] { --accent-l: #2c2c34; --accent-d: #e6e6ee; }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
@@ -27,8 +34,8 @@
     --muted: #8d8d9a;
     --line: #25252d;
     --fill: #1b1b22;
-    --accent: #8484ee;
-    --accent-soft: #23233f;
+    --accent: var(--accent-d);
+    --accent-soft: color-mix(in srgb, var(--accent) 16%, var(--bg));
     --on-accent: #0f0f13;
     --bad: #f07272;
     --good: #5fcf98;
@@ -42,8 +49,8 @@
   --muted: #8d8d9a;
   --line: #25252d;
   --fill: #1b1b22;
-  --accent: #8484ee;
-  --accent-soft: #23233f;
+  --accent: var(--accent-d);
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, var(--bg));
   --on-accent: #0f0f13;
   --bad: #f07272;
   --good: #5fcf98;
@@ -678,3 +685,11 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .msg-files li { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 10px; background: var(--fill); font-size: 14.5px; overflow-wrap: anywhere; }
 .nav-item { font-size: 10.5px; }
 .page > .notice { margin: 0 0 16px; }
+
+/* Choix de la couleur d'accent */
+.accents { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 12px; }
+.accent-dot { display: grid; justify-items: center; gap: 6px; padding: 0; border: 0; background: none; font-size: 11.5px; color: var(--muted); }
+.accent-dot span { width: 100%; max-width: 44px; aspect-ratio: 1; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(127 127 127 / 0.25); transition: box-shadow 0.4s var(--spring), transform 0.4s var(--spring); }
+.accent-dot[aria-checked='true'] { color: var(--text); font-weight: 700; }
+.accent-dot[aria-checked='true'] span { transform: scale(1.06); box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
+.accent-dot:active span { transform: scale(0.9); }

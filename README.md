@@ -42,7 +42,7 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 
 **Confort**
 
-- Thème clair, sombre ou automatique, pensé pour le téléphone (encoches, barre du bas, PWA)
+- Thème clair, sombre ou automatique, **6 couleurs d'accent au choix** (turquoise, bleu, vert, orange, rose, graphite), pensé pour le téléphone (encoches, barre du bas, PWA)
 - Animations façon Apple : ressorts physiques, pages qui glissent dans le sens de la navigation, barre du bas à bulle mobile, onglets qui glissent, titre qui se réduit au défilement, messages « Dynamic Island »
 - **Hors connexion** : l'app s'ouvre instantanément avec tes dernières données (gardées sur l'appareil) puis se met à jour ; tirer vers le bas pour actualiser
 - HTML sémantique, ARIA, focus visible, respect de « réduire les animations »
