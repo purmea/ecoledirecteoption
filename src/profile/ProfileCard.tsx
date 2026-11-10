@@ -58,9 +58,8 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
   const presence = options.discordPresence && discord
   const footer = [
     profile.views !== undefined && { key: 'views', icon: 'eye' as const, text: profile.views.toLocaleString('fr-FR'), title: 'Vues du profil' },
-    profile.location && { key: 'loc', icon: 'pin' as const, text: profile.location, title: 'Localisation' },
     joined && !embedded && { key: 'since', icon: 'calendar' as const, text: joined, title: `Membre ${joined}` },
-  ].filter((f): f is { key: string; icon: 'eye' | 'pin' | 'calendar'; text: string; title: string } => !!f)
+  ].filter((f): f is { key: string; icon: 'eye' | 'calendar'; text: string; title: string } => !!f)
 
   return (
     <div className={`pf-page ${embedded ? 'embedded' : ''} ${hasAudio && options.volumeControl ? 'has-volume' : ''}`} style={style}>

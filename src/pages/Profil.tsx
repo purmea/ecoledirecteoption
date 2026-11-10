@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useData, useSession } from '../state/session'
 import { PageHeader, SectionTitle } from '../components/ui'
+import { ACCENTS, THEMES, useAppearance } from '../state/appearance'
 import { Icon } from '../components/Icon'
 import { toast } from '../fx'
 import { ProfileView } from '../profile/ProfileCard'
 import { useDiscord } from '../profile/discord'
 import {
-  BG_EFFECTS, DEFAULTS, NAME_EFFECTS, PROFILE_THEMES, WIDGETS,
+  BG_EFFECTS, DEFAULTS, NAME_EFFECTS, WIDGETS,
   type Profile, type Widget, type WidgetType,
 } from '../profile/types'
 import {
-  buildSnapshot, checkHandle, cursorFromImage, deleteProfile, getMyProfile, imageToAvatar,
-  saveProfile, suggestHandle, uploadAudio, uploadBackground,
+  buildSnapshot, checkHandle, deleteProfile, getMyProfile, imageToAvatar,
+  saveProfile, suggestHandle,
 } from '../profile/api'
 
 const newId = () => Math.random().toString(36).slice(2, 10)
@@ -21,6 +22,10 @@ export function Profil() {
   const { mode } = useSession()
   const m = mode ?? 'demo'
   const snapshot = useMemo(() => buildSnapshot(data), [data])
+  const { theme, accent, custom, colors: appColors, setTheme, setAccent, setCustom } = useAppearance()
+  // La page de profil reprend les couleurs de l'app : un seul thème pour tout.
+  const themed = useMemo(() => ({ background: appColors.bg.startsWith('#') ? appColors.bg : '#0f0f13', text: appColors.text, icons: appColors.accent, accent: appColors.text }), [appColors])
+  const fileRef = useRef<HTMLInputElement>(null)
   const subjects = snapshot.subjects.map((s) => s.subject)
 
   const [saved, setSaved] = useState<Profile | null>(null)
@@ -29,6 +34,12 @@ export function Profil() {
   const [busy, setBusy] = useState<string | null>(null)
   // Vrai dès que l'utilisateur modifie quelque chose : rien n'est enregistré (ni pseudo réservé) avant.
   const [touched, setTouched] = useState(false)
+  // Changer le thème ou la couleur enregistre aussi les couleurs de la page de profil.
+  const firstColors = useRef(true)
+  useEffect(() => {
+    if (firstColors.current) { firstColors.current = false; return }
+    setTouched(true)
+  }, [themed.background, themed.text, themed.icons])
   const [handleState, setHandleState] = useState<{ checking: boolean; available?: boolean; reason?: string }>({ checking: false })
 
   useEffect(() => {
@@ -105,14 +116,14 @@ export function Profil() {
   const addWidget = (type: WidgetType) =>
     setWidgets([...cur.widgets, { id: newId(), type, ...(type === 'subject' ? { subject: subjects[0] ?? '' } : {}) }])
 
-  const dirty = JSON.stringify({ ...cur, snapshot: null, views: null }) !== JSON.stringify(saved && { ...saved, snapshot: null, views: null })
+  const dirty = JSON.stringify({ ...cur, colors: themed, snapshot: null, views: null }) !== JSON.stringify(saved && { ...saved, snapshot: null, views: null })
   const canSave = handleState.available !== false && !handleState.checking && status.kind !== 'saving' && !busy
 
   const onSave = async () => {
     const draftAtSave = cur
     setStatus({ kind: 'saving' })
     try {
-      const p = await saveProfile(m, { ...cur, snapshot })
+      const p = await saveProfile(m, { ...cur, colors: themed, snapshot })
       setSaved(p)
       setDraft((d) => (d && JSON.stringify({ ...d, snapshot: null, views: null }) !== JSON.stringify({ ...draftAtSave, snapshot: null, views: null }) ? d : p))
       setStatus({ kind: 'ok', msg: 'Enregistré' })
@@ -152,7 +163,7 @@ export function Profil() {
     <>
       <PageHeader title="Profil" subtitle={m === 'demo' ? 'Mode démo : ton profil reste sur cet appareil.' : undefined} />
 
-      <div className="pf-preview"><ProfileView profile={{ ...draft, snapshot }} embedded /></div>
+      <div className="pf-preview"><ProfileView profile={{ ...draft, colors: themed, snapshot }} embedded /></div>
 
       <p className={`autosave ${status.kind}`} role="status" aria-live="polite">
         {status.kind === 'saving' ? 'Enregistrement…'
@@ -171,60 +182,64 @@ export function Profil() {
         </div>
       )}
 
-      {/* ----------------------------------------------------------- Thèmes */}
-      <Group title="Thèmes" open>
-        <div className="ptheme-grid" role="radiogroup" aria-label="Thème du profil">
-          {PROFILE_THEMES.map((t) => {
-            const on = JSON.stringify(t.apply.colors) === JSON.stringify(draft.colors) && t.apply.effects.background === draft.effects.background
-            return (
-              <button key={t.id} role="radio" aria-checked={on} className="ptheme"
-                onClick={() => set({ ...t.apply, effects: { ...draft.effects, ...t.apply.effects } })}>
-                <span style={{ background: t.apply.colors.background }}>
-                  <i style={{ background: t.apply.colors.text }} />
-                  <i style={{ background: t.apply.colors.text, opacity: 0.35, width: '55%' }} />
-                  <b style={{ background: t.apply.colors.icons }} />
-                </span>
-                {t.label}
-              </button>
-            )
-          })}
+      {/* ------------------------------------------------------ Thème et couleurs */}
+      <Group title="Thème et couleurs" open>
+        <p className="group-hint">S’applique à toute l’application et à ta page de profil.</p>
+
+        <h3 className="sub-title">Fond</h3>
+        <div className="theme-tiles" role="radiogroup" aria-label="Fond">
+          {THEMES.map((t) => (
+            <button key={t.id} role="radio" aria-checked={theme === t.id} className="theme-tile" onClick={() => setTheme(t.id)}>
+              <span style={{ background: t.bg }}>
+                <i style={{ background: t.fill }} /><i style={{ background: t.fill, width: '40%' }} />
+                <b style={{ background: 'var(--accent)' }} />
+              </span>
+              {t.label}
+            </button>
+          ))}
+          <button role="radio" aria-checked={theme === 'perso'} className="theme-tile" onClick={() => setTheme('perso')}>
+            <span style={{ background: custom.bg }}>
+              <i style={{ background: 'rgb(255 255 255 / 0.14)' }} /><i style={{ background: 'rgb(255 255 255 / 0.14)', width: '40%' }} />
+              <b style={{ background: 'var(--accent)' }} />
+            </span>
+            Perso
+          </button>
         </div>
+
+        <h3 className="sub-title">Couleur</h3>
+        <div className="accents" role="radiogroup" aria-label="Couleur d’accent">
+          {ACCENTS.map((a) => (
+            <button key={a.id} role="radio" aria-checked={accent === a.id} className="accent-dot" onClick={() => setAccent(a.id)}>
+              <span style={{ background: appColors.dark ? a.d : a.l }} />
+              {a.label}
+            </button>
+          ))}
+          <button role="radio" aria-checked={accent === 'perso'} className="accent-dot" onClick={() => setAccent('perso')}>
+            <span style={{ background: custom.accent }} />
+            Perso
+          </button>
+        </div>
+
+        <h3 className="sub-title">Couleur exacte</h3>
+        <ColorField label="Couleur d’accent" value={accent === 'perso' ? custom.accent : appColors.accent}
+          onChange={(v) => { setCustom({ accent: v }); setAccent('perso') }} />
+        <ColorField label="Fond" value={theme === 'perso' ? custom.bg : appColors.bg.startsWith('#') ? appColors.bg : '#0f0f13'}
+          onChange={(v) => { setCustom({ bg: v }); setTheme('perso') }} />
       </Group>
 
-      {/* ------------------------------------------------------------ Médias */}
-      <Group title="Import de médias" open>
-      <div className="media-grid">
-        <Drop label="Arrière-plan" hint="Image, GIF ou vidéo MP4" accept="image/*,video/mp4,video/webm" busy={busy === 'bg'}
-          preview={draft.background && (draft.background.type === 'video'
-            ? <video src={draft.background.url} muted autoPlay loop playsInline />
-            : <img src={draft.background.url} alt="" />)}
-          onFile={(f) => run('bg', async () => ({ background: await uploadBackground(m, f) }))}
-          onClear={() => set({ background: null })} />
-        <Drop label="Avatar" hint="Recadré en carré" accept="image/*" busy={busy === 'avatar'} round
-          preview={draft.avatar && <img src={draft.avatar} alt="" />}
-          onFile={(f) => run('avatar', async () => ({ avatar: await imageToAvatar(f) }))}
-          onClear={() => set({ avatar: null })} />
-        <Drop label="Audio" hint="MP3, M4A, OGG" accept="audio/*" busy={busy === 'audio'}
-          preview={draft.audio && <span className="drop-audio"><Icon name="music" size={22} /><small>Musique ajoutée</small></span>}
-          onFile={(f) => run('audio', async () => ({ audio: await uploadAudio(m, f) }))}
-          onClear={() => set({ audio: null })} />
-        <Drop label="Curseur" hint="Petite image (32 px)" accept="image/png,image/webp,image/gif,image/jpeg" busy={busy === 'cursor'}
-          preview={draft.cursor && <img src={draft.cursor} alt="" className="drop-cursor" />}
-          onFile={(f) => run('cursor', async () => ({ cursor: await cursorFromImage(f) }))}
-          onClear={() => set({ cursor: null })} />
-      </div>
-
-      {draft.audio && (
-        <label className="field">
-          <span>Texte de l’écran d’entrée</span>
-          <input value={draft.enterText} maxLength={40} placeholder="clique pour entrer" onChange={(e) => set({ enterText: e.target.value })} />
-          <small>Affiché avant de lancer ta musique, entouré de ★｡°✩ … ★˚.★</small>
-        </label>
-      )}
-
-      </Group>
       {/* ---------------------------------------------------------- Identité */}
       <Group title="Identité" open>
+      <div className="row-form">
+        <button className="avatar-edit" onClick={() => fileRef.current?.click()} aria-label="Changer la photo de profil" disabled={busy === 'avatar'}>
+          {busy === 'avatar' ? <span className="spinner" /> : draft.avatar ? <img src={draft.avatar} alt="" /> : <Icon name="camera" size={20} />}
+        </button>
+        <div className="grow">
+          <button className="text-btn" onClick={() => fileRef.current?.click()}>{draft.avatar ? 'Changer la photo' : 'Ajouter une photo'}</button>
+          {draft.avatar && <button className="text-btn muted" onClick={() => set({ avatar: null })}>Retirer</button>}
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" hidden
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) void run('avatar', async () => ({ avatar: await imageToAvatar(f) })); e.target.value = '' }} />
+      </div>
       <label className="field">
         <span>Pseudo</span>
         <span className="prefixed">
@@ -247,14 +262,6 @@ export function Profil() {
         <textarea value={draft.bio} maxLength={140} rows={2} placeholder="c’est ma description"
           onChange={(e) => set({ bio: e.target.value })} />
       </label>
-      <label className="field">
-        <span>Localisation</span>
-        <span className="prefixed">
-          <span><Icon name="pin" size={16} /></span>
-          <input value={draft.location} maxLength={40} placeholder="Ma localisation" onChange={(e) => set({ location: e.target.value })} />
-        </span>
-      </label>
-
       </Group>
       {/* ------------------------------------------- Personnalisation générale */}
       <Group title="Personnalisation générale">
@@ -283,14 +290,6 @@ export function Profil() {
           ))}
         </div>
       </div>
-
-      </Group>
-      {/* ----------------------------------------------------------- Couleurs */}
-      <Group title="Personnalisation des couleurs">
-      <ColorField label="Couleur d’accentuation (blocs)" value={draft.colors.accent} onChange={(v) => setIn('colors', { accent: v })} />
-      <ColorField label="Couleur du texte" value={draft.colors.text} onChange={(v) => setIn('colors', { text: v })} />
-      <ColorField label="Couleur d’arrière-plan" value={draft.colors.background} onChange={(v) => setIn('colors', { background: v })} />
-      <ColorField label="Couleur des icônes" value={draft.colors.icons} onChange={(v) => setIn('colors', { icons: v })} />
 
       </Group>
       {/* ------------------------------------------------------------ Widgets */}
@@ -344,7 +343,6 @@ export function Profil() {
  <Toggle label="Description animée" hint="Ta description s’écrit lettre par lettre" on={draft.options.animatedBio} onChange={(v) => setIn('options', { animatedBio: v })} />
       <Toggle label="Titre animé" hint="Le titre de l’onglet s’écrit en boucle" on={draft.options.animatedTitle} onChange={(v) => setIn('options', { animatedTitle: v })} />
       <Toggle label="Inverser les couleurs des blocs" hint="Widgets clairs, texte foncé" on={draft.options.invertBlocks} onChange={(v) => setIn('options', { invertBlocks: v })} />
-      <Toggle label="Contrôle du volume" hint="Bouton son sur ton profil" on={draft.options.volumeControl} onChange={(v) => setIn('options', { volumeControl: v })} />
       <Toggle label="Badges" hint="Félicitations, compliments, en progression…" on={draft.options.showBadges} onChange={(v) => setIn('options', { showBadges: v })} />
 
       </Group>
@@ -365,25 +363,6 @@ export function Profil() {
 }
 
 // --- Contrôles ----------------------------------------------------------------
-
-function Drop({ label, hint, accept, preview, busy, round, onFile, onClear }: {
-  label: string; hint: string; accept: string; preview: ReactNode; busy: boolean; round?: boolean
-  onFile: (f: File) => void; onClear: () => void
-}) {
-  const ref = useRef<HTMLInputElement>(null)
-  return (
-    <div className="drop-field">
-      <span className="drop-label">{label}</span>
-      <div className={`drop ${preview ? 'has' : ''} ${round ? 'round' : ''}`}>
-        <button className="drop-btn" onClick={() => ref.current?.click()} disabled={busy} aria-label={`${label} : choisir un fichier`}>
-          {busy ? <span className="spinner" /> : preview || <><Icon name="image" size={22} /><small>{hint}</small></>}
-        </button>
-        {preview && !busy && <button className="drop-clear" onClick={onClear} aria-label={`Retirer ${label.toLowerCase()}`}><Icon name="x" size={14} /></button>}
-      </div>
-      <input ref={ref} type="file" accept={accept} hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = '' }} />
-    </div>
-  )
-}
 
 function Toggle({ label, hint, on, onChange }: { label: string; hint?: string; on: boolean; onChange: (v: boolean) => void }) {
   return (

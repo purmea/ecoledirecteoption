@@ -68,3 +68,12 @@ export function timeAgo(at: number, now = Date.now()) {
   const d = Math.floor(h / 24)
   return d === 1 ? 'hier' : `il y a ${d} jours`
 }
+
+/** « 1er Trimestre » → « T1 », « 2ème Semestre » → « S2 » ; autre libellé : inchangé (écoles à périodes différentes). */
+export function periodShort(label: string) {
+  const a = /(\d+)\s*(?:er|re|e|ème|eme|ère)?\s*(trimestre|semestre)/i.exec(label)
+  if (a) return `${a[2][0].toUpperCase()}${a[1]}`
+  const b = /(trimestre|semestre)\s*(\d+)/i.exec(label)
+  if (b) return `${b[1][0].toUpperCase()}${b[2]}`
+  return label
+}

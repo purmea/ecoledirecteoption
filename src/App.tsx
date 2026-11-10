@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { useHashRoute } from './hooks/useHashRoute'
-import { useLocalStorage } from './hooks/useLocalStorage'
 import { SessionProvider, useMessages, useSession } from './state/session'
 import { BottomNav } from './components/BottomNav'
 import { Confetti, Toaster, toast } from './fx'
@@ -14,31 +13,21 @@ import { Login } from './pages/Login'
 import { MessageView, Messages } from './pages/Messages'
 import { Profil } from './pages/Profil'
 import { PublicProfile } from './pages/PublicProfile'
-import { Reglages, type Accent, type Theme } from './pages/Reglages'
+import { Reglages } from './pages/Reglages'
+import { AppearanceProvider } from './state/appearance'
 import { buildSnapshot, getMyProfile, saveProfile } from './profile/api'
 
 export default function App() {
-  // Nouvelles clés : le thème par défaut est désormais « marine » avec l'accent rouge.
-  const [theme, setTheme] = useLocalStorage<Theme>('edo:theme2', 'marine')
-  const [accent, setAccent] = useLocalStorage<Accent>('edo:accent2', 'rouge')
-  useEffect(() => {
-    const root = document.documentElement
-    if (theme === 'auto') delete root.dataset.theme
-    else root.dataset.theme = theme
-    if (accent === 'rouge') delete root.dataset.accent
-    else root.dataset.accent = accent
-    // La barre du navigateur (téléphone) prend la couleur du fond.
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', getComputedStyle(root).getPropertyValue('--bg').trim() || '#0a1a3a')
-  }, [theme, accent])
-
   return (
-    <SessionProvider>
-      <Shell theme={theme} setTheme={setTheme} accent={accent} setAccent={setAccent} />
-    </SessionProvider>
+    <AppearanceProvider>
+      <SessionProvider>
+        <Shell />
+      </SessionProvider>
+    </AppearanceProvider>
   )
 }
 
-function Shell({ theme, setTheme, accent, setAccent }: { theme: Theme; setTheme: (t: Theme) => void; accent: Accent; setAccent: (a: Accent) => void }) {
+function Shell() {
   const { status, data, error, mode, refresh } = useSession()
   const { route, param } = useHashRoute()
   const messages = useMessages()
@@ -93,7 +82,7 @@ function Shell({ theme, setTheme, accent, setAccent }: { theme: Theme; setTheme:
         {route === 'devoirs' && <Devoirs />}
         {route === 'messages' && (param ? <MessageView id={param} key={param} /> : <Messages />)}
         {route === 'profil' && <Profil />}
-        {route === 'reglages' && <Reglages theme={theme} setTheme={setTheme} accent={accent} setAccent={setAccent} />}
+        {route === 'reglages' && <Reglages />}
       </main>
       <BottomNav current={route} badges={{ devoirs: todo, messages: unread }} />
       <Toaster />

@@ -22,7 +22,7 @@ export function Simulator({ grades, subjects }: { grades: Grade[]; subjects: str
         </select>
         <div className="sim-coef" role="group" aria-label="Coefficient">
           {[1, 2, 3].map((c) => (
-            <button key={c} aria-pressed={coef === c} onClick={() => setCoef(c)}>×{c}</button>
+            <button key={c} aria-pressed={coef === c} onClick={() => setCoef(c)}>Coef {c}</button>
           ))}
         </div>
       </div>

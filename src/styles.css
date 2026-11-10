@@ -5,7 +5,7 @@
    Chaque accent existe en version claire (--accent-l) et sombre (--accent-d), contrastes validés.
 ------------------------------------------------------------------- */
 :root {
-  --accent-l: #d01f3a; --on-l: #ffffff;   /* rouge (par défaut) */
+  --accent-l: #d01f3a; --on-l: #ffffff;   /* rouge (par défaut) ; l'app réécrit ces valeurs selon le choix */
   --accent-d: #ee2d46; --on-d: #ffffff;
   --gutter: 20px;
   --nav-h: 60px;
@@ -24,27 +24,35 @@
   --good: #1c7f55;
   color-scheme: light;
 }
-:root[data-accent='turquoise'] { --accent-l: #00809a; --accent-d: #1ea3bd; --on-l: #ffffff; --on-d: #0f0f13; }
-:root[data-accent='bleu'] { --accent-l: #2a78d6; --accent-d: #4b95ee; --on-l: #ffffff; --on-d: #0f0f13; }
-:root[data-accent='vert'] { --accent-l: #17894f; --accent-d: #22a56c; --on-l: #ffffff; --on-d: #0f0f13; }
-:root[data-accent='orange'] { --accent-l: #c9501a; --accent-d: #e56a30; --on-l: #ffffff; --on-d: #0f0f13; }
-:root[data-accent='rose'] { --accent-l: #d23f78; --accent-d: #e64a83; --on-l: #ffffff; --on-d: #0f0f13; }
-:root[data-accent='blanc'] { --accent-l: #2c2c34; --accent-d: #f1f1f5; --on-l: #ffffff; --on-d: #0f0f13; }
 
 /* thème nuit : noir bleuté neutre */
 :root[data-theme='nuit'] {
   --bg: #0f0f13; --text: #f1f1f5; --text-2: #c5c5d0; --muted: #8d8d9a; --line: #25252d; --fill: #1b1b22;
   --bad: #f07272; --good: #5fcf98;
 }
-/* thème marine : fond bleu marine */
+/* thème marine : bleu marine presque noir */
 :root[data-theme='marine'] {
-  --bg: #0a1a3a; --text: #f2f5ff; --text-2: #c5cde8; --muted: #93a1c9; --line: #1d3166; --fill: #12285a;
+  --bg: #050c20; --text: #f0f4ff; --text-2: #c3cce6; --muted: #8e9bc4; --line: #172554; --fill: #0d1836;
   --bad: #ff7b7b; --good: #5fd9a0;
 }
 :root[data-theme='nuit'], :root[data-theme='marine'] {
   --accent: var(--accent-d);
   --on-accent: var(--on-d);
   --accent-soft: color-mix(in srgb, var(--accent) 18%, var(--bg));
+  color-scheme: dark;
+}
+/* fond personnalisé : tout est calculé à partir de la couleur choisie (--bg et --text sont posés par l'app) */
+:root[data-theme='perso'] {
+  --fill: color-mix(in srgb, var(--text) 8%, var(--bg));
+  --line: color-mix(in srgb, var(--text) 16%, var(--bg));
+  --muted: color-mix(in srgb, var(--text) 58%, var(--bg));
+  --text-2: color-mix(in srgb, var(--text) 82%, var(--bg));
+}
+:root[data-theme='perso'][data-tone='dark'] {
+  --accent: var(--accent-d);
+  --on-accent: var(--on-d);
+  --accent-soft: color-mix(in srgb, var(--accent) 18%, var(--bg));
+  --bad: #ff7b7b; --good: #5fd9a0;
   color-scheme: dark;
 }
 /* auto : suit le téléphone (clair ou nuit) */
@@ -433,23 +441,7 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .back { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-size: 15px; margin-bottom: 8px; }
 .back svg { transform: rotate(180deg); }
 
-/* Éditeur : médias, interrupteurs, curseurs, couleurs, réseaux ----------- */
-.media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
-.drop-field { display: grid; gap: 6px; min-width: 0; }
-.drop-label { font-size: 13px; font-weight: 500; color: var(--text-2); }
-.drop { position: relative; }
-.drop-btn {
-  width: 100%; aspect-ratio: 4 / 3; display: grid; place-content: center; justify-items: center; gap: 6px; padding: 0; overflow: hidden;
-  border: 1.5px dashed var(--line); border-radius: 14px; background: var(--fill); color: var(--muted); text-align: center;
-}
-.drop-btn small { padding: 0 10px; font-size: 12px; }
-.drop.has .drop-btn { border-style: solid; }
-.drop-btn > img, .drop-btn > video { width: 100%; height: 100%; object-fit: cover; }
-.drop.round .drop-btn > img { width: 70%; height: auto; aspect-ratio: 1; border-radius: 50%; }
-.drop-btn > img.drop-cursor { width: 32px; height: auto; object-fit: contain; image-rendering: pixelated; }
-.drop-audio { display: grid; justify-items: center; gap: 6px; width: 100%; padding: 0 8px; color: var(--text-2); }
-.drop-audio small { color: var(--text-2); }
-.drop-clear { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgb(0 0 0 / 0.6); color: #fff; }
+/* Éditeur : interrupteurs, curseurs, couleurs */
 
 .toggle-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
 .toggle-row .grow > span { font-weight: 500; white-space: normal; }
@@ -533,8 +525,7 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .group > summary svg { color: var(--muted); transition: transform 0.25s; }
 .group[open] > summary svg { transform: rotate(90deg); }
 .group-body { padding-bottom: 20px; animation: rise 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.group-body > .field:first-child, .group-body > .media-grid:first-child { margin-top: 0; }
-.group + .save-bar { margin-top: 20px; }
+.group-body > .field:first-child { margin-top: 0; }
 
 /* Connexion : apparition en cascade */
 .login > * { animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
@@ -558,10 +549,10 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .now-bar span { display: block; height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.6s; }
 
 .sim { display: grid; gap: 14px; padding: 16px; border-radius: 16px; background: var(--fill); margin-top: 8px; }
-.sim-row { display: flex; gap: 10px; }
+.sim-row { display: grid; gap: 10px; }
 .sim select { flex: 1; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; font-size: 15px; }
-.sim-coef { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
-.sim-coef button { border: 0; background: none; padding: 5px 10px; border-radius: 7px; font-weight: 600; font-size: 14px; color: var(--muted); }
+.sim-coef { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 3px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+.sim-coef button { border: 0; background: none; padding: 7px 10px; border-radius: 7px; font-weight: 600; font-size: 14px; color: var(--muted); }
 .sim-coef button[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); }
 .sim-slider { display: grid; gap: 4px; font-size: 14px; color: var(--text-2); }
 .sim-slider strong { font-size: 18px; color: var(--text); font-variant-numeric: tabular-nums; }
@@ -673,15 +664,15 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .page > .notice { margin: 0 0 16px; }
 
 /* Choix de la couleur d'accent */
-.accents { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 12px; }
-.accent-dot { display: grid; justify-items: center; gap: 6px; padding: 0; border: 0; background: none; font-size: 10.5px; color: var(--muted); }
+.accents { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px 6px; margin-top: 4px; padding: 6px 6px 2px; }
+.accent-dot { display: grid; justify-items: center; gap: 6px; padding: 0; border: 0; background: none; font-size: 11.5px; color: var(--muted); }
 .accent-dot span { width: 100%; max-width: 44px; aspect-ratio: 1; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(127 127 127 / 0.25); transition: box-shadow 0.4s var(--spring), transform 0.4s var(--spring); }
 .accent-dot[aria-checked='true'] { color: var(--text); font-weight: 700; }
 .accent-dot[aria-checked='true'] span { transform: scale(1.06); box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
 .accent-dot:active span { transform: scale(0.9); }
 
 /* Choix du thème : aperçus miniatures */
-.theme-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+.theme-tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 4px; padding: 6px 6px 2px; }
 .theme-tile { display: grid; gap: 7px; padding: 0; border: 0; background: none; font-size: 12.5px; color: var(--muted); }
 .theme-tile > span { position: relative; display: grid; align-content: start; gap: 5px; aspect-ratio: 3 / 4; padding: 10px 8px; border-radius: 14px; box-shadow: inset 0 0 0 1px rgb(127 127 127 / 0.3); transition: box-shadow 0.4s var(--spring), transform 0.4s var(--spring); overflow: hidden; }
 .theme-tile i { display: block; height: 7px; width: 100%; border-radius: 4px; }
@@ -741,3 +732,8 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .ptheme[aria-checked='true'] { color: var(--text); font-weight: 700; }
 .ptheme[aria-checked='true'] > span { transform: scale(1.05); box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
 .ptheme:active > span { transform: scale(0.93); }
+
+/* Thème et couleurs (dans le profil) */
+.sub-title { margin: 18px 0 2px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.group-hint { margin: 0 0 4px; font-size: 14px; color: var(--muted); }
+.theme-tile > span { aspect-ratio: 3 / 4.2; }

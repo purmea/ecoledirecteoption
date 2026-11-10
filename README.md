@@ -29,20 +29,20 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 **Au quotidien**
 
 - **Accueil** : moyenne qui défile, carte « En cours · fin dans 30 min » avec les **3 prochains cours** (même sur la semaine suivante), les **3 dernières notes en grand**, devoirs à faire
-- **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix du trimestre
-- **Simulateur** : « et si j'avais 15/20 en maths (coef 2) ? » → l'effet immédiat sur la moyenne générale
+- **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix de la période (**trimestres ou semestres**, selon l'établissement, plus « Année »)
+- **Simulateur** : « et si j'avais 15/20 en maths (Coef 2) ? » → l'effet immédiat sur la moyenne générale
 - **Planning** : emploi du temps navigable semaine par semaine (flèches ou glissement du doigt), cours annulés et cours en cours mis en avant
 - **Messages** : boîte de réception, ouverture d'un message (marqué comme lu), et raccourcis en haut du message : **épingler, archiver, supprimer, marquer comme non lu** (avec « Annuler »), filtres Tous / Non lus / Épinglés / Archivés
 - **Devoirs** : consignes groupées par date, cases à cocher synchronisées avec École Directe, confettis quand tout est fait
 
 **Profil public** (`#/u/ton-pseudo`)
 
-- Page au style « clean » : fond image ou vidéo, musique, effets (pluie, neige, étoiles…), couleurs, badges, widgets de moyennes
-- 10 thèmes complets en un geste, pseudo unique, photo, bio, localisation, compteur de vues, présence Discord ; **enregistrement automatique** (aucun bouton à valider) ; profil privé par défaut, public quand tu l'actives
+- Page au style « clean » : effets d'arrière-plan (pluie, neige, étoiles…), badges, widgets de moyennes ; elle reprend le thème et les couleurs de l'app
+- Pseudo unique, photo, bio, compteur de vues, présence Discord ; **enregistrement automatique** (aucun bouton à valider) ; profil privé par défaut, public quand tu l'actives
 
 **Confort**
 
-- Thème **marine** (bleu marine et rouge vif, par défaut), nuit, clair ou automatique, **7 couleurs d'accent au choix**, pensé pour le téléphone (encoches, barre du bas, PWA)
+- **Thème et couleurs** (dans Profil, pour toute l'app) : fond marine (presque noir, par défaut), nuit, clair, auto ou **fond exact** ; **9 couleurs d'accent** (rouge par défaut, violet, jaune…) ou **couleur exacte** saisie en hexadécimal, appliquées aussitôt ; pensé pour le téléphone (encoches, barre du bas, PWA)
 - Animations façon Apple : ressorts physiques, pages qui glissent dans le sens de la navigation, barre du bas à bulle mobile, onglets qui glissent, titre qui se réduit au défilement, messages « Dynamic Island »
 - **Hors connexion** : l'app s'ouvre instantanément avec tes dernières données (gardées sur l'appareil) puis se met à jour ; tirer vers le bas pour actualiser
 - HTML sémantique, ARIA, focus visible, respect de « réduire les animations »
@@ -107,8 +107,8 @@ navigateur ──► /ed/v3/…  (serveur de l'app) ──► api.ecoledirecte.c
 - **Pseudo unique** (3 à 20 caractères : `a-z`, `0-9`, `_`, `.`), vérifié en direct ; en changer libère l'ancien.
 - **Propriété** : au login réussi, le serveur lie la session de l'appareil au compte élève ; seule cette session
   peut modifier le profil ou envoyer des fichiers. Un profil ne peut utiliser que ses propres médias.
-- **Médias** : images (converties en WebP côté navigateur), GIF, vidéos MP4/WebM, audio. SVG refusés, type de
-  contenu fixé (`nosniff`), fichiers inutilisés supprimés automatiquement.
+- **Photo de profil** : image recadrée et convertie en WebP côté navigateur. SVG refusés, type de contenu fixé
+  (`nosniff`), fichiers inutilisés supprimés automatiquement.
 - **Widgets** : instantané des moyennes, mis à jour à chaque enregistrement et actualisation.
 - **Stockage** : `data/` (ignoré par git), ou `$DATA_DIR`. En mode démo, tout reste sur l'appareil.
 - **Discord** (avatar, décoration, présence) via [Lanyard](https://github.com/Phineas/lanyard).

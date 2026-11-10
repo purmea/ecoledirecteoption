@@ -112,7 +112,6 @@
 .login-brand img { animation: avatar-in 0.9s var(--spring) both; }
 
 /* 12. Éditeur de profil : les aperçus apparaissent en rebondissant */
-.drop.has .drop-btn > img, .drop.has .drop-btn > video, .drop-audio { animation: pop-in 0.7s var(--spring) both; }
 
 /* 13. Profil public : avatar, widgets et icônes se posent l'un après l'autre */
 .pf-avatar { animation: avatar-in 0.9s var(--spring) 0.1s both; }
@@ -131,7 +130,7 @@
 /* Après une animation d'entrée, l'élément retrouve son état normal : on ne garde ni flou ni transformation
    (sinon la page entière resterait sur une couche graphique dédiée, plus coûteuse et au texte moins net). */
 .page, .page > *, .pf-in, .pf-foot, .pf-avatar, .login > *, .login-brand img, .group-body, .save-bar,
-.list > li, .pf-widgets > .pf-tile, .drop.has .drop-btn > img, .drop.has .drop-btn > video, .drop-audio {
+.list > li, .pf-widgets > .pf-tile {
   animation-fill-mode: backwards;
 }
 .list li.leaving { animation-fill-mode: both; }
