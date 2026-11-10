@@ -80,9 +80,8 @@ export function periodShort(label: string) {
   return label
 }
 
-/** Devoirs restants pour le prochain jour qui en a (aujourd'hui ou plus tard) : sert aux pastilles. */
-export function homeworkForNextDay(homework: { due: string; done: boolean }[], now = new Date()) {
+/** Devoirs encore à faire pour AUJOURD'HUI uniquement (0 = pas de pastille), même s'il en reste pour d'autres jours. */
+export function homeworkForToday(homework: { due: string; done: boolean }[], now = new Date()) {
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  const next = homework.filter((h) => !h.done && h.due >= today).map((h) => h.due).sort()[0]
-  return next ? homework.filter((h) => !h.done && h.due === next).length : 0
+  return homework.filter((h) => !h.done && h.due === today).length
 }
