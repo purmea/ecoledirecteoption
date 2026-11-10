@@ -2,12 +2,13 @@ import { useData, useSession } from '../state/session'
 import { PageHeader, SectionTitle, Segmented } from '../components/ui'
 import { Icon } from '../components/Icon'
 import { Avatar, useMyProfile } from '../profile/useMyProfile'
+import { timeAgo } from '../lib'
 
 export type Theme = 'system' | 'light' | 'dark'
 
 export function Reglages({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
   const { student } = useData()
-  const { mode, refresh, refreshing, signOut } = useSession()
+  const { mode, refresh, refreshing, signOut, updatedAt } = useSession()
   const me = useMyProfile()
   return (
     <>
@@ -30,6 +31,7 @@ export function Reglages({ theme, setTheme }: { theme: Theme; setTheme: (t: Them
       <div className="list actions">
         <button className="row-action" onClick={() => void refresh()} disabled={refreshing}>
           {refreshing ? 'Actualisation…' : mode === 'demo' ? 'Réinitialiser la démo' : 'Actualiser les données'}
+          {mode === 'live' && updatedAt && !refreshing && <small>Mis à jour {timeAgo(updatedAt)}</small>}
         </button>
         <button className="row-action danger" onClick={signOut}>
           {mode === 'demo' ? 'Quitter la démo' : 'Se déconnecter'}

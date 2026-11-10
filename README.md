@@ -31,7 +31,7 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 - **Accueil** : moyenne qui défile, carte « En cours · fin dans 30 min » / « Prochain cours dans… », dernières notes, devoirs à faire
 - **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix du trimestre
 - **Simulateur** : « et si j'avais 15/20 en maths (coef 2) ? » → l'effet immédiat sur la moyenne générale
-- **Planning** : emploi du temps de la semaine, cours annulés et cours en cours mis en avant
+- **Planning** : emploi du temps navigable semaine par semaine (flèches ou glissement du doigt), cours annulés et cours en cours mis en avant
 - **Devoirs** : consignes groupées par date, cases à cocher synchronisées avec École Directe, confettis quand tout est fait
 
 **Profil public** (`#/u/ton-pseudo`)
@@ -42,7 +42,8 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 **Confort**
 
 - Thème clair, sombre ou automatique, pensé pour le téléphone (encoches, barre du bas, PWA)
-- Animations d'entrée, messages façon « Dynamic Island », retours au toucher
+- Animations façon Apple : ressorts physiques, pages qui glissent dans le sens de la navigation, barre du bas à bulle mobile, onglets qui glissent, titre qui se réduit au défilement, messages « Dynamic Island »
+- **Hors connexion** : l'app s'ouvre instantanément avec tes dernières données (gardées sur l'appareil) puis se met à jour ; tirer vers le bas pour actualiser
 - HTML sémantique, ARIA, focus visible, respect de « réduire les animations »
 
 ## Démarrage rapide
@@ -125,6 +126,7 @@ src/
 ├── api/          Client École Directe + conversion des données
 ├── state/        Session : connexion, QCM, démo, chargement
 ├── fx/           Messages, confettis, compteur animé, vibration
+├── spring.css    Ressorts physiques (courbes linear()) utilisés par animations.css
 └── styles.css    Design tokens + styles (clair & sombre)
 server/
 ├── ed-proxy.mjs  Proxy vers École Directe

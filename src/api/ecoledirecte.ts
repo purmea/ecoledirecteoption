@@ -171,8 +171,7 @@ interface RawLesson {
   prof: string; salle: string; isAnnule: boolean; typeCours: string
 }
 
-async function fetchLessons(s: Session) {
-  const monday = displayedMonday()
+export async function fetchLessonsFor(s: Session, monday: Date) {
   const friday = new Date(monday)
   friday.setDate(monday.getDate() + 4)
   const r = await edRequest<RawLesson[]>(`/v3/E/${s.account.id}/emploidutemps.awp`,
@@ -233,7 +232,7 @@ async function fetchHomework(s: Session) {
 
 /** Charge toutes les données. Renvoie aussi le dernier jeton reçu (École Directe le renouvelle). */
 export async function fetchAll(s: Session): Promise<{ data: SchoolData; token: string }> {
-  const [g, l, h] = await Promise.all([fetchGrades(s), fetchLessons(s), fetchHomework(s)])
+  const [g, l, h] = await Promise.all([fetchGrades(s), fetchLessonsFor(s, displayedMonday()), fetchHomework(s)])
   return {
     data: {
       student: toStudent(s.account),

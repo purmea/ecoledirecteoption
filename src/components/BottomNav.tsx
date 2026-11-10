@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import type { Route } from '../hooks/useHashRoute'
 import { Icon, type IconName } from './Icon'
 import { haptic } from '../fx'
@@ -11,8 +12,10 @@ const items: { route: Route; label: string; icon: IconName }[] = [
 ]
 
 export function BottomNav({ current, badge }: { current: Route; badge: number }) {
+  const active = Math.max(0, items.findIndex((it) => it.route === current || (it.route === 'profil' && current === 'reglages')))
   return (
-    <nav className="nav" aria-label="Navigation principale">
+    <nav className="nav" aria-label="Navigation principale" style={{ '--n': items.length, '--i': active } as CSSProperties}>
+      <span className="nav-pill" aria-hidden="true" />
       {items.map((it) => (
         <a key={it.route} href={`#/${it.route}`} className="nav-item" onClick={() => haptic(6)}
           aria-current={current === it.route || (it.route === 'profil' && current === 'reglages') ? 'page' : undefined}>

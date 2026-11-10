@@ -56,7 +56,7 @@ export function Login() {
               </label>
             ))}
           </fieldset>
-          {error && <p className="error" role="alert">{error}</p>}
+          {error && <p className="error shake" role="alert" key={error}>{error}</p>}
           <button className="btn primary" disabled={busy || !choice}>{busy ? 'Vérification…' : 'Valider'}</button>
           <button type="button" className="btn ghost" onClick={cancelQcm}>Annuler</button>
         </form>
@@ -86,7 +86,7 @@ export function Login() {
             <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
             Rester connecté sur cet appareil
           </label>
-          {error && <p className="error" role="alert">{error}</p>}
+          {error && <p className="error shake" role="alert" key={error}>{error}</p>}
           <button className="btn primary" disabled={busy || offline}>{busy ? 'Connexion…' : 'Se connecter'}</button>
           <button type="button" className={`btn ${offline ? 'primary' : 'ghost'}`} onClick={startDemo}>Essayer avec la démo</button>
         </form>

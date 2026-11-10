@@ -57,3 +57,14 @@ export function greeting(d = new Date()) {
   const h = d.getHours()
   return h < 5 || h >= 18 ? 'Bonsoir' : 'Bonjour'
 }
+
+/** « à l'instant », « il y a 5 min », « il y a 2 h », « hier »… */
+export function timeAgo(at: number, now = Date.now()) {
+  const min = Math.floor((now - at) / 60000)
+  if (min < 1) return 'à l’instant'
+  if (min < 60) return `il y a ${min} min`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `il y a ${h} h`
+  const d = Math.floor(h / 24)
+  return d === 1 ? 'hier' : `il y a ${d} jours`
+}

@@ -1,12 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { demoData } from '../data/demo'
-import type { SchoolData } from '../types'
-import { fetchAll, login as edLogin, answerQcm, setHomeworkDone, type DeviceTrust, type Qcm, type Session } from '../api/ecoledirecte'
+import type { Lesson, SchoolData } from '../types'
+import { displayedMonday, fetchAll, fetchLessonsFor, isoDate, login as edLogin, answerQcm, setHomeworkDone, type DeviceTrust, type Qcm, type Session } from '../api/ecoledirecte'
 import { isAuthError } from '../api/client'
 
 const SESSION_KEY = 'edo:session'
 const TRUST_KEY = 'edo:trust'
 const DEMO_KEY = 'edo:demo-homework'
+const CACHE_KEY = 'edo:cache'
 
 type Status = 'signed-out' | 'loading' | 'ready'
 
@@ -26,6 +27,10 @@ interface Ctx {
   error: string | null
   pendingQcm: PendingQcm | null
   refreshing: boolean
+  /** Date des données affichées (cache ou dernier chargement). */
+  updatedAt: number | null
+  /** Lundi (ISO) de la semaine affichée par défaut + décalage en semaines. */
+  loadWeek: (offset: number) => Promise<{ lessons: Lesson[]; monday: string }>
   signIn: (identifiant: string, motdepasse: string, remember: boolean) => Promise<void>
   submitQcm: (choice: string) => Promise<void>
   cancelQcm: () => void
@@ -51,6 +56,7 @@ const store = {
 }
 
 type Saved = { session: Session; remember: boolean } | { demo: true }
+type Cache = { data: SchoolData; at: number }
 
 function loadSaved(): Saved | null {
   return store.get<Saved>(SESSION_KEY) ?? store.get<Saved>(SESSION_KEY, sessionStorage)
@@ -71,10 +77,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const [pendingQcm, setPendingQcm] = useState<PendingQcm | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null)
+  const dataRef = useRef<SchoolData | null>(null)
+  dataRef.current = data
   const session = useRef<{ session: Session; remember: boolean } | null>(saved && 'session' in saved ? saved : null)
 
   const signOut = useCallback(() => {
     store.del(SESSION_KEY)
+    store.del(CACHE_KEY)
+    setUpdatedAt(null)
     session.current = null
     setMode(null)
     setData(null)
@@ -89,23 +100,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const { data, token } = await fetchAll(s.session)
       s.session = { ...s.session, token }
       saveSession(s.session, s.remember)
+      const at = Date.now()
+      store.set(CACHE_KEY, { data, at } satisfies Cache, s.remember ? localStorage : sessionStorage)
       setData(data)
+      setUpdatedAt(at)
       setError(null)
       setStatus('ready')
     } catch (e) {
       if (isAuthError(e)) {
         signOut()
         setError('Ta session a expiré, reconnecte-toi.')
+      } else if (dataRef.current) {
+        // Des données (cache) sont déjà affichées : on les garde et on prévient simplement.
+        setError('Hors connexion : tes dernières données sont affichées.')
+        setStatus('ready')
       } else {
         setError(e instanceof Error ? e.message : String(e))
-        // Rien d'affiché encore : retour à l'écran de connexion (la session reste enregistrée).
-        if (!data) {
-          setMode(null)
-          setStatus('signed-out')
-        }
+        // Rien à afficher : retour à l'écran de connexion (la session reste enregistrée).
+        setMode(null)
+        setStatus('signed-out')
       }
     }
-  }, [signOut, data])
+  }, [signOut])
 
   // Au démarrage : on reprend la session enregistrée.
   useEffect(() => {
@@ -113,7 +129,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if ('demo' in saved) {
       setData({ ...demoData, homework: store.get(DEMO_KEY) ?? demoData.homework })
       setStatus('ready')
-    } else void load()
+    } else {
+      // Ouverture instantanée avec les dernières données, puis actualisation en arrière-plan.
+      const cached = store.get<Cache>(CACHE_KEY, saved.remember ? localStorage : sessionStorage)
+      if (cached?.data) {
+        // Pas d'attente du prochain rendu : si le réseau échoue tout de suite, load() doit déjà savoir
+        // que des données sont affichées (sinon on retomberait sur la page de connexion).
+        dataRef.current = cached.data
+        setData(cached.data)
+        setUpdatedAt(cached.at)
+        setStatus('ready')
+      }
+      void load()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -181,6 +209,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const homework = d.homework.map((h) => (h.id === id ? { ...h, done: !h.done } : h))
       if (mode === 'demo') store.set(DEMO_KEY, homework)
       else if (session.current) {
+        const remember = session.current.remember
+        store.set(CACHE_KEY, { data: { ...d, homework }, at: Date.now() } satisfies Cache, remember ? localStorage : sessionStorage)
         setHomeworkDone(session.current.session, id, !hw.done).catch((e) => {
           setError(`Impossible d’enregistrer sur École Directe : ${e instanceof Error ? e.message : e}`)
           setData((d2) => d2 && { ...d2, homework: d2.homework.map((h) => (h.id === id ? { ...h, done: hw.done } : h)) })
@@ -190,10 +220,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     })
   }, [mode])
 
+  const loadWeek = useCallback(async (offset: number) => {
+    const monday = displayedMonday()
+    monday.setDate(monday.getDate() + offset * 7)
+    const iso = isoDate(monday)
+    if (mode === 'demo' || !session.current) return { lessons: demoData.lessons, monday: iso }
+    const r = await fetchLessonsFor(session.current.session, monday)
+    return { lessons: r.lessons, monday: iso }
+  }, [mode])
+
   const value = useMemo<Ctx>(() => ({
-    status, mode, data, error, pendingQcm, refreshing,
+    status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek,
     signIn, submitQcm, cancelQcm: () => setPendingQcm(null), startDemo, signOut, refresh, toggleHomework,
-  }), [status, mode, data, error, pendingQcm, refreshing, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
+  }), [status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }

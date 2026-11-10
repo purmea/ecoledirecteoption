@@ -130,8 +130,8 @@ export function SubjectBars({ subjects }: { subjects: SubjectRow[] }) {
                 {r.classAverage !== null && <span className="bar-tick" style={{ left: `${(r.classAverage / 20) * 100}%` }} />}
               </span>
             </button>
-            {isOpen && (
-              <ul className="bar-detail">
+            <div className={`bar-detail-wrap ${isOpen ? 'open' : ''}`}>
+              <ul className="bar-detail" inert={!isOpen}>
                 {r.classAverage !== null && (
                   <li className="muted small">
                     Moyenne de classe {fmt(r.classAverage)} · {r.average >= r.classAverage ? '+' : '−'}{fmt(Math.abs(r.average - r.classAverage))}
@@ -147,7 +147,7 @@ export function SubjectBars({ subjects }: { subjects: SubjectRow[] }) {
                   </li>
                 ))}
               </ul>
-            )}
+            </div>
           </li>
         )
       })}
