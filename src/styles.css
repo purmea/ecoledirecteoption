@@ -401,8 +401,7 @@ small { display: block; font-size: 13px; color: var(--muted); }
 }
 
 /* Aperçu dans l'éditeur */
-.pf-preview { position: sticky; top: calc(env(safe-area-inset-top) + 50px); z-index: 6; margin-bottom: 12px; border-radius: 20px; overflow: hidden; max-height: 36vh; box-shadow: 0 8px 30px rgb(0 0 0 / 0.35); transition: transform 0.45s var(--spring), opacity 0.3s; }
-.pf-preview.away { transform: translateY(calc(-100% - 70px)); opacity: 0; pointer-events: none; }
+.pf-preview { margin-bottom: 12px; border-radius: 20px; overflow: hidden; }
 .pf-preview .pf-page.embedded { min-height: 0; padding: 22px 16px; }
 
 /* Éditeur de profil (style de l'app) ---------------------------------- */

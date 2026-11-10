@@ -26,17 +26,6 @@ export function Profil() {
   // La page de profil reprend les couleurs de l'app : un seul thème pour tout.
   const themed = useMemo(() => ({ background: appColors.bg.startsWith('#') ? appColors.bg : '#0f0f13', text: appColors.text, icons: appColors.accent, accent: appColors.text }), [appColors])
   const fileRef = useRef<HTMLInputElement>(null)
-  // L'aperçu se range quand tu défiles vers le bas et revient quand tu remontes.
-  const [hidePreview, setHidePreview] = useState(false)
-  useEffect(() => {
-    let last = window.scrollY
-    const on = () => {
-      const y = window.scrollY
-      if (Math.abs(y - last) > 6) { setHidePreview(y > last && y > 120); last = y }
-    }
-    window.addEventListener('scroll', on, { passive: true })
-    return () => window.removeEventListener('scroll', on)
-  }, [])
   const subjects = snapshot.subjects.map((s) => s.subject)
 
   const [saved, setSaved] = useState<Profile | null>(null)
@@ -174,7 +163,7 @@ export function Profil() {
     <>
       <PageHeader title="Profil" subtitle={m === 'demo' ? 'Mode démo : ton profil reste sur cet appareil.' : undefined} />
 
-      <div className={`pf-preview ${hidePreview ? 'away' : ''}`}><ProfileView profile={{ ...draft, colors: themed, snapshot }} embedded /></div>
+      <div className="pf-preview"><ProfileView profile={{ ...draft, colors: themed, snapshot }} embedded /></div>
 
       <p className={`autosave ${status.kind}`} role="status" aria-live="polite">
         {status.kind === 'saving' ? 'Enregistrement…'
