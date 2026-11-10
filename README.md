@@ -35,7 +35,7 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 - **Planning** : la même interface que l'app École Directe, toujours sur fond blanc : barre bleue avec les trois traits (menu de navigation, la barre du bas disparaît sur cet écran), vues **Jour / Semaine / Mois**, grille horaire et blocs colorés par matière ; touche un cours pour l'annuler, le masquer, changer salle, prof ou horaire, ou ajoute un cours avec « + » (modifications gardées dans l'app, l'école ne les voit pas)
 - **Réglages d'interface** (Profil, Personnalisation générale, valables pour toute l'app) : animations on/off, taille du texte, vibrations, confettis, noms sous les icônes de la barre du bas.
 - **Messages** : boîte de réception, ouverture d'un message (marqué comme lu), et raccourcis en haut du message : **épingler, archiver, supprimer, marquer comme non lu** (avec « Annuler »), filtres Tous / Non lus / Épinglés / Archivés / Supprimés (avec « Restaurer »)
-- **Devoirs** : barre de jours en haut (comme le planning) avec le nombre restant par jour, notification « Plus que N devoirs pour mardi », cases à cocher synchronisées avec École Directe (aussi depuis l'accueil), confettis quand tout est fait
+- **Devoirs** : barre de jours en haut (comme le planning) avec le nombre restant par jour, notification « Plus que N devoirs pour mardi », cases à cocher synchronisées avec École Directe (aussi depuis l'accueil), devoirs des jours passés cochés automatiquement, confettis quand tout est fait
 
 **Profil public** (`#/u/ton-pseudo`)
 

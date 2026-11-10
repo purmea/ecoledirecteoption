@@ -308,10 +308,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return detail
   }, [mode])
 
+  // Un jour passé = devoirs faits : ceux dont la date est dépassée apparaissent cochés (affichage seulement, rien n'est envoyé à l'école).
+  const shown = useMemo(() => {
+    if (!data) return data
+    const t = new Date()
+    const today = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+    return { ...data, homework: data.homework.map((h) => (h.due < today && !h.done ? { ...h, done: true } : h)) }
+  }, [data])
+
   const value = useMemo<Ctx>(() => ({
-    status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, planEdits, editPlan, applyPlan,
+    status, mode, data: shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, planEdits, editPlan, applyPlan,
     signIn, submitQcm, cancelQcm: () => setPendingQcm(null), startDemo, signOut, refresh, toggleHomework,
-  }), [status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, planEdits, editPlan, applyPlan, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
+  }), [status, mode, shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, planEdits, editPlan, applyPlan, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }
