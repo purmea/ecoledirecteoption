@@ -3,7 +3,7 @@ import { useHashRoute } from './hooks/useHashRoute'
 import { SessionProvider, useMessages, useSession } from './state/session'
 import { BottomNav } from './components/BottomNav'
 import { Confetti, Toaster, toast } from './fx'
-import { homeworkForToday } from './lib'
+import { homeworkForTomorrow } from './lib'
 import { Skeleton } from './components/Skeleton'
 import { usePullToRefresh } from './hooks/usePullToRefresh'
 import { Accueil } from './pages/Accueil'
@@ -66,7 +66,7 @@ function Shell() {
   if (status === 'signed-out') return <Login />
   if (status === 'loading' || !data) return <Skeleton />
 
-  const todo = homeworkForToday(data.homework)
+  const todo = homeworkForTomorrow(data.homework)
   const unread = messages.filter((m) => !m.read && !m.archived).length
   return (
     <div className="app">

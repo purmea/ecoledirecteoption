@@ -23,7 +23,7 @@ export function BottomNav({ current, badges }: { current: Route; badges: Partial
           <span className="nav-icon">
             <Icon name={it.icon} />
             {(badges[it.route] ?? 0) > 0 && (it.route === 'devoirs'
-              ? <span className="badge count" role="img" aria-label={`${badges[it.route]} devoir${badges[it.route]! > 1 ? 's' : ''} à faire aujourd’hui`}>{badges[it.route]}</span>
+              ? <span className="badge count" role="img" aria-label={`${badges[it.route]} devoir${badges[it.route]! > 1 ? 's' : ''} à faire pour demain`}>{badges[it.route]}</span>
               : <span className="badge" role="img" aria-label={`${badges[it.route]} non lus`} />)}
           </span>
           <span>{it.label}</span>
