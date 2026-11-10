@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { fxFlags } from '../fx'
 
 // Apparence de toute l'application (et de la page de profil, qui reprend ces couleurs).
 // Deux choix indépendants : le FOND (thème) et la COULEUR d'accent, chacun avec une valeur « exacte » possible.
@@ -9,6 +10,10 @@ export type Accent =
   | 'rouge' | 'orange' | 'jaune' | 'vert' | 'turquoise' | 'bleu' | 'violet' | 'rose' | 'blanc' | 'perso'
 
 export interface Custom { bg: string; accent: string }
+
+/** Réglages d'interface qui s'appliquent à toute l'application. */
+export interface UiSettings { animations: boolean; textSize: 'small' | 'normal' | 'large'; vibration: boolean; confetti: boolean; navLabels: boolean }
+export const DEFAULT_UI: UiSettings = { animations: true, textSize: 'normal', vibration: true, confetti: true, navLabels: true }
 
 /** Fonds proposés. `bg` / `text` servent aussi à colorer la page de profil publique (doit rester aligné avec styles.css). */
 export const THEMES: { id: Exclude<Theme, 'perso'>; label: string; bg: string; fill: string; text: string }[] = [
@@ -68,6 +73,8 @@ interface Ctx {
   setTheme: (t: Theme) => void
   setAccent: (a: Accent) => void
   setCustom: (patch: Partial<Custom>) => void
+  ui: UiSettings
+  setUi: (patch: Partial<UiSettings>) => void
   /** Couleurs réellement appliquées en ce moment. */
   colors: ReturnType<typeof resolveColors>
 }
@@ -78,6 +85,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useLocalStorage<Theme>('edo:theme3', 'nuit')
   const [accent, setAccent] = useLocalStorage<Accent>('edo:accent3', 'turquoise')
   const [custom, setCustomState] = useLocalStorage<Custom>('edo:custom', DEFAULT_CUSTOM)
+  const [uiRaw, setUiState] = useLocalStorage<UiSettings>('edo:ui', DEFAULT_UI)
+  const ui = useMemo(() => ({ ...DEFAULT_UI, ...uiRaw }), [uiRaw])
   const systemDark = typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches
   const colors = useMemo(() => resolveColors(theme, accent, custom, systemDark), [theme, accent, custom, systemDark])
 
@@ -105,10 +114,20 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', colors.bg.startsWith('#') ? colors.bg : '#0f0f13')
   }, [theme, accent, custom, colors])
 
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.anim = ui.animations ? 'on' : 'off'
+    root.dataset.text = ui.textSize
+    root.dataset.labels = ui.navLabels ? 'on' : 'off'
+    fxFlags.vibration = ui.vibration
+    fxFlags.confetti = ui.confetti
+  }, [ui])
+
   const value = useMemo<Ctx>(() => ({
-    theme, accent, custom, colors, setTheme, setAccent,
+    theme, accent, custom, colors, setTheme, setAccent, ui,
+    setUi: (patch) => setUiState({ ...ui, ...patch }),
     setCustom: (patch) => setCustomState({ ...custom, ...patch }),
-  }), [theme, accent, custom, colors, setTheme, setAccent, setCustomState])
+  }), [theme, accent, custom, colors, ui, setTheme, setAccent, setCustomState, setUiState])
 
   return <AppearanceContext.Provider value={value}>{children}</AppearanceContext.Provider>
 }

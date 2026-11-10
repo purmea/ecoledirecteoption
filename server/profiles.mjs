@@ -18,8 +18,6 @@ const MAX_BODY = 600 * 1024
 const HANDLE_RE = /^[a-z0-9_.]{3,20}$/
 const RESERVED = new Set(['admin', 'api', 'app', 'ed', 'help', 'login', 'moderation', 'profil', 'root', 'settings', 'support', 'www', 'ecoledirecte'])
 export const WIDGET_TYPES = ['average', 'subject', 'trend', 'subjects', 'homework']
-const BG_EFFECTS = ['none', 'halos', 'rain', 'snow', 'stars', 'particles']
-const NAME_EFFECTS = ['none', 'rainbow', 'typewriter', 'glitch', 'sparkles']
 
 // Médias acceptés : type MIME → extension et taille maximale. Pas de SVG (risque de script).
 const MEDIA_TYPES = {
@@ -79,7 +77,6 @@ const HEX_RE = /^#[0-9a-f]{6}$/i
 const color = (v, fallback) => (typeof v === 'string' && HEX_RE.test(v) ? v.toLowerCase() : fallback)
 const bool = (v) => v === true
 const int = (v, min, max, fallback) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : fallback)
-const pick = (v, list, fallback) => (list.includes(v) ? v : fallback)
 
 /** Image en data URL (petits fichiers : photo, curseur) ou média hébergé ici. */
 function mediaRef(v, { dataMax = 0, kinds }) {
@@ -107,7 +104,7 @@ function cleanProfile(input) {
   }
   const bg = p.background && typeof p.background === 'object' ? p.background : null
   const bgUrl = bg ? mediaRef(bg.url, { kinds: ['image', 'video'] }) : null
-  const c = p.colors ?? {}, fx = p.effects ?? {}, g = p.glow ?? {}, o = p.options ?? {}
+  const c = p.colors ?? {}, o = p.options ?? {}
   return {
     handle: str(p.handle, 20).toLowerCase(),
     displayName: str(p.displayName, 32),
@@ -123,10 +120,11 @@ function cleanProfile(input) {
       accent: color(c.accent, '#ffffff'), text: color(c.text, '#ffffff'),
       background: color(c.background, '#0a0a0a'), icons: color(c.icons, '#ffffff'),
     },
-    effects: { background: pick(fx.background, BG_EFFECTS, 'none'), username: pick(fx.username, NAME_EFFECTS, 'none') },
-    opacity: int(p.opacity, 0, 100, 7),
-    blur: int(p.blur, 0, 80, 8),
-    glow: { username: bool(g.username), widgets: bool(g.widgets) },
+    // Réglages de base de la page de profil : fixes (particules, blocs à 1 %, sans flou, nom lumineux).
+    effects: { background: 'particles', username: 'none' },
+    opacity: 1,
+    blur: 0,
+    glow: { username: true, widgets: false },
     options: {
       animations: o.animations !== false, showViews: o.showViews !== false, showSince: o.showSince !== false, invertBlocks: bool(o.invertBlocks),
       volumeControl: o.volumeControl !== false,

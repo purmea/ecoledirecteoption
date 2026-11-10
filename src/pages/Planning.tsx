@@ -3,7 +3,7 @@ import { useSession } from '../state/session'
 import { useWeek } from '../hooks/useWeek'
 import { DAYS, todayIndex } from '../lib'
 import type { Lesson } from '../types'
-import { EMPTY_PLAN, hasEdits, subjectHue, type CustomLesson } from '../planning/edits'
+import { hasEdits, subjectHue, type CustomLesson } from '../planning/edits'
 import { Icon } from '../components/Icon'
 import { PageHeader } from '../components/ui'
 import { Sheet } from '../components/Sheet'
@@ -54,10 +54,9 @@ export function Planning() {
   const todayCol = offset === 0 ? todayIndex() : -1
   const dates = useMemo(() => (monday ? DAYS.map((_, i) => { const d = new Date(monday + 'T12:00:00'); d.setDate(d.getDate() + i); return d.getDate() }) : []), [monday])
 
-  const act = (label: string, run: () => void, undo?: () => void) => {
+  const act = (_label: string, run: () => void) => {
     run()
     setOpenId(null)
-    toast(label, 'check', undo ? { label: 'Annuler', run: undo } : undefined)
   }
 
   return (
@@ -115,7 +114,7 @@ export function Planning() {
       <div className="pe-actions">
         <button className="btn primary" onClick={() => setAdding(true)}><Icon name="plus" size={16} /> Ajouter un cours</button>
         {hasEdits(planEdits) && (
-          <button className="btn ghost danger" onClick={() => { const before = planEdits; editPlan({ type: 'set', plan: EMPTY_PLAN }); toast('Modifications effacées', 'check', { label: 'Annuler', run: () => editPlan({ type: 'set', plan: before }) }) }}>
+          <button className="btn ghost danger" onClick={() => editPlan({ type: 'reset' })}>
             Effacer toutes mes modifications
           </button>
         )}

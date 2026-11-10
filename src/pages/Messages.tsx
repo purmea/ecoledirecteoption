@@ -59,7 +59,7 @@ export function Messages() {
       {list.length === 0 ? (
         !messagesError && <Empty>{{ all: 'Aucun message', unread: 'Aucun message non lu', pinned: 'Aucun message épinglé', archived: 'Aucun message archivé', deleted: 'Aucun message supprimé' }[filter]}</Empty>
       ) : (
-        <ul className="list msg-list">
+        <ul className="list msg-list" key={filter}>
           {list.map((m) => (
             <li key={m.id} className={`${m.read ? '' : 'unread'} ${m.pinned ? 'pinned' : ''}`}>
               <a href={`#/messages/${encodeURIComponent(m.id)}`}>

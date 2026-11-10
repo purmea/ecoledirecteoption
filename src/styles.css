@@ -549,9 +549,6 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .sim { display: grid; gap: 14px; padding: 16px; border-radius: 16px; background: var(--fill); margin-top: 8px; }
 .sim-row { display: grid; gap: 10px; }
 .sim select { flex: 1; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; font-size: 15px; }
-.sim-coef { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 3px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
-.sim-coef button { border: 0; background: none; padding: 7px 10px; border-radius: 7px; font-weight: 600; font-size: 14px; color: var(--muted); }
-.sim-coef button[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); }
 .sim-slider { display: grid; gap: 4px; font-size: 14px; color: var(--text-2); }
 .sim-slider strong { font-size: 18px; color: var(--text); font-variant-numeric: tabular-nums; }
 .sim-slider .range { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; margin: 10px 0 4px; padding: 0; border: 0; border-radius: 999px; background: linear-gradient(90deg, var(--accent) var(--p), var(--line) var(--p)); }
@@ -846,16 +843,28 @@ small { display: block; font-size: 13px; color: var(--muted); }
 /* Profil sans animations */
 .pf-page.no-anim *, .pf-page.no-anim *::before, .pf-page.no-anim *::after { animation: none !important; transition: none !important; }
 
-/* Simulateur : le niveau du coefficient se remplit, le résultat rebondit à chaque changement */
-.sim-weight { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-top: 12px; font-size: 13px; color: var(--muted); }
-.sim-weight i { height: 8px; border-radius: 999px; background: var(--fill); overflow: hidden; }
-.sim-weight b { display: block; height: 100%; width: 100%; border-radius: inherit; background: var(--accent); transform-origin: left; transform: scaleX(var(--w)); transition: transform 0.7s var(--spring); }
-.sim-weight em { font-style: normal; font-weight: 700; color: var(--text); min-width: 3.2ch; text-align: right; animation: pop-in 0.5s var(--spring) both; }
-.sim-result .pop, .sim-delta.pop { display: inline-block; animation: pop-in 0.55s var(--spring) both; }
-@media (prefers-reduced-motion: reduce) { .sim-weight b { transition: none; } .sim-result .pop, .sim-delta.pop, .sim-weight em { animation: none; } }
 
 .pf-tile { backdrop-filter: var(--pf-bf); }
 
 .msg-list > li { display: flex; align-items: center; }
 .msg-list > li > a { flex: 1; min-width: 0; }
 .msg-list > li > .text-btn { flex: none; margin-left: 8px; }
+
+/* Réglages d'interface (Profil → Personnalisation générale) */
+:root[data-text='small'] { zoom: 0.92; }
+:root[data-text='large'] { zoom: 1.1; }
+:root[data-labels='off'] .nav-item > span:not(.nav-icon) { display: none; }
+:root[data-anim='off'] *, :root[data-anim='off'] *::before, :root[data-anim='off'] *::after {
+  animation-duration: 0.01ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important; transition-delay: 0ms !important; scroll-behavior: auto !important;
+}
+
+/* Barres de choix : le choix rebondit comme l'icône de la barre du bas */
+.tabs button[aria-selected='true'], .day-chip[aria-selected='true'], .theme-tile[aria-checked='true'], .accent-dot[aria-checked='true'] {
+  animation: choice-bounce 0.7s var(--spring) both;
+}
+@keyframes choice-bounce { from { transform: scale(0.88); } to { transform: none; } }
+
+.sim-row .tabs { margin: 0; }
+/* Planning : changements de cours instantanés, sans animation */
+.wk-block, .wk-block * { animation: none !important; transition: none !important; }

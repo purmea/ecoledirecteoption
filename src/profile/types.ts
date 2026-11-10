@@ -63,9 +63,9 @@ export const DEFAULTS: Omit<Profile, 'handle' | 'displayName' | 'snapshot' | 'wi
   cursor: null,
   public: false,
   colors: { accent: '#ffffff', text: '#ffffff', background: '#0a0a0a', icons: '#ffffff' },
-  effects: { background: 'none', username: 'none' },
-  opacity: 7,
-  blur: 8,
+  effects: { background: 'particles', username: 'none' },
+  opacity: 1,
+  blur: 0,
   glow: { username: true, widgets: false },
   options: {
     animations: true, showViews: true, showSince: true, invertBlocks: false, volumeControl: true,
@@ -80,8 +80,11 @@ export function withDefaults(p: Partial<Profile>): Profile {
     ...DEFAULTS,
     ...p,
     colors: { ...DEFAULTS.colors, ...p.colors },
-    effects: { ...DEFAULTS.effects, ...p.effects },
-    glow: { ...DEFAULTS.glow, ...p.glow },
+    // Réglages de base de la page de profil : fixes, non modifiables.
+    effects: { ...DEFAULTS.effects },
+    opacity: DEFAULTS.opacity,
+    blur: DEFAULTS.blur,
+    glow: { ...DEFAULTS.glow },
     options: { ...DEFAULTS.options, ...p.options },
     widgets: p.widgets ?? [],
   } as Profile

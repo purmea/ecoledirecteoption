@@ -27,7 +27,10 @@ export function useCountUp(value: number | null, duration = 900) {
 }
 
 /** Petite vibration (Android ; ignorée ailleurs). */
+/** Réglages d'interface (Profil → Personnalisation générale) lus par les effets. */
+export const fxFlags = { vibration: true, confetti: true }
 export const haptic = (ms = 10) => {
+  if (!fxFlags.vibration) return
   try { navigator.vibrate?.(ms) } catch { /* non pris en charge */ }
 }
 
@@ -85,7 +88,7 @@ export function Toaster() {
 // --- Confettis ---------------------------------------------------------------
 
 const CONFETTI = 'edo:confetti'
-export const celebrate = () => { if (!reduced()) window.dispatchEvent(new Event(CONFETTI)) }
+export const celebrate = () => { if (fxFlags.confetti && !reduced()) window.dispatchEvent(new Event(CONFETTI)) }
 
 export function Confetti() {
   const ref = useRef<HTMLCanvasElement>(null)

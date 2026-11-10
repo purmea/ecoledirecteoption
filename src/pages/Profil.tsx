@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useData, useSession } from '../state/session'
-import { PageHeader, SectionTitle } from '../components/ui'
+import { PageHeader, SectionTitle, Segmented } from '../components/ui'
 import { ACCENTS, THEMES, useAppearance } from '../state/appearance'
 import { Icon } from '../components/Icon'
 import { toast } from '../fx'
 import { ProfileView } from '../profile/ProfileCard'
 import { useDiscord } from '../profile/discord'
 import {
-  BG_EFFECTS, DEFAULTS, NAME_EFFECTS, WIDGETS,
+  DEFAULTS, WIDGETS,
   type Profile, type Widget, type WidgetType,
 } from '../profile/types'
 import {
@@ -22,7 +22,7 @@ export function Profil() {
   const { mode } = useSession()
   const m = mode ?? 'demo'
   const snapshot = useMemo(() => buildSnapshot(data), [data])
-  const { theme, accent, custom, colors: appColors, setTheme, setAccent, setCustom } = useAppearance()
+  const { theme, accent, custom, colors: appColors, setTheme, setAccent, setCustom, ui, setUi } = useAppearance()
   // La page de profil reprend les couleurs de l'app : un seul thème pour tout.
   const themed = useMemo(() => ({ background: appColors.bg.startsWith('#') ? appColors.bg : '#0f0f13', text: appColors.text, icons: appColors.accent, accent: appColors.text }), [appColors])
   const fileRef = useRef<HTMLInputElement>(null)
@@ -271,32 +271,16 @@ export function Profil() {
       </Group>
       {/* ------------------------------------------- Personnalisation générale */}
       <Group title="Personnalisation générale">
-      <label className="field">
-        <span>Effets d’arrière-plan</span>
-        <select className="select" value={draft.effects.background} onChange={(e) => setIn('effects', { background: e.target.value as Profile['effects']['background'] })}>
-          {BG_EFFECTS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-        </select>
-      </label>
-      <label className="field">
-        <span>Effets du nom d’utilisateur</span>
-        <select className="select" value={draft.effects.username} onChange={(e) => setIn('effects', { username: e.target.value as Profile['effects']['username'] })}>
-          {NAME_EFFECTS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-        </select>
-      </label>
-      <Range label="Opacité des blocs" value={draft.opacity} max={100} unit="%" onChange={(v) => set({ opacity: v })} />
-      <Range label="Flou des blocs" value={draft.blur} max={80} unit="px" onChange={(v) => set({ blur: v })} />
+      <p className="group-hint">Réglages de l’interface, pour toute l’application.</p>
+      <Toggle label="Animations" hint="Transitions, ressorts et effets d’entrée" on={ui.animations} onChange={(v) => setUi({ animations: v })} />
       <div className="field">
-        <span>Effet lumineux</span>
-        <div className="glow-grid">
-          {([['username', 'Nom d’utilisateur'], ['widgets', 'Widgets']] as const).map(([k, label]) => (
-            <button key={k} className={`glow-btn ${draft.glow[k] ? 'on' : ''}`} aria-pressed={draft.glow[k]}
-              onClick={() => setIn('glow', { [k]: !draft.glow[k] })}>
-              <Icon name="star" size={15} />{label}
-            </button>
-          ))}
-        </div>
+        <span>Taille du texte</span>
+        <Segmented label="Taille du texte" value={ui.textSize} onChange={(v) => setUi({ textSize: v })}
+          options={[['small', 'Petit'], ['normal', 'Normal'], ['large', 'Grand']] as const} />
       </div>
-
+      <Toggle label="Vibrations" hint="Léger retour au toucher (selon le téléphone)" on={ui.vibration} onChange={(v) => setUi({ vibration: v })} />
+      <Toggle label="Confettis" hint="Quand tous les devoirs sont faits" on={ui.confetti} onChange={(v) => setUi({ confetti: v })} />
+      <Toggle label="Noms sous les icônes" hint="Libellés de la barre du bas" on={ui.navLabels} onChange={(v) => setUi({ navLabels: v })} />
       </Group>
       {/* ------------------------------------------------------------ Widgets */}
       <Group title="Widgets" meta={`${draft.widgets.length}/8`}>
@@ -346,7 +330,7 @@ export function Profil() {
       </Group>
       {/* ------------------------------------------------------------- Autres */}
       <Group title="Autres personnalisations">
-      <Toggle label="Animations" hint="Entrée en douceur, effets d’arrière-plan et du nom" on={draft.options.animations} onChange={(v) => setIn('options', { animations: v })} />
+      <Toggle label="Animations de la page" hint="Entrée en douceur et particules sur ta page de profil" on={draft.options.animations} onChange={(v) => setIn('options', { animations: v })} />
       <Toggle label="Compteur de vues" hint="Affiche combien de fois ta page a été vue" on={draft.options.showViews} onChange={(v) => setIn('options', { showViews: v })} />
       <Toggle label="Ancienneté" hint="Affiche « depuis 3 mois » en bas de ta page" on={draft.options.showSince} onChange={(v) => setIn('options', { showSince: v })} />
       <Toggle label="Inverser les couleurs des blocs" hint="Widgets clairs, texte foncé" on={draft.options.invertBlocks} onChange={(v) => setIn('options', { invertBlocks: v })} />
@@ -375,16 +359,6 @@ function Toggle({ label, hint, on, onChange }: { label: string; hint?: string; o
     <label className="toggle-row">
       <span className="grow"><span>{label}</span>{hint && <small>{hint}</small>}</span>
       <input type="checkbox" role="switch" className="switch" checked={on} onChange={(e) => onChange(e.target.checked)} />
-    </label>
-  )
-}
-
-function Range({ label, value, max, unit, onChange }: { label: string; value: number; max: number; unit: string; onChange: (v: number) => void }) {
-  return (
-    <label className="field">
-      <span>{label} <em>{value}{unit}</em></span>
-      <input type="range" className="range" min={0} max={max} value={value} onChange={(e) => onChange(Number(e.target.value))}
-        style={{ '--p': `${(value / max) * 100}%` } as CSSProperties} />
     </label>
   )
 }
