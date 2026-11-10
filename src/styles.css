@@ -35,7 +35,11 @@
   --bg: #050c20; --text: #f0f4ff; --text-2: #c3cce6; --muted: #8e9bc4; --line: #172554; --fill: #0d1836;
   --bad: #ff7b7b; --good: #5fd9a0;
 }
-:root[data-theme='nuit'], :root[data-theme='marine'] {
+:root[data-theme='gris'] {
+  --bg: #191919; --text: #f1f1f1; --text-2: #cfcfcf; --muted: #9a9a9a; --line: #2e2e2e; --fill: #262626;
+  --bad: #f07272; --good: #5fcf98;
+}
+:root[data-theme='nuit'], :root[data-theme='marine'], :root[data-theme='gris'] {
   --accent: var(--accent-d);
   --on-accent: var(--on-d);
   --accent-soft: color-mix(in srgb, var(--accent) 18%, var(--bg));
@@ -666,7 +670,7 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .accent-dot:active span { transform: scale(0.9); }
 
 /* Choix du thème : aperçus miniatures */
-.theme-tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 4px; padding: 6px 6px 2px; }
+.theme-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 4px; padding: 6px 6px 2px; }
 .theme-tile { display: grid; gap: 7px; padding: 0; border: 0; background: none; font-size: 12.5px; color: var(--muted); }
 .theme-tile > span { position: relative; display: grid; align-content: start; gap: 5px; aspect-ratio: 3 / 4; padding: 10px 8px; border-radius: 14px; box-shadow: inset 0 0 0 1px rgb(127 127 127 / 0.3); transition: box-shadow 0.4s var(--spring), transform 0.4s var(--spring); overflow: hidden; }
 .theme-tile i { display: block; height: 7px; width: 100%; border-radius: 4px; }

@@ -5,7 +5,7 @@ import { fxFlags } from '../fx'
 // Apparence de toute l'application (et de la page de profil, qui reprend ces couleurs).
 // Deux choix indépendants : le FOND (thème) et la COULEUR d'accent, chacun avec une valeur « exacte » possible.
 
-export type Theme = 'marine' | 'nuit' | 'clair' | 'auto' | 'perso'
+export type Theme = 'marine' | 'nuit' | 'gris' | 'clair' | 'auto' | 'perso'
 export type Accent =
   | 'rouge' | 'orange' | 'jaune' | 'vert' | 'turquoise' | 'bleu' | 'violet' | 'rose' | 'blanc' | 'perso'
 
@@ -19,6 +19,7 @@ export const DEFAULT_UI: UiSettings = { animations: true, textSize: 'normal', vi
 export const THEMES: { id: Exclude<Theme, 'perso'>; label: string; bg: string; fill: string; text: string }[] = [
   { id: 'marine', label: 'Marine', bg: '#050c20', fill: '#0d1836', text: '#f0f4ff' },
   { id: 'nuit', label: 'Nuit', bg: '#08080b', fill: '#17171d', text: '#f1f1f5' },
+  { id: 'gris', label: 'Gris', bg: '#191919', fill: '#262626', text: '#f1f1f1' },
   { id: 'clair', label: 'Clair', bg: '#f8f8fa', fill: '#eeeef3', text: '#0d0d12' },
   { id: 'auto', label: 'Auto', bg: 'linear-gradient(135deg, #f8f8fa 50%, #0f0f13 50%)', fill: '#8884', text: '#888' },
 ]
