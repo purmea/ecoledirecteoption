@@ -52,6 +52,8 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
     cursor: profile.cursor ? `url(${profile.cursor}) 0 0, auto` : undefined,
   } as CSSProperties
 
+  // Dans l'aperçu de l'éditeur (zone réduite), la courbe d'évolution est masquée : elle reste visible sur la page complète.
+  const widgets = embedded ? profile.widgets.filter((w) => w.type !== 'trend') : profile.widgets
   const avatar = (options.discordAvatar && discord?.avatarUrl) || profile.avatar
   const joined = memberSince(profile.createdAt)
   const presence = options.discordPresence && discord
@@ -96,10 +98,10 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
             </div>
           </header>
 
-          {(profile.widgets.length > 0 || presence) && (
+          {(widgets.length > 0 || presence) && (
             <section className={`pf-widgets pf-in ${glow.widgets ? 'glow' : ''}`}>
               {presence && (
-                <div className={`pf-tile pf-presence${profile.widgets[0] && SMALL.has(profile.widgets[0].type) ? '' : ' wide'}`}>
+                <div className={`pf-tile pf-presence${widgets[0] && SMALL.has(widgets[0].type) ? '' : ' wide'}`}>
                   <span className="pf-presence-ava">
                     {discord.avatarUrl ? <img src={discord.avatarUrl} alt="" /> : <Icon name="user" size={22} />}
                     <i className={`pf-status ${discord.status}`} />
@@ -110,8 +112,8 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
                   </span>
                 </div>
               )}
-              {profile.widgets.map((w, i) => (
-                <WidgetTile key={w.id} widget={w} profile={profile} wide={isWide(profile.widgets, i, !!presence)} />
+              {widgets.map((w, i) => (
+                <WidgetTile key={w.id} widget={w} profile={profile} wide={isWide(widgets, i, !!presence)} />
               ))}
             </section>
           )}
