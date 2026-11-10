@@ -33,6 +33,9 @@ interface Ctx {
   loadWeek: (offset: number) => Promise<{ lessons: Lesson[]; monday: string }>
   /** Ouvre un message (le marque comme lu, ici et sur École Directe). */
   openMessage: (id: string) => Promise<MessageDetail>
+  messageMeta: MessageMeta
+  /** Épingler, archiver, supprimer (masquer) ou remettre en non lu un message. */
+  messageAction: (id: string, action: MessageAction) => void
   signIn: (identifiant: string, motdepasse: string, remember: boolean) => Promise<void>
   submitQcm: (choice: string) => Promise<void>
   cancelQcm: () => void
@@ -60,6 +63,12 @@ const store = {
 type Saved = { session: Session; remember: boolean } | { demo: true }
 type Cache = { data: SchoolData; at: number }
 
+/** Organisation des messages, gardée sur cet appareil (épinglés, archivés, masqués, remis en « non lu »). */
+export interface MessageMeta { pinned: string[]; archived: string[]; hidden: string[]; unread: string[] }
+export type MessageAction = 'pin' | 'unpin' | 'archive' | 'unarchive' | 'delete' | 'restore' | 'unread'
+const EMPTY_META: MessageMeta = { pinned: [], archived: [], hidden: [], unread: [] }
+const metaKey = (mode: string) => `edo:msgmeta:${mode}`
+
 function loadSaved(): Saved | null {
   return store.get<Saved>(SESSION_KEY) ?? store.get<Saved>(SESSION_KEY, sessionStorage)
 }
@@ -80,12 +89,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [pendingQcm, setPendingQcm] = useState<PendingQcm | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [updatedAt, setUpdatedAt] = useState<number | null>(null)
+  const [messageMeta, setMessageMeta] = useState<MessageMeta>(EMPTY_META)
   const dataRef = useRef<SchoolData | null>(null)
   dataRef.current = data
   const session = useRef<{ session: Session; remember: boolean } | null>(saved && 'session' in saved ? saved : null)
 
   const signOut = useCallback(() => {
     store.del(SESSION_KEY)
+    store.del(metaKey('live'))
+    setMessageMeta(EMPTY_META)
     store.del(CACHE_KEY)
     setUpdatedAt(null)
     session.current = null
@@ -234,18 +246,47 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return { lessons: r.lessons, monday: iso }
   }, [mode])
 
+  useEffect(() => {
+    setMessageMeta(mode ? { ...EMPTY_META, ...store.get<MessageMeta>(metaKey(mode)) } : EMPTY_META)
+  }, [mode])
+
+  const messageAction = useCallback((id: string, action: MessageAction) => {
+    if (!mode) return
+    setMessageMeta((m) => {
+      const without = (k: keyof MessageMeta) => m[k].filter((x) => x !== id)
+      const add = (k: keyof MessageMeta) => (m[k].includes(id) ? m[k] : [...m[k], id])
+      const next: MessageMeta = {
+        pin: { ...m, pinned: add('pinned') },
+        unpin: { ...m, pinned: without('pinned') },
+        archive: { ...m, archived: add('archived'), pinned: without('pinned') },
+        unarchive: { ...m, archived: without('archived') },
+        delete: { ...m, hidden: add('hidden'), pinned: without('pinned'), archived: without('archived') },
+        restore: { ...m, hidden: without('hidden') },
+        unread: { ...m, unread: add('unread') },
+      }[action]
+      store.set(metaKey(mode), next)
+      return next
+    })
+  }, [mode])
+
   const openMessage = useCallback(async (id: string) => {
     const detail = mode === 'demo' || !session.current
       ? (demoMessageDetails[id] ?? Promise.reject(new Error('Message introuvable')))
       : await fetchMessageDetail(session.current.session, id)
     setData((d) => d && { ...d, messages: d.messages?.map((m) => (m.id === id ? { ...m, read: true } : m)) })
+    setMessageMeta((m) => {
+      if (!m.unread.includes(id)) return m
+      const next = { ...m, unread: m.unread.filter((x) => x !== id) }
+      store.set(metaKey(mode ?? 'live'), next)
+      return next
+    })
     return detail
   }, [mode])
 
   const value = useMemo<Ctx>(() => ({
-    status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage,
+    status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction,
     signIn, submitQcm, cancelQcm: () => setPendingQcm(null), startDemo, signOut, refresh, toggleHomework,
-  }), [status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
+  }), [status, mode, data, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }
@@ -261,4 +302,17 @@ export function useData() {
   const { data } = useSession()
   if (!data) throw new Error('Données non chargées')
   return data
+}
+
+/** Messages avec l'organisation locale appliquée : masqués retirés, état lu/épinglé/archivé calculé. */
+export function useMessages() {
+  const { data, messageMeta: meta } = useSession()
+  return (data?.messages ?? [])
+    .filter((m) => !meta.hidden.includes(m.id))
+    .map((m) => ({
+      ...m,
+      read: m.read && !meta.unread.includes(m.id),
+      pinned: meta.pinned.includes(m.id),
+      archived: meta.archived.includes(m.id),
+    }))
 }

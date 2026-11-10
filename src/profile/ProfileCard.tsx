@@ -4,7 +4,6 @@ import { Icon } from '../components/Icon'
 import { badgesFor } from './api'
 import { useDiscord } from './discord'
 import { EffectCanvas } from './effects'
-import { LINKS, LinkIcon, brandColor } from './links'
 import type { NameEffect, Profile, Widget } from './types'
 
 const rgb = (hex: string) => {
@@ -129,23 +128,6 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
                 <WidgetTile key={w.id} widget={w} profile={profile} wide={isWide(profile.widgets, i, !!presence)} />
               ))}
             </section>
-          )}
-
-          {profile.links.length > 0 && (
-            <ul className={`pf-links pf-in ${glow.icons ? 'glow' : ''}`}>
-              {profile.links.map((l, i) => {
-                const def = LINKS[l.type]
-                const href = def.url(l.value)
-                const color = options.monoIcons ? 'var(--pf-icons)' : brandColor(def.icon)
-                return (
-                  <li key={i} style={{ color }}>
-                    {href
-                      ? <a href={href} target="_blank" rel="noopener noreferrer nofollow" title={`${def.label} : ${l.value}`} aria-label={def.label}><LinkIcon type={l.type} size={30} /></a>
-                      : <button title={`${def.label} : ${l.value} (copier)`} aria-label={`${def.label} : ${l.value}`} onClick={() => void navigator.clipboard?.writeText(l.value)}><LinkIcon type={l.type} size={30} /></button>}
-                  </li>
-                )
-              })}
-            </ul>
           )}
 
           {footer.length > 0 && (

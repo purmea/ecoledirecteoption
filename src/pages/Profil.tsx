@@ -4,11 +4,10 @@ import { PageHeader, SectionTitle } from '../components/ui'
 import { Icon } from '../components/Icon'
 import { toast } from '../fx'
 import { ProfileView } from '../profile/ProfileCard'
-import { LINKS, LinkIcon } from '../profile/links'
 import { useDiscord } from '../profile/discord'
 import {
-  BG_EFFECTS, DEFAULTS, NAME_EFFECTS, PALETTES, WIDGETS,
-  type LinkType, type Profile, type Widget, type WidgetType,
+  BG_EFFECTS, DEFAULTS, NAME_EFFECTS, PROFILE_THEMES, WIDGETS,
+  type Profile, type Widget, type WidgetType,
 } from '../profile/types'
 import {
   buildSnapshot, checkHandle, cursorFromImage, deleteProfile, getMyProfile, imageToAvatar,
@@ -28,6 +27,8 @@ export function Profil() {
   const [draft, setDraft] = useState<Profile | null>(null)
   const [status, setStatus] = useState<{ kind: 'idle' | 'saving' | 'ok' | 'error'; msg?: string }>({ kind: 'idle' })
   const [busy, setBusy] = useState<string | null>(null)
+  // Vrai dès que l'utilisateur modifie quelque chose : rien n'est enregistré (ni pseudo réservé) avant.
+  const [touched, setTouched] = useState(false)
   const [handleState, setHandleState] = useState<{ checking: boolean; available?: boolean; reason?: string }>({ checking: false })
 
   useEffect(() => {
@@ -72,21 +73,15 @@ export function Profil() {
     return () => clearTimeout(t)
   }, [okMsg])
 
-  if (!draft) {
-    return (
-      <>
-        <PageHeader title="Profil" />
-        {status.kind === 'error' ? <p className="error">{status.msg}</p> : <div className="spinner" />}
-      </>
-    )
-  }
-
+  // Les fonctions ci-dessous ne sont appelées qu'une fois le profil chargé (voir le retour anticipé plus bas).
+  const cur = draft as Profile
   const set = (patch: Partial<Profile>) => {
-    setDraft({ ...draft, ...patch })
-    setStatus({ kind: 'idle' })
+    setDraft({ ...cur, ...patch })
+    setTouched(true)
+    setStatus((st) => (st.kind === 'saving' ? st : { kind: 'idle' }))
   }
   const setIn = <K extends 'colors' | 'effects' | 'glow' | 'options'>(key: K, patch: Partial<Profile[K]>) =>
-    set({ [key]: { ...draft[key], ...patch } } as Partial<Profile>)
+    set({ [key]: { ...cur[key], ...patch } } as Partial<Profile>)
 
   /** Exécute un envoi de fichier en affichant l'état « en cours » sur le bon champ. */
   const run = async (field: string, fn: () => Promise<Partial<Profile>>) => {
@@ -102,27 +97,45 @@ export function Profil() {
 
   const setWidgets = (widgets: Widget[]) => set({ widgets })
   const move = (i: number, d: number) => {
-    const w = [...draft.widgets]
+    const w = [...cur.widgets]
     const [x] = w.splice(i, 1)
     w.splice(i + d, 0, x)
     setWidgets(w)
   }
   const addWidget = (type: WidgetType) =>
-    setWidgets([...draft.widgets, { id: newId(), type, ...(type === 'subject' ? { subject: subjects[0] ?? '' } : {}) }])
+    setWidgets([...cur.widgets, { id: newId(), type, ...(type === 'subject' ? { subject: subjects[0] ?? '' } : {}) }])
 
-  const dirty = JSON.stringify({ ...draft, snapshot: null, views: null }) !== JSON.stringify(saved && { ...saved, snapshot: null, views: null })
+  const dirty = JSON.stringify({ ...cur, snapshot: null, views: null }) !== JSON.stringify(saved && { ...saved, snapshot: null, views: null })
   const canSave = handleState.available !== false && !handleState.checking && status.kind !== 'saving' && !busy
 
   const onSave = async () => {
+    const draftAtSave = cur
     setStatus({ kind: 'saving' })
     try {
-      const p = await saveProfile(m, { ...draft, snapshot })
+      const p = await saveProfile(m, { ...cur, snapshot })
       setSaved(p)
-      setDraft(p)
-      setStatus({ kind: 'ok', msg: saved ? 'Profil mis à jour' : 'Profil publié' })
+      setDraft((d) => (d && JSON.stringify({ ...d, snapshot: null, views: null }) !== JSON.stringify({ ...draftAtSave, snapshot: null, views: null }) ? d : p))
+      setStatus({ kind: 'ok', msg: 'Enregistré' })
     } catch (e) {
       setStatus({ kind: 'error', msg: e instanceof Error ? e.message : String(e) })
     }
+  }
+
+  // Enregistrement automatique : tout changement est enregistré tout seul, sans bouton « valider ».
+  useEffect(() => {
+    if (!touched || !dirty || !canSave) return
+    const t = window.setTimeout(() => { void onSave() }, 650)
+    return () => window.clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, touched, dirty, canSave])
+
+  if (!draft) {
+    return (
+      <>
+        <PageHeader title="Profil" />
+        {status.kind === 'error' ? <p className="error">{status.msg}</p> : <div className="spinner" />}
+      </>
+    )
   }
 
   const publicUrl = `${location.origin}${location.pathname}#/u/${saved?.handle ?? draft.handle}`
@@ -140,12 +153,43 @@ export function Profil() {
       <PageHeader title="Profil" subtitle={m === 'demo' ? 'Mode démo : ton profil reste sur cet appareil.' : undefined} />
 
       <div className="pf-preview"><ProfileView profile={{ ...draft, snapshot }} embedded /></div>
+
+      <p className={`autosave ${status.kind}`} role="status" aria-live="polite">
+        {status.kind === 'saving' ? 'Enregistrement…'
+          : status.kind === 'error' ? status.msg
+          : status.kind === 'ok' ? 'Enregistré'
+          : touched && dirty && handleState.available === false ? 'Choisis un autre pseudo pour enregistrer'
+          : saved ? 'Les modifications sont enregistrées automatiquement' : 'Tes modifications seront enregistrées automatiquement'}
+      </p>
+
+      <Toggle label="Profil public" hint={draft.public ? 'Tout le monde peut voir ta page avec le lien' : 'Privé : seul toi peux voir ta page'}
+        on={draft.public} onChange={(v) => set({ public: v })} />
       {saved && (
         <div className="pf-share">
           <a href={`#/u/${saved.handle}`} className="link-btn"><Icon name="eye" size={16} />Voir</a>
-          <button className="link-btn" onClick={copy}><Icon name="link" size={16} />Copier le lien</button>
+          {saved.public && <button className="link-btn" onClick={copy}><Icon name="link" size={16} />Copier le lien</button>}
         </div>
       )}
+
+      {/* ----------------------------------------------------------- Thèmes */}
+      <Group title="Thèmes" open>
+        <div className="ptheme-grid" role="radiogroup" aria-label="Thème du profil">
+          {PROFILE_THEMES.map((t) => {
+            const on = JSON.stringify(t.apply.colors) === JSON.stringify(draft.colors) && t.apply.effects.background === draft.effects.background
+            return (
+              <button key={t.id} role="radio" aria-checked={on} className="ptheme"
+                onClick={() => set({ ...t.apply, effects: { ...draft.effects, ...t.apply.effects } })}>
+                <span style={{ background: t.apply.colors.background }}>
+                  <i style={{ background: t.apply.colors.text }} />
+                  <i style={{ background: t.apply.colors.text, opacity: 0.35, width: '55%' }} />
+                  <b style={{ background: t.apply.colors.icons }} />
+                </span>
+                {t.label}
+              </button>
+            )
+          })}
+        </div>
+      </Group>
 
       {/* ------------------------------------------------------------ Médias */}
       <Group title="Import de médias" open>
@@ -212,29 +256,6 @@ export function Profil() {
       </label>
 
       </Group>
-      {/* ----------------------------------------------------------- Réseaux */}
-      <Group title="Réseaux" meta={`${draft.links.length}/12`}>
-      <ul className="list links-edit">
-        {draft.links.map((l, i) => (
-          <li key={i}>
-            <span className="link-ico"><LinkIcon type={l.type} size={18} /></span>
-            <select value={l.type} aria-label="Réseau"
-              onChange={(e) => set({ links: draft.links.map((x, j) => (j === i ? { ...x, type: e.target.value as LinkType } : x)) })}>
-              {(Object.keys(LINKS) as LinkType[]).map((t) => <option key={t} value={t}>{LINKS[t].label}</option>)}
-            </select>
-            <input value={l.value} placeholder={LINKS[l.type].placeholder} maxLength={120} autoCapitalize="none" spellCheck={false}
-              onChange={(e) => set({ links: draft.links.map((x, j) => (j === i ? { ...x, value: e.target.value.trim() } : x)) })} />
-            <button className="icon-btn" onClick={() => set({ links: draft.links.filter((_, j) => j !== i) })} aria-label="Retirer"><Icon name="x" size={16} /></button>
-          </li>
-        ))}
-      </ul>
-      {draft.links.length < 12 && (
-        <button className="chip" onClick={() => set({ links: [...draft.links, { type: 'instagram', value: '' }] })}>
-          <Icon name="plus" size={14} />Ajouter un réseau
-        </button>
-      )}
-
-      </Group>
       {/* ------------------------------------------- Personnalisation générale */}
       <Group title="Personnalisation générale">
       <label className="field">
@@ -254,7 +275,7 @@ export function Profil() {
       <div className="field">
         <span>Effet lumineux</span>
         <div className="glow-grid">
-          {([['username', 'Nom d’utilisateur'], ['icons', 'Réseaux'], ['badges', 'Badges'], ['widgets', 'Widgets']] as const).map(([k, label]) => (
+          {([['username', 'Nom d’utilisateur'], ['badges', 'Badges'], ['widgets', 'Widgets']] as const).map(([k, label]) => (
             <button key={k} className={`glow-btn ${draft.glow[k] ? 'on' : ''}`} aria-pressed={draft.glow[k]}
               onClick={() => setIn('glow', { [k]: !draft.glow[k] })}>
               <Icon name="star" size={15} />{label}
@@ -266,15 +287,7 @@ export function Profil() {
       </Group>
       {/* ----------------------------------------------------------- Couleurs */}
       <Group title="Personnalisation des couleurs">
-      <div className="palettes">
-        {PALETTES.map((p) => (
-          <button key={p.id} className="palette" onClick={() => set({ colors: p.colors })} title={p.label}>
-            <span style={{ background: p.colors.background }}><i style={{ background: p.colors.accent }} /><i style={{ background: p.colors.icons }} /></span>
-            {p.label}
-          </button>
-        ))}
-      </div>
-       <ColorField label="Couleur d’accentuation (blocs)" value={draft.colors.accent} onChange={(v) => setIn('colors', { accent: v })} />
+      <ColorField label="Couleur d’accentuation (blocs)" value={draft.colors.accent} onChange={(v) => setIn('colors', { accent: v })} />
       <ColorField label="Couleur du texte" value={draft.colors.text} onChange={(v) => setIn('colors', { text: v })} />
       <ColorField label="Couleur d’arrière-plan" value={draft.colors.background} onChange={(v) => setIn('colors', { background: v })} />
       <ColorField label="Couleur des icônes" value={draft.colors.icons} onChange={(v) => setIn('colors', { icons: v })} />
@@ -328,7 +341,6 @@ export function Profil() {
       </Group>
       {/* ------------------------------------------------------------- Autres */}
       <Group title="Autres personnalisations">
-      <Toggle label="Icônes monochromes" hint="Réseaux dans la couleur des icônes" on={draft.options.monoIcons} onChange={(v) => setIn('options', { monoIcons: v })} />
  <Toggle label="Description animée" hint="Ta description s’écrit lettre par lettre" on={draft.options.animatedBio} onChange={(v) => setIn('options', { animatedBio: v })} />
       <Toggle label="Titre animé" hint="Le titre de l’onglet s’écrit en boucle" on={draft.options.animatedTitle} onChange={(v) => setIn('options', { animatedTitle: v })} />
       <Toggle label="Inverser les couleurs des blocs" hint="Widgets clairs, texte foncé" on={draft.options.invertBlocks} onChange={(v) => setIn('options', { invertBlocks: v })} />
@@ -337,18 +349,6 @@ export function Profil() {
 
       </Group>
 
-      {(!saved || dirty || status.kind !== 'idle') && (
-        <div className="save-bar">
-          {status.kind === 'error' && <p className="error" role="alert">{status.msg}</p>}
-          {status.kind === 'ok' && <p className="ok" role="status">{status.msg}</p>}
-          {(!saved || dirty || status.kind === 'saving' || status.kind === 'error') && (
-            <button className="btn primary" onClick={onSave} disabled={!canSave}>
-              {status.kind === 'saving' ? 'Enregistrement…' : saved ? 'Enregistrer les modifications' : 'Publier mon profil'}
-            </button>
-          )}
-        </div>
-      )}
-
       <SectionTitle>Application</SectionTitle>
       <a href="#/reglages" className="row-link"><span className="grow">Réglages</span><Icon name="chevron" size={16} /></a>
       {saved && (
@@ -356,6 +356,7 @@ export function Profil() {
           if (!confirm('Supprimer ton profil public ? Ton pseudo sera libéré.')) return
           await deleteProfile(m)
           setSaved(null)
+          setTouched(false) // sinon l'enregistrement automatique le recréerait aussitôt
           setStatus({ kind: 'ok', msg: 'Profil supprimé' })
         }}><span className="grow">Supprimer mon profil public</span></button>
       )}

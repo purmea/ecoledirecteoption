@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useHashRoute } from './hooks/useHashRoute'
 import { useLocalStorage } from './hooks/useLocalStorage'
-import { SessionProvider, useSession } from './state/session'
+import { SessionProvider, useMessages, useSession } from './state/session'
 import { BottomNav } from './components/BottomNav'
 import { Confetti, Toaster, toast } from './fx'
 import { Skeleton } from './components/Skeleton'
@@ -18,21 +18,18 @@ import { Reglages, type Accent, type Theme } from './pages/Reglages'
 import { buildSnapshot, getMyProfile, saveProfile } from './profile/api'
 
 export default function App() {
-  const [theme, setTheme] = useLocalStorage<Theme>('edo:theme', 'system')
-  const [accent, setAccent] = useLocalStorage<Accent>('edo:accent', 'turquoise')
-  useEffect(() => {
-    if (theme === 'system') delete document.documentElement.dataset.theme
-    else document.documentElement.dataset.theme = theme
-  }, [theme])
+  // Nouvelles clés : le thème par défaut est désormais « marine » avec l'accent rouge.
+  const [theme, setTheme] = useLocalStorage<Theme>('edo:theme2', 'marine')
+  const [accent, setAccent] = useLocalStorage<Accent>('edo:accent2', 'rouge')
   useEffect(() => {
     const root = document.documentElement
-    if (accent === 'turquoise') delete root.dataset.accent
+    if (theme === 'auto') delete root.dataset.theme
+    else root.dataset.theme = theme
+    if (accent === 'rouge') delete root.dataset.accent
     else root.dataset.accent = accent
-    // La barre du navigateur (téléphone) prend la couleur choisie.
-    const meta = document.querySelector('meta[name="theme-color"]')
-    const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
-    meta?.setAttribute('content', dark ? '#0f0f13' : getComputedStyle(root).getPropertyValue('--accent').trim() || '#00809a')
-  }, [accent, theme])
+    // La barre du navigateur (téléphone) prend la couleur du fond.
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', getComputedStyle(root).getPropertyValue('--bg').trim() || '#0a1a3a')
+  }, [theme, accent])
 
   return (
     <SessionProvider>
@@ -44,6 +41,7 @@ export default function App() {
 function Shell({ theme, setTheme, accent, setAccent }: { theme: Theme; setTheme: (t: Theme) => void; accent: Accent; setAccent: (a: Accent) => void }) {
   const { status, data, error, mode, refresh } = useSession()
   const { route, param } = useHashRoute()
+  const messages = useMessages()
   const order = ['accueil', 'notes', 'planning', 'devoirs', 'messages', 'profil', 'reglages']
   const idx = Math.max(0, order.indexOf(route))
   const prevIdx = useRef(idx)
@@ -79,7 +77,7 @@ function Shell({ theme, setTheme, accent, setAccent }: { theme: Theme; setTheme:
   if (status === 'loading' || !data) return <Skeleton />
 
   const todo = data.homework.filter((h) => !h.done).length
-  const unread = (data.messages ?? []).filter((m) => !m.read).length
+  const unread = messages.filter((m) => !m.read && !m.archived).length
   return (
     <div className="app">
       <div className={`ptr ${ptr.busy ? 'busy' : ''} ${ptr.ready ? 'ready' : ''}`} style={{ transform: `translateY(${ptr.pull - 44}px)`, opacity: Math.min(1, ptr.pull / 50) }} aria-hidden="true">

@@ -1,5 +1,5 @@
 import { useData, useSession } from '../state/session'
-import { averageTimeline, fmt, formatDate, generalAverage, greeting, on20, todayIndex, DAYS } from '../lib'
+import { averageTimeline, fmt, formatDate, generalAverage, greeting, on20 } from '../lib'
 import { Empty, SectionTitle } from '../components/ui'
 import { Sparkline } from '../components/charts'
 import { Avatar, useMyProfile } from '../profile/useMyProfile'
@@ -14,16 +14,9 @@ export function Accueil() {
   const avg = generalAverage(periodGrades)
   const trend = averageTimeline(periodGrades)
   const delta = trend.length > 1 ? trend[trend.length - 1].value - trend[trend.length - 2].value : null
-  const day = todayIndex()
-  const today = lessons.filter((l) => l.day === day).sort((a, b) => a.start.localeCompare(b.start))
   const todo = homework.filter((h) => !h.done).sort((a, b) => a.due.localeCompare(b.due))
   const latest = [...grades].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3)
-  const isWeekend = (new Date().getDay() + 6) % 7 > 4
 
-  const summary = [
-    `${today.filter((l) => !l.cancelled).length} cours`,
-    `${todo.length} devoir${todo.length > 1 ? 's' : ''}`,
-  ].join(' · ')
 
   return (
     <>
@@ -53,29 +46,17 @@ export function Accueil() {
 
       <NowCard lessons={lessons} />
 
-      <SectionTitle meta={summary}>{isWeekend ? DAYS[day] : 'Aujourd’hui'}</SectionTitle>
-      {today.length === 0 ? <Empty>Pas de cours</Empty> : (
-        <ul className="list">
-          {today.map((l) => (
-            <li key={l.id} className={l.cancelled ? 'cancelled' : ''}>
-              <span className="time">{l.start}</span>
-              <div className="grow"><strong>{l.subject}</strong><small>{[l.room, l.teacher].filter(Boolean).join(' · ')}</small></div>
-              {l.cancelled && <span className="status bad">Annulé</span>}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <SectionTitle>Dernières notes</SectionTitle>
+      <SectionTitle meta={<a href="#/notes" className="link">Tout voir</a>}>Dernières notes</SectionTitle>
       {latest.length === 0 ? <Empty>Aucune note</Empty> : (
-        <ul className="list">
+        <div className="notes-row">
           {latest.map((g) => (
-            <li key={g.id}>
-              <div className="grow"><strong>{g.subject}</strong><small>{g.label} · {formatDate(g.date)}</small></div>
-              <span className={`score ${on20(g) < 10 ? 'low' : ''}`}>{fmt(g.value)}<small>/{g.outOf}</small></span>
-            </li>
+            <a href="#/notes" key={g.id} className={`note-tile ${on20(g) < 10 ? 'low' : ''}`} aria-label={`${g.subject} : ${fmt(g.value)} sur ${g.outOf}`}>
+              <strong>{fmt(g.value)}<small>/{g.outOf}</small></strong>
+              <span className="note-subject">{g.subject}</span>
+              <small>{formatDate(g.date)}</small>
+            </a>
           ))}
-        </ul>
+        </div>
       )}
 
       <SectionTitle>À faire</SectionTitle>

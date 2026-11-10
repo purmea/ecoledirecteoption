@@ -20,7 +20,6 @@ const RESERVED = new Set(['admin', 'api', 'app', 'ed', 'help', 'login', 'moderat
 export const WIDGET_TYPES = ['average', 'subject', 'trend', 'subjects', 'homework']
 const BG_EFFECTS = ['none', 'halos', 'rain', 'snow', 'stars', 'particles']
 const NAME_EFFECTS = ['none', 'rainbow', 'typewriter', 'glitch', 'sparkles']
-const LINK_TYPES = ['instagram', 'tiktok', 'snapchat', 'youtube', 'x', 'discord', 'github', 'twitch', 'spotify', 'soundcloud', 'pinterest', 'telegram', 'website']
 
 // Médias acceptés : type MIME → extension et taille maximale. Pas de SVG (risque de script).
 const MEDIA_TYPES = {
@@ -38,7 +37,11 @@ let writing = Promise.resolve()
 
 function load() {
   loaded ??= readFile(DATA_FILE, 'utf8')
-    .then((t) => { db = { profiles: {}, sessions: {}, media: {}, ...JSON.parse(t) } })
+    .then((t) => {
+      db = { profiles: {}, sessions: {}, media: {}, ...JSON.parse(t) }
+      // Les profils créés avant l'option « public » étaient publiés : ils le restent.
+      for (const p of Object.values(db.profiles)) if (p.public === undefined) p.public = true
+    })
     .catch(() => {})
   return loaded
 }
@@ -86,15 +89,6 @@ function mediaRef(v, { dataMax = 0, kinds }) {
   return m && kinds.includes(EXT_TYPES[m[2]].split('/')[0]) ? v : null
 }
 
-function cleanLink(l) {
-  const type = pick(l?.type, LINK_TYPES, null)
-  const value = str(l?.value, 120)
-  if (!type || !value) return null
-  if ((type === 'website' || type === 'spotify') && !/^https:\/\/[^\s"'<>]+$/.test(value)) return null
-  if (type !== 'website' && type !== 'spotify' && !/^[\w.@-]{1,60}$/.test(value)) return null
-  return { type, value }
-}
-
 function cleanProfile(input) {
   const p = input && typeof input === 'object' ? input : {}
   const widgets = (Array.isArray(p.widgets) ? p.widgets : []).slice(0, 8)
@@ -124,7 +118,7 @@ function cleanProfile(input) {
     background: bgUrl ? { url: bgUrl, type: bgUrl.match(/\.(mp4|webm)$/) ? 'video' : 'image' } : null,
     audio: mediaRef(p.audio, { kinds: ['audio'] }),
     cursor: mediaRef(p.cursor, { dataMax: 60_000, kinds: ['image'] }),
-    links: (Array.isArray(p.links) ? p.links : []).slice(0, 12).map(cleanLink).filter(Boolean),
+    public: bool(p.public),
     colors: {
       accent: color(c.accent, '#ffffff'), text: color(c.text, '#ffffff'),
       background: color(c.background, '#0a0a0a'), icons: color(c.icons, '#ffffff'),
@@ -132,9 +126,9 @@ function cleanProfile(input) {
     effects: { background: pick(fx.background, BG_EFFECTS, 'none'), username: pick(fx.username, NAME_EFFECTS, 'none') },
     opacity: int(p.opacity, 0, 100, 7),
     blur: int(p.blur, 0, 80, 8),
-    glow: { username: bool(g.username), icons: bool(g.icons), badges: bool(g.badges), widgets: bool(g.widgets) },
+    glow: { username: bool(g.username), badges: bool(g.badges), widgets: bool(g.widgets) },
     options: {
-      monoIcons: bool(o.monoIcons), animatedTitle: bool(o.animatedTitle), animatedBio: bool(o.animatedBio), invertBlocks: bool(o.invertBlocks),
+      animatedTitle: bool(o.animatedTitle), animatedBio: bool(o.animatedBio), invertBlocks: bool(o.invertBlocks),
       volumeControl: o.volumeControl !== false, showBadges: o.showBadges !== false,
       discordAvatar: bool(o.discordAvatar), discordDecoration: bool(o.discordDecoration), discordPresence: bool(o.discordPresence),
     },
@@ -217,9 +211,11 @@ export function profilesApi(prefix = '/api') {
       let m
       if (req.method === 'GET' && (m = path.match(/^\/u\/([^/]+)$/))) {
         const p = db.profiles[decodeURIComponent(m[1]).toLowerCase()]
-        if (!p) return send(res, 404, { error: 'Profil introuvable' })
-        p.views = (p.views ?? 0) + 1
-        void persist()
+        const viewer = db.sessions[String(req.headers['x-session'] ?? '')]?.account
+        const isOwner = !!p && viewer === p.account
+        // Un profil privé n'existe que pour son propriétaire.
+        if (!p || (!p.public && !isOwner)) return send(res, 404, { error: 'Profil introuvable' })
+        if (!isOwner) { p.views = (p.views ?? 0) + 1; void persist() } // ses propres visites ne comptent pas
         return send(res, 200, publicView(p))
       }
       if (req.method === 'GET' && (m = path.match(/^\/handles\/([^/]+)$/))) {

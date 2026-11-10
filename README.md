@@ -28,21 +28,21 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 
 **Au quotidien**
 
-- **Accueil** : moyenne qui défile, carte « En cours · fin dans 30 min » / « Prochain cours dans… », dernières notes, devoirs à faire
+- **Accueil** : moyenne qui défile, carte « En cours · fin dans 30 min » avec les **3 prochains cours** (même sur la semaine suivante), les **3 dernières notes en grand**, devoirs à faire
 - **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix du trimestre
 - **Simulateur** : « et si j'avais 15/20 en maths (coef 2) ? » → l'effet immédiat sur la moyenne générale
 - **Planning** : emploi du temps navigable semaine par semaine (flèches ou glissement du doigt), cours annulés et cours en cours mis en avant
-- **Messages** : boîte de réception avec non lus, ouverture d'un message (marqué comme lu), pièces jointes listées
+- **Messages** : boîte de réception, ouverture d'un message (marqué comme lu), et raccourcis en haut du message : **épingler, archiver, supprimer, marquer comme non lu** (avec « Annuler »), filtres Tous / Non lus / Épinglés / Archivés
 - **Devoirs** : consignes groupées par date, cases à cocher synchronisées avec École Directe, confettis quand tout est fait
 
 **Profil public** (`#/u/ton-pseudo`)
 
-- Page au style « clean » : fond image ou vidéo, musique, effets (pluie, neige, étoiles…), couleurs, réseaux, badges, widgets de moyennes
-- Pseudo unique, photo, bio, localisation, compteur de vues, présence Discord
+- Page au style « clean » : fond image ou vidéo, musique, effets (pluie, neige, étoiles…), couleurs, badges, widgets de moyennes
+- 10 thèmes complets en un geste, pseudo unique, photo, bio, localisation, compteur de vues, présence Discord ; **enregistrement automatique** (aucun bouton à valider) ; profil privé par défaut, public quand tu l'actives
 
 **Confort**
 
-- Thème clair, sombre ou automatique, **6 couleurs d'accent au choix** (turquoise, bleu, vert, orange, rose, graphite), pensé pour le téléphone (encoches, barre du bas, PWA)
+- Thème **marine** (bleu marine et rouge vif, par défaut), nuit, clair ou automatique, **7 couleurs d'accent au choix**, pensé pour le téléphone (encoches, barre du bas, PWA)
 - Animations façon Apple : ressorts physiques, pages qui glissent dans le sens de la navigation, barre du bas à bulle mobile, onglets qui glissent, titre qui se réduit au défilement, messages « Dynamic Island »
 - **Hors connexion** : l'app s'ouvre instantanément avec tes dernières données (gardées sur l'appareil) puis se met à jour ; tirer vers le bas pour actualiser
 - HTML sémantique, ARIA, focus visible, respect de « réduire les animations »
@@ -96,20 +96,20 @@ navigateur ──► /ed/v3/…  (serveur de l'app) ──► api.ecoledirecte.c
 - Il ne relaie que les routes `/v3/*.awp` et **n'enregistre jamais** les identifiants.
 - Sans le serveur (version statique seule), seule la démo fonctionne : l'écran de connexion le détecte et le dit.
 - Seuls les **comptes élèves** sont pris en charge pour l'instant.
-- **Messagerie** : la liste des messages n'est pas décrite dans la documentation communautaire ; sa lecture est
+- **Messagerie** : épingler, archiver, supprimer et « non lu » sont des rangements **locaux à l'appareil** (ils ne modifient pas la boîte École Directe ; seule l'ouverture d'un message le marque comme lu côté École Directe). La liste des messages n'est pas décrite dans la documentation communautaire ; sa lecture est
   tolérante (une réponse inattendue affiche un message d'erreur clair, jamais un plantage). Le contenu des
   messages est converti en texte : aucun HTML d'École Directe n'est injecté dans la page.
 - Derrière un proxy d'entreprise : `NODE_USE_ENV_PROXY=1 npm run dev`.
 
 ### Profils publics
 
+- **Enregistrement automatique** : chaque réglage est enregistré tout seul (rien n'est créé ni réservé avant ta première modification). Le profil est **privé par défaut** ; l'interrupteur « Profil public » le rend visible par lien.
 - **Pseudo unique** (3 à 20 caractères : `a-z`, `0-9`, `_`, `.`), vérifié en direct ; en changer libère l'ancien.
 - **Propriété** : au login réussi, le serveur lie la session de l'appareil au compte élève ; seule cette session
   peut modifier le profil ou envoyer des fichiers. Un profil ne peut utiliser que ses propres médias.
 - **Médias** : images (converties en WebP côté navigateur), GIF, vidéos MP4/WebM, audio. SVG refusés, type de
   contenu fixé (`nosniff`), fichiers inutilisés supprimés automatiquement.
-- **Widgets** : instantané des moyennes, mis à jour à chaque publication et actualisation. **Rien n'est public
-  tant que tu ne publies pas.**
+- **Widgets** : instantané des moyennes, mis à jour à chaque enregistrement et actualisation.
 - **Stockage** : `data/` (ignoré par git), ou `$DATA_DIR`. En mode démo, tout reste sur l'appareil.
 - **Discord** (avatar, décoration, présence) via [Lanyard](https://github.com/Phineas/lanyard).
 
@@ -126,7 +126,7 @@ navigateur ──► /ed/v3/…  (serveur de l'app) ──► api.ecoledirecte.c
 src/
 ├── pages/        Accueil, Notes, Planning, Devoirs, Messages, Profil, Profil public, Réglages, Connexion
 ├── components/   Graphiques, navigation, simulateur, carte « maintenant »
-├── profile/      Profils publics : types, API, page, effets, réseaux, Discord
+├── profile/      Profils publics : types, API, page, effets, Discord
 ├── api/          Client École Directe + conversion des données
 ├── state/        Session : connexion, QCM, démo, chargement
 ├── fx/           Messages, confettis, compteur animé, vibration
@@ -143,7 +143,7 @@ server/
 - [x] Interface mobile-first, thèmes clair / sombre, PWA
 - [x] Connexion École Directe (élève) avec QCM
 - [x] Notes en graphiques, simulateur, planning, devoirs
-- [x] Profils publics : médias, effets, couleurs, réseaux, badges, Discord, widgets
+- [x] Profils publics : médias, effets, couleurs, thèmes, badges, Discord, widgets
 - [ ] Comptes parents (plusieurs enfants)
 - [x] Messagerie : lecture des messages reçus
 - [ ] Messagerie : répondre, envoyer, télécharger les pièces jointes

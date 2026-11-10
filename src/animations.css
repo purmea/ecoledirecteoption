@@ -84,8 +84,8 @@
 .switch:checked:active::after { transform: translateX(12px); }
 
 /* 8. Boutons : enfoncement, puis retour en ressort */
-.btn, .chip, .link-btn, .glow-btn, .palette, .drop-btn, .icon-btn, .check { transition-property: transform, opacity, background, border-color; transition-duration: 0.5s; transition-timing-function: var(--spring); }
-.btn:active, .chip:active, .link-btn:active, .glow-btn:active, .palette:active, .drop-btn:active { transform: scale(0.95); transition-duration: 0.12s; }
+.btn, .chip, .link-btn, .glow-btn, .drop-btn, .icon-btn, .check { transition-property: transform, opacity, background, border-color; transition-duration: 0.5s; transition-timing-function: var(--spring); }
+.btn:active, .chip:active, .link-btn:active, .glow-btn:active, .drop-btn:active { transform: scale(0.95); transition-duration: 0.12s; }
 .icon-btn:active { transform: scale(0.85); transition-duration: 0.12s; }
 .hero, .row-link, .row-action, .bar-row { transition: transform 0.5s var(--spring), opacity 0.2s; }
 .hero:active, .row-link:active, .row-action:active { transform: scale(0.985); opacity: 0.7; transition-duration: 0.12s; }
@@ -117,7 +117,6 @@
 /* 13. Profil public : avatar, widgets et icônes se posent l'un après l'autre */
 .pf-avatar { animation: avatar-in 0.9s var(--spring) 0.1s both; }
 .pf-widgets > .pf-tile { animation: tile-in 0.85s var(--spring) both; animation-delay: calc(260ms + var(--k, 0) * 90ms); }
-.pf-links > li { animation: pop-in 0.75s var(--spring) both; animation-delay: calc(520ms + var(--k, 0) * 70ms); }
 .pf-widgets > :nth-child(1) { --k: 0; }
 .pf-widgets > :nth-child(2) { --k: 1; }
 .pf-widgets > :nth-child(3) { --k: 2; }
@@ -127,24 +126,12 @@
 .pf-widgets > :nth-child(7) { --k: 6; }
 .pf-widgets > :nth-child(8) { --k: 7; }
 .pf-widgets > :nth-child(9) { --k: 8; }
-.pf-links > :nth-child(1) { --k: 0; }
-.pf-links > :nth-child(2) { --k: 1; }
-.pf-links > :nth-child(3) { --k: 2; }
-.pf-links > :nth-child(4) { --k: 3; }
-.pf-links > :nth-child(5) { --k: 4; }
-.pf-links > :nth-child(6) { --k: 5; }
-.pf-links > :nth-child(7) { --k: 6; }
-.pf-links > :nth-child(8) { --k: 7; }
-.pf-links > :nth-child(9) { --k: 8; }
-.pf-links > :nth-child(10) { --k: 9; }
-.pf-links > :nth-child(11) { --k: 10; }
-.pf-links > :nth-child(12) { --k: 11; }
 .pf-foot { animation: rise-soft 0.8s var(--spring-soft) 0.9s both; }
 
 /* Après une animation d'entrée, l'élément retrouve son état normal : on ne garde ni flou ni transformation
    (sinon la page entière resterait sur une couche graphique dédiée, plus coûteuse et au texte moins net). */
 .page, .page > *, .pf-in, .pf-foot, .pf-avatar, .login > *, .login-brand img, .group-body, .save-bar,
-.list > li, .pf-widgets > .pf-tile, .pf-links > li, .drop.has .drop-btn > img, .drop.has .drop-btn > video, .drop-audio {
+.list > li, .pf-widgets > .pf-tile, .drop.has .drop-btn > img, .drop.has .drop-btn > video, .drop-audio {
   animation-fill-mode: backwards;
 }
 .list li.leaving { animation-fill-mode: both; }

@@ -34,10 +34,11 @@ export const haptic = (ms = 10) => {
 // --- Messages courts, façon « Dynamic Island » ------------------------------
 
 type ToastIcon = 'check' | 'party' | 'link'
-type Toast = { id: number; text: string; icon: ToastIcon; leaving: boolean }
+type ToastAction = { label: string; run: () => void }
+type Toast = { id: number; text: string; icon: ToastIcon; leaving: boolean; action?: ToastAction }
 const TOAST = 'edo:toast'
-export const toast = (text: string, icon: ToastIcon = 'check') =>
-  window.dispatchEvent(new CustomEvent(TOAST, { detail: { text, icon } }))
+export const toast = (text: string, icon: ToastIcon = 'check', action?: ToastAction) =>
+  window.dispatchEvent(new CustomEvent(TOAST, { detail: { text, icon, action } }))
 
 const SHOW_MS = 2200
 const LEAVE_MS = 320
@@ -47,12 +48,13 @@ export function Toaster() {
   useEffect(() => {
     let n = 0
     const on = (e: Event) => {
-      const { text, icon } = (e as CustomEvent<{ text: string; icon: ToastIcon }>).detail
+      const { text, icon, action } = (e as CustomEvent<{ text: string; icon: ToastIcon; action?: ToastAction }>).detail
       const id = ++n
+      const show = action ? 4200 : SHOW_MS // avec un bouton, on laisse plus de temps
       // Un seul message à la fois, comme l'île dynamique : le nouveau remplace l'ancien.
-      setItems([{ id, text, icon, leaving: false }])
-      setTimeout(() => setItems((xs) => xs.map((x) => (x.id === id ? { ...x, leaving: true } : x))), SHOW_MS)
-      setTimeout(() => setItems((xs) => xs.filter((x) => x.id !== id)), SHOW_MS + LEAVE_MS)
+      setItems([{ id, text, icon, action, leaving: false }])
+      setTimeout(() => setItems((xs) => xs.map((x) => (x.id === id ? { ...x, leaving: true } : x))), show)
+      setTimeout(() => setItems((xs) => xs.filter((x) => x.id !== id)), show + LEAVE_MS)
     }
     window.addEventListener(TOAST, on)
     return () => window.removeEventListener(TOAST, on)
@@ -71,6 +73,9 @@ export function Toaster() {
             )}
           </span>
           <span className="toast-text">{t.text}</span>
+          {t.action && (
+            <button className="toast-action" onClick={() => { t.action!.run(); setItems((xs) => xs.filter((x) => x.id !== t.id)) }}>{t.action.label}</button>
+          )}
         </div>
       ))}
     </div>

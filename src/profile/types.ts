@@ -1,7 +1,6 @@
 export type WidgetType = 'average' | 'subject' | 'trend' | 'subjects' | 'homework'
 export type BgEffect = 'none' | 'halos' | 'rain' | 'snow' | 'stars' | 'particles'
 export type NameEffect = 'none' | 'rainbow' | 'typewriter' | 'glitch' | 'sparkles'
-export type LinkType = 'instagram' | 'tiktok' | 'snapchat' | 'youtube' | 'x' | 'discord' | 'github' | 'twitch' | 'spotify' | 'soundcloud' | 'pinterest' | 'telegram' | 'website'
 
 export interface Widget {
   id: string
@@ -30,14 +29,12 @@ export interface Profile {
   background: { url: string; type: 'image' | 'video' } | null
   audio: string | null
   cursor: string | null
-  links: { type: LinkType; value: string }[]
   colors: { accent: string; text: string; background: string; icons: string }
   effects: { background: BgEffect; username: NameEffect }
   opacity: number // 0–100, opacité des blocs (widgets, badges)
   blur: number // 0–80 px, flou derrière les blocs
-  glow: { username: boolean; icons: boolean; badges: boolean; widgets: boolean }
+  glow: { username: boolean; badges: boolean; widgets: boolean }
   options: {
-    monoIcons: boolean
     animatedTitle: boolean
     animatedBio: boolean
     invertBlocks: boolean
@@ -48,6 +45,8 @@ export interface Profile {
     discordPresence: boolean
   }
   discordId: string
+  /** Visible par tout le monde (sinon privé : seul le propriétaire le voit). */
+  public: boolean
   widgets: Widget[]
   snapshot: Snapshot
   views?: number
@@ -62,41 +61,63 @@ export const DEFAULTS: Omit<Profile, 'handle' | 'displayName' | 'snapshot' | 'wi
   background: null,
   audio: null,
   cursor: null,
-  links: [],
+  public: false,
   colors: { accent: '#ffffff', text: '#ffffff', background: '#0a0a0a', icons: '#ffffff' },
   effects: { background: 'none', username: 'none' },
   opacity: 7,
   blur: 8,
-  glow: { username: true, icons: true, badges: true, widgets: false },
+  glow: { username: true, badges: true, widgets: false },
   options: {
-    monoIcons: true, animatedTitle: false, animatedBio: true, invertBlocks: false, volumeControl: true, showBadges: true,
+    animatedTitle: false, animatedBio: true, invertBlocks: false, volumeControl: true, showBadges: true,
     discordAvatar: false, discordDecoration: false, discordPresence: false,
   },
   discordId: '',
 }
 
 /** Complète un profil (ancien format ou incomplet) avec les valeurs par défaut. */
-export function withDefaults(p: Partial<Profile> & { theme?: string }): Profile {
-  const legacy = PALETTES.find((x) => x.id === p.theme)
+export function withDefaults(p: Partial<Profile>): Profile {
   return {
     ...DEFAULTS,
     ...p,
-    colors: { ...DEFAULTS.colors, ...(legacy ? legacy.colors : {}), ...p.colors },
+    colors: { ...DEFAULTS.colors, ...p.colors },
     effects: { ...DEFAULTS.effects, ...p.effects },
     glow: { ...DEFAULTS.glow, ...p.glow },
     options: { ...DEFAULTS.options, ...p.options },
-    links: p.links ?? [],
     widgets: p.widgets ?? [],
   } as Profile
 }
 
-/** Palettes rapides (remplissent les 4 couleurs d'un coup). */
-export const PALETTES: { id: string; label: string; colors: Profile['colors'] }[] = [
-  { id: 'clean', label: 'Clean', colors: { accent: '#ffffff', text: '#ffffff', background: '#0a0a0a', icons: '#ffffff' } },
-  { id: 'aurora', label: 'Aurore', colors: { accent: '#b7a8ff', text: '#f5f3ff', background: '#0a0716', icons: '#c9bdff' } },
-  { id: 'ocean', label: 'Océan', colors: { accent: '#7cc4ff', text: '#eaf4ff', background: '#030b18', icons: '#9fd3ff' } },
-  { id: 'sunset', label: 'Couchant', colors: { accent: '#ff8a65', text: '#fff1ec', background: '#12060c', icons: '#ffb199' } },
-  { id: 'forest', label: 'Forêt', colors: { accent: '#8fe3a8', text: '#ecfff4', background: '#04100a', icons: '#b2efc4' } },
+/** Thèmes complets du profil : un seul geste applique couleurs, effets, lueurs et transparence. */
+export interface ProfileTheme {
+  id: string
+  label: string
+  apply: Pick<Profile, 'colors' | 'effects' | 'glow' | 'opacity' | 'blur'>
+}
+
+const theme = (
+  id: string, label: string, colors: Profile['colors'],
+  effects: Partial<Profile['effects']> = {}, glow: Partial<Profile['glow']> = {}, opacity = 7, blur = 8,
+): ProfileTheme => ({
+  id, label,
+  apply: {
+    colors,
+    effects: { background: 'none', username: 'none', ...effects },
+    glow: { username: true, badges: true, widgets: false, ...glow },
+    opacity, blur,
+  },
+})
+
+export const PROFILE_THEMES: ProfileTheme[] = [
+  theme('clean', 'Clean', { accent: '#ffffff', text: '#ffffff', background: '#0a0a0a', icons: '#ffffff' }),
+  theme('marine', 'Marine', { accent: '#7f9bff', text: '#f2f5ff', background: '#0a1a3a', icons: '#ee2d46' }, { background: 'halos' }, { widgets: true }, 12, 12),
+  theme('rouge', 'Rouge', { accent: '#ffffff', text: '#ffffff', background: '#14070a', icons: '#ff3b52' }, { background: 'particles', username: 'glitch' }, { widgets: true }, 8, 10),
+  theme('aurore', 'Aurore', { accent: '#b7a8ff', text: '#f5f3ff', background: '#0a0716', icons: '#c9bdff' }, { background: 'halos' }, {}, 10, 14),
+  theme('ocean', 'Océan', { accent: '#7cc4ff', text: '#eaf4ff', background: '#030b18', icons: '#9fd3ff' }, { background: 'halos' }, {}, 10, 14),
+  theme('couchant', 'Couchant', { accent: '#ff8a65', text: '#fff1ec', background: '#12060c', icons: '#ffb199' }, { background: 'halos' }, {}, 10, 14),
+  theme('foret', 'Forêt', { accent: '#8fe3a8', text: '#ecfff4', background: '#04100a', icons: '#b2efc4' }, { background: 'particles' }, {}, 10, 10),
+  theme('neon', 'Néon', { accent: '#ff2dd1', text: '#ffffff', background: '#05010f', icons: '#ff2dd1' }, { background: 'stars', username: 'rainbow' }, { widgets: true }, 10, 16),
+  theme('pluie', 'Pluie', { accent: '#9db4d6', text: '#e8eef8', background: '#0b0f14', icons: '#9db4d6' }, { background: 'rain' }, {}, 10, 14),
+  theme('neige', 'Neige', { accent: '#ffffff', text: '#ffffff', background: '#0c1220', icons: '#cfe4ff' }, { background: 'snow', username: 'sparkles' }, {}, 10, 14),
 ]
 
 export const WIDGETS: { type: WidgetType; label: string; hint: string }[] = [
