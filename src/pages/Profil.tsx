@@ -197,12 +197,8 @@ export function Profil() {
               {t.label}
             </button>
           ))}
-          <button role="radio" aria-checked={theme === 'perso'} className="theme-tile" onClick={() => setTheme('perso')}>
-            <span style={{ background: custom.bg }}>
-              <i style={{ background: 'rgb(255 255 255 / 0.14)' }} /><i style={{ background: 'rgb(255 255 255 / 0.14)', width: '40%' }} />
-              <b style={{ background: 'var(--accent)' }} />
-            </span>
-            Perso
+          <button role="radio" aria-checked={theme === 'perso'} className="theme-plus" onClick={() => setTheme('perso')} aria-label="Fond personnalisé">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
           </button>
         </div>
 
