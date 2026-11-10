@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { fmt } from '../lib'
 import { Icon } from '../components/Icon'
-import { badgesFor } from './api'
 import { useDiscord } from './discord'
 import { EffectCanvas } from './effects'
 import type { NameEffect, Profile, Widget } from './types'
@@ -35,7 +34,8 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
   const hasAudio = !!profile.audio && !embedded
   const [entered, setEntered] = useState(!hasAudio)
 
-  useAnimatedTitle(`@${profile.handle}`, embedded ? 'off' : options.animatedTitle ? 'animated' : 'static')
+  useAnimatedTitle(`@${profile.handle}`, embedded ? 'off' : 'static')
+  const anim = options.animations
 
   const style = {
     '--pf-text': colors.text,
@@ -48,25 +48,25 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
     '--pf-block-text': options.invertBlocks ? colors.background : colors.text,
     '--pf-block-text-rgb': rgb(options.invertBlocks ? colors.background : colors.text),
     '--pf-blur': `${profile.blur}px`,
+    '--pf-bf': `blur(${profile.blur}px)`,
     cursor: profile.cursor ? `url(${profile.cursor}) 0 0, auto` : undefined,
   } as CSSProperties
 
   const avatar = (options.discordAvatar && discord?.avatarUrl) || profile.avatar
-  const badges = options.showBadges ? badgesFor(profile.snapshot) : []
   const joined = memberSince(profile.createdAt)
   const presence = options.discordPresence && discord
   const footer = [
-    profile.views !== undefined && { key: 'views', icon: 'eye' as const, text: profile.views.toLocaleString('fr-FR'), title: 'Vues du profil' },
-    joined && !embedded && { key: 'since', icon: 'calendar' as const, text: joined, title: `Membre ${joined}` },
+    options.showViews && (profile.views !== undefined || embedded) && { key: 'views', icon: 'eye' as const, text: (profile.views ?? 0).toLocaleString('fr-FR'), title: 'Vues du profil' },
+    options.showSince && (joined || embedded) && { key: 'since', icon: 'calendar' as const, text: joined ?? 'depuis aujourd’hui', title: `Membre ${joined ?? 'depuis aujourd’hui'}` },
   ].filter((f): f is { key: string; icon: 'eye' | 'calendar'; text: string; title: string } => !!f)
 
   return (
-    <div className={`pf-page ${embedded ? 'embedded' : ''} ${hasAudio && options.volumeControl ? 'has-volume' : ''}`} style={style}>
+    <div className={`pf-page ${embedded ? 'embedded' : ''} ${anim ? '' : 'no-anim'} ${hasAudio && options.volumeControl ? 'has-volume' : ''}`} style={style}>
       <div className="pf-backdrop" aria-hidden="true">
         {profile.background?.type === 'video' && <video src={profile.background.url} autoPlay muted loop playsInline />}
         {profile.background?.type === 'image' && <img src={profile.background.url} alt="" />}
-        {effects.background === 'halos' && <div className="pf-halos"><span /><span /><span /></div>}
-        <EffectCanvas effect={effects.background} color={colors.text} />
+        {anim && effects.background === 'halos' && <div className="pf-halos"><span /><span /><span /></div>}
+        <EffectCanvas effect={anim ? effects.background : 'none'} color={colors.text} />
       </div>
 
       {!entered && (
@@ -89,15 +89,8 @@ export function ProfileView({ profile, embedded = false }: { profile: Profile; e
             <div className="pf-id">
               <div className="pf-name-row">
                 <h1 className={`pf-name ${glow.username ? 'glow' : ''}`}>
-                  <NameFx text={profile.displayName || profile.handle} effect={effects.username} />
+                  <NameFx text={profile.displayName || profile.handle} effect={anim ? effects.username : 'none'} />
                 </h1>
-                {badges.length > 0 && (
-                  <ul className={`pf-badges ${glow.badges ? 'glow' : ''}`} aria-label="Badges">
-                    {badges.map((b) => (
-                      <li key={b.id} title={b.label} aria-label={b.label}><Icon name={b.icon} size={15} /></li>
-                    ))}
-                  </ul>
-                )}
               </div>
               <p className="pf-sub">@{profile.handle}</p>
             </div>

@@ -26,14 +26,19 @@ export function Simulator({ grades, subjects }: { grades: Grade[]; subjects: str
           ))}
         </div>
       </div>
+      <div className="sim-weight" aria-hidden="true" style={{ '--w': coef / 3 } as CSSProperties}>
+        <span>Poids de la note</span>
+        <i><b /></i>
+        <em key={coef}>{Math.round((coef / (coef + 3)) * 100)} %</em>
+      </div>
       <label className="sim-slider">
         <span>Si j’avais <strong>{fmt(value)}</strong>/20</span>
         <input type="range" className="range" min={0} max={20} step={0.5} value={value}
           onChange={(e) => setValue(Number(e.target.value))} style={{ '--p': `${(value / 20) * 100}%` } as CSSProperties} />
       </label>
       <p className="sim-result">
-        Moyenne générale : <strong>{fmt(after)}</strong>
-        <span className={`sim-delta ${delta > 0.004 ? 'trend-up' : delta < -0.004 ? 'trend-down' : ''}`}>
+        Moyenne générale : <strong key={`${coef}-${value}-${subject}`} className="pop">{fmt(after)}</strong>
+        <span key={`d${coef}-${value}-${subject}`} className={`sim-delta pop ${delta > 0.004 ? 'trend-up' : delta < -0.004 ? 'trend-down' : ''}`}>
           {Math.abs(delta) < 0.005 ? 'inchangée' : `${delta > 0 ? '+' : '−'}${fmt(Math.abs(delta))}`}
         </span>
       </p>

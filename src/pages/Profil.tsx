@@ -26,6 +26,17 @@ export function Profil() {
   // La page de profil reprend les couleurs de l'app : un seul thème pour tout.
   const themed = useMemo(() => ({ background: appColors.bg.startsWith('#') ? appColors.bg : '#0f0f13', text: appColors.text, icons: appColors.accent, accent: appColors.text }), [appColors])
   const fileRef = useRef<HTMLInputElement>(null)
+  // L'aperçu se range quand tu défiles vers le bas et revient quand tu remontes.
+  const [hidePreview, setHidePreview] = useState(false)
+  useEffect(() => {
+    let last = window.scrollY
+    const on = () => {
+      const y = window.scrollY
+      if (Math.abs(y - last) > 6) { setHidePreview(y > last && y > 120); last = y }
+    }
+    window.addEventListener('scroll', on, { passive: true })
+    return () => window.removeEventListener('scroll', on)
+  }, [])
   const subjects = snapshot.subjects.map((s) => s.subject)
 
   const [saved, setSaved] = useState<Profile | null>(null)
@@ -163,7 +174,7 @@ export function Profil() {
     <>
       <PageHeader title="Profil" subtitle={m === 'demo' ? 'Mode démo : ton profil reste sur cet appareil.' : undefined} />
 
-      <div className="pf-preview"><ProfileView profile={{ ...draft, colors: themed, snapshot }} embedded /></div>
+      <div className={`pf-preview ${hidePreview ? 'away' : ''}`}><ProfileView profile={{ ...draft, colors: themed, snapshot }} embedded /></div>
 
       <p className={`autosave ${status.kind}`} role="status" aria-live="polite">
         {status.kind === 'saving' ? 'Enregistrement…'
@@ -277,7 +288,7 @@ export function Profil() {
       <div className="field">
         <span>Effet lumineux</span>
         <div className="glow-grid">
-          {([['username', 'Nom d’utilisateur'], ['badges', 'Badges'], ['widgets', 'Widgets']] as const).map(([k, label]) => (
+          {([['username', 'Nom d’utilisateur'], ['widgets', 'Widgets']] as const).map(([k, label]) => (
             <button key={k} className={`glow-btn ${draft.glow[k] ? 'on' : ''}`} aria-pressed={draft.glow[k]}
               onClick={() => setIn('glow', { [k]: !draft.glow[k] })}>
               <Icon name="star" size={15} />{label}
@@ -335,9 +346,10 @@ export function Profil() {
       </Group>
       {/* ------------------------------------------------------------- Autres */}
       <Group title="Autres personnalisations">
-      <Toggle label="Titre animé" hint="Le titre de l’onglet s’écrit en boucle" on={draft.options.animatedTitle} onChange={(v) => setIn('options', { animatedTitle: v })} />
+      <Toggle label="Animations" hint="Entrée en douceur, effets d’arrière-plan et du nom" on={draft.options.animations} onChange={(v) => setIn('options', { animations: v })} />
+      <Toggle label="Compteur de vues" hint="Affiche combien de fois ta page a été vue" on={draft.options.showViews} onChange={(v) => setIn('options', { showViews: v })} />
+      <Toggle label="Ancienneté" hint="Affiche « depuis 3 mois » en bas de ta page" on={draft.options.showSince} onChange={(v) => setIn('options', { showSince: v })} />
       <Toggle label="Inverser les couleurs des blocs" hint="Widgets clairs, texte foncé" on={draft.options.invertBlocks} onChange={(v) => setIn('options', { invertBlocks: v })} />
-      <Toggle label="Badges" hint="Félicitations, compliments, en progression…" on={draft.options.showBadges} onChange={(v) => setIn('options', { showBadges: v })} />
 
       </Group>
 

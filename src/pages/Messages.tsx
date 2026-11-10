@@ -17,24 +17,27 @@ export function messageDate(raw: string, now = new Date()) {
     ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-type Filter = 'all' | 'unread' | 'pinned' | 'archived'
+type Filter = 'all' | 'unread' | 'pinned' | 'archived' | 'deleted'
 
 export function Messages() {
   const { messagesError } = useData()
-  const messages = useMessages()
+  const all = useMessages(true)
+  const messages = all.filter((m) => !m.deleted)
+  const deleted = all.filter((m) => m.deleted)
+  const { messageAction } = useSession()
   const [filter, setFilter] = useState<Filter>('all')
   const inbox = messages.filter((m) => !m.archived)
   const unread = inbox.filter((m) => !m.read).length
-  const counts = { pinned: messages.filter((m) => m.pinned).length, archived: messages.filter((m) => m.archived).length }
 
   const list = useMemo(() => {
-    const base = filter === 'archived' ? messages.filter((m) => m.archived)
+    const base = filter === 'deleted' ? deleted
+      : filter === 'archived' ? messages.filter((m) => m.archived)
       : filter === 'pinned' ? messages.filter((m) => m.pinned)
       : filter === 'unread' ? inbox.filter((m) => !m.read)
       : inbox
     // Les messages épinglés remontent en haut (le reste garde l'ordre de la boîte).
     return [...base].sort((a, b) => Number(b.pinned) - Number(a.pinned))
-  }, [messages, inbox, filter])
+  }, [messages, deleted, inbox, filter])
 
   return (
     <>
@@ -44,16 +47,17 @@ export function Messages() {
           {messages.length ? 'Actualisation impossible : ' : 'Impossible de lire la messagerie : '}{messagesError}
         </p>
       )}
-      {(messages.length > 0 || !messagesError) && (
+      {(all.length > 0 || !messagesError) && (
         <Segmented label="Filtre" value={filter} onChange={setFilter}
           options={[
             ['all', 'Tous'], ['unread', 'Non lus'],
-            ['pinned', counts.pinned ? `Épinglés ${counts.pinned}` : 'Épinglés'],
-            ['archived', counts.archived ? `Archivés ${counts.archived}` : 'Archivés'],
+            ['pinned', 'Épinglés'],
+            ['archived', 'Archivés'],
+            ['deleted', 'Supprimés'],
           ] as const} />
       )}
       {list.length === 0 ? (
-        !messagesError && <Empty>{{ all: 'Aucun message', unread: 'Aucun message non lu', pinned: 'Aucun message épinglé', archived: 'Aucun message archivé' }[filter]}</Empty>
+        !messagesError && <Empty>{{ all: 'Aucun message', unread: 'Aucun message non lu', pinned: 'Aucun message épinglé', archived: 'Aucun message archivé', deleted: 'Aucun message supprimé' }[filter]}</Empty>
       ) : (
         <ul className="list msg-list">
           {list.map((m) => (
@@ -72,6 +76,9 @@ export function Messages() {
                   </span>
                 </span>
               </a>
+              {m.deleted && (
+                <button className="text-btn" onClick={() => { messageAction(m.id, 'restore'); toast('Message restauré', 'check') }}>Restaurer</button>
+              )}
             </li>
           ))}
         </ul>
@@ -82,7 +89,7 @@ export function Messages() {
 
 export function MessageView({ id }: { id: string }) {
   const { openMessage, messageAction } = useSession()
-  const meta = useMessages().find((m) => m.id === id)
+  const meta = useMessages(true).find((m) => m.id === id)
   const [msg, setMsg] = useState<MessageDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -100,6 +107,7 @@ export function MessageView({ id }: { id: string }) {
   const back = () => { location.hash = '#/messages' }
   const pinned = !!meta?.pinned
   const archived = !!meta?.archived
+  const deleted = !!meta?.deleted
 
   const togglePin = () => {
     messageAction(id, pinned ? 'unpin' : 'pin')
@@ -132,7 +140,9 @@ export function MessageView({ id }: { id: string }) {
             <button onClick={togglePin} aria-pressed={pinned} className={pinned ? 'on' : ''}><Icon name="pushpin" size={19} /><span>{pinned ? 'Épinglé' : 'Épingler'}</span></button>
             <button onClick={markUnread}><Icon name="mail" size={19} /><span>Non lu</span></button>
             <button onClick={toggleArchive}><Icon name="archive" size={19} /><span>{archived ? 'Désarchiver' : 'Archiver'}</span></button>
-            <button onClick={remove} className="danger"><Icon name="trash" size={19} /><span>Supprimer</span></button>
+            {deleted
+              ? <button onClick={() => { messageAction(id, 'restore'); toast('Message restauré', 'check'); back() }}><Icon name="undo" size={19} /><span>Restaurer</span></button>
+              : <button onClick={remove} className="danger"><Icon name="trash" size={19} /><span>Supprimer</span></button>}
           </div>
         )}
       </div>

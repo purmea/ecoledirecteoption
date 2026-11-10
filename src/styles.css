@@ -306,7 +306,7 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .pf-tile {
   min-width: 0; padding: 14px 16px; border-radius: 20px; color: var(--pf-block-text);
   background: var(--pf-block); border: 1px solid var(--pf-block-border);
-  backdrop-filter: blur(var(--pf-blur)); -webkit-backdrop-filter: blur(var(--pf-blur));
+  -webkit-backdrop-filter: var(--pf-bf);
 }
 .pf-widgets.glow .pf-tile { box-shadow: 0 0 20px rgb(var(--pf-icons-rgb) / 0.18); }
 .pf-tile.wide { grid-column: 1 / -1; }
@@ -401,7 +401,8 @@ small { display: block; font-size: 13px; color: var(--muted); }
 }
 
 /* Aperçu dans l'éditeur */
-.pf-preview { position: sticky; top: calc(env(safe-area-inset-top) + 50px); z-index: 6; margin-bottom: 12px; border-radius: 20px; overflow: hidden; max-height: 36vh; box-shadow: 0 8px 30px rgb(0 0 0 / 0.35); }
+.pf-preview { position: sticky; top: calc(env(safe-area-inset-top) + 50px); z-index: 6; margin-bottom: 12px; border-radius: 20px; overflow: hidden; max-height: 36vh; box-shadow: 0 8px 30px rgb(0 0 0 / 0.35); transition: transform 0.45s var(--spring), opacity 0.3s; }
+.pf-preview.away { transform: translateY(calc(-100% - 70px)); opacity: 0; pointer-events: none; }
 .pf-preview .pf-page.embedded { min-height: 0; padding: 22px 16px; }
 
 /* Éditeur de profil (style de l'app) ---------------------------------- */
@@ -841,3 +842,20 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .swap-in > :nth-child(4) { animation-delay: 210ms; }
 .swap-in > :nth-child(5) { animation-delay: 280ms; }
 @media (prefers-reduced-motion: reduce) { .swap-in > * { animation: none; } }
+
+/* Profil sans animations */
+.pf-page.no-anim *, .pf-page.no-anim *::before, .pf-page.no-anim *::after { animation: none !important; transition: none !important; }
+
+/* Simulateur : le niveau du coefficient se remplit, le résultat rebondit à chaque changement */
+.sim-weight { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-top: 12px; font-size: 13px; color: var(--muted); }
+.sim-weight i { height: 8px; border-radius: 999px; background: var(--fill); overflow: hidden; }
+.sim-weight b { display: block; height: 100%; width: 100%; border-radius: inherit; background: var(--accent); transform-origin: left; transform: scaleX(var(--w)); transition: transform 0.7s var(--spring); }
+.sim-weight em { font-style: normal; font-weight: 700; color: var(--text); min-width: 3.2ch; text-align: right; animation: pop-in 0.5s var(--spring) both; }
+.sim-result .pop, .sim-delta.pop { display: inline-block; animation: pop-in 0.55s var(--spring) both; }
+@media (prefers-reduced-motion: reduce) { .sim-weight b { transition: none; } .sim-result .pop, .sim-delta.pop, .sim-weight em { animation: none; } }
+
+.pf-tile { backdrop-filter: var(--pf-bf); }
+
+.msg-list > li { display: flex; align-items: center; }
+.msg-list > li > a { flex: 1; min-width: 0; }
+.msg-list > li > .text-btn { flex: none; margin-left: 8px; }

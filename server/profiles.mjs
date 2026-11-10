@@ -126,10 +126,10 @@ function cleanProfile(input) {
     effects: { background: pick(fx.background, BG_EFFECTS, 'none'), username: pick(fx.username, NAME_EFFECTS, 'none') },
     opacity: int(p.opacity, 0, 100, 7),
     blur: int(p.blur, 0, 80, 8),
-    glow: { username: bool(g.username), badges: bool(g.badges), widgets: bool(g.widgets) },
+    glow: { username: bool(g.username), widgets: bool(g.widgets) },
     options: {
-      animatedTitle: bool(o.animatedTitle), animatedBio: bool(o.animatedBio), invertBlocks: bool(o.invertBlocks),
-      volumeControl: o.volumeControl !== false, showBadges: o.showBadges !== false,
+      animations: o.animations !== false, showViews: o.showViews !== false, showSince: o.showSince !== false, invertBlocks: bool(o.invertBlocks),
+      volumeControl: o.volumeControl !== false,
       discordAvatar: bool(o.discordAvatar), discordDecoration: bool(o.discordDecoration), discordPresence: bool(o.discordPresence),
     },
     discordId: /^\d{15,21}$/.test(String(p.discordId ?? '')) ? String(p.discordId) : '',

@@ -330,12 +330,13 @@ export function useData() {
 }
 
 /** Messages avec l'organisation locale appliquée : masqués retirés, état lu/épinglé/archivé calculé. */
-export function useMessages() {
+export function useMessages(withDeleted = false) {
   const { data, messageMeta: meta } = useSession()
   return (data?.messages ?? [])
-    .filter((m) => !meta.hidden.includes(m.id))
+    .filter((m) => withDeleted || !meta.hidden.includes(m.id))
     .map((m) => ({
       ...m,
+      deleted: meta.hidden.includes(m.id),
       read: m.read && !meta.unread.includes(m.id),
       pinned: meta.pinned.includes(m.id),
       archived: meta.archived.includes(m.id),

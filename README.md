@@ -33,12 +33,12 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 - **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix de la période (**trimestres ou semestres**, selon l'établissement, plus « Année »)
 - **Simulateur** : « et si j'avais 15/20 en maths (Coef 2) ? » → l'effet immédiat sur la moyenne générale
 - **Planning** : la grille de la semaine, comme sur École Directe, avec navigation de semaine en semaine ; touche un cours pour l'annuler, le masquer, changer salle, prof ou horaire, ou ajoute un cours (modifications gardées dans l'app, annulables d'un geste)
-- **Messages** : boîte de réception, ouverture d'un message (marqué comme lu), et raccourcis en haut du message : **épingler, archiver, supprimer, marquer comme non lu** (avec « Annuler »), filtres Tous / Non lus / Épinglés / Archivés
+- **Messages** : boîte de réception, ouverture d'un message (marqué comme lu), et raccourcis en haut du message : **épingler, archiver, supprimer, marquer comme non lu** (avec « Annuler »), filtres Tous / Non lus / Épinglés / Archivés / Supprimés (avec « Restaurer »)
 - **Devoirs** : barre de jours en haut (comme le planning) avec le nombre restant par jour, notification « Plus que N devoirs pour mardi », cases à cocher synchronisées avec École Directe (aussi depuis l'accueil), confettis quand tout est fait
 
 **Profil public** (`#/u/ton-pseudo`)
 
-- Page au style « clean » : effets d'arrière-plan (pluie, neige, étoiles…), badges, widgets de moyennes ; elle reprend le thème et les couleurs de l'app
+- Page au style « clean » : effets d'arrière-plan (pluie, neige, étoiles…), widgets de moyennes, réglages à cocher (animations, compteur de vues, ancienneté), flou et opacité des blocs ; elle reprend le thème et les couleurs de l'app
 - Pseudo unique, photo, bio, compteur de vues, présence Discord ; **enregistrement automatique** (aucun bouton à valider) ; profil privé par défaut, public quand tu l'actives
 
 **Confort**
@@ -144,7 +144,7 @@ server/
 - [x] Interface mobile-first, thèmes clair / sombre, PWA
 - [x] Connexion École Directe (élève) avec QCM
 - [x] Notes en graphiques, simulateur, planning, devoirs
-- [x] Profils publics : médias, effets, couleurs, thèmes, badges, Discord, widgets
+- [x] Profils publics : médias, effets, couleurs, thèmes, Discord, widgets
 - [ ] Comptes parents (plusieurs enfants)
 - [x] Messagerie : lecture des messages reçus
 - [ ] Messagerie : répondre, envoyer, télécharger les pièces jointes

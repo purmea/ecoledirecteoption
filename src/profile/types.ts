@@ -33,12 +33,13 @@ export interface Profile {
   effects: { background: BgEffect; username: NameEffect }
   opacity: number // 0–100, opacité des blocs (widgets, badges)
   blur: number // 0–80 px, flou derrière les blocs
-  glow: { username: boolean; badges: boolean; widgets: boolean }
+  glow: { username: boolean; widgets: boolean }
   options: {
-    animatedTitle: boolean
+    animations: boolean // animations d'entrée, effets de fond et du nom
+    showViews: boolean
+    showSince: boolean
     invertBlocks: boolean
     volumeControl: boolean
-    showBadges: boolean
     discordAvatar: boolean
     discordDecoration: boolean
     discordPresence: boolean
@@ -65,9 +66,9 @@ export const DEFAULTS: Omit<Profile, 'handle' | 'displayName' | 'snapshot' | 'wi
   effects: { background: 'none', username: 'none' },
   opacity: 7,
   blur: 8,
-  glow: { username: true, badges: true, widgets: false },
+  glow: { username: true, widgets: false },
   options: {
-    animatedTitle: false, invertBlocks: false, volumeControl: true, showBadges: true,
+    animations: true, showViews: true, showSince: true, invertBlocks: false, volumeControl: true,
     discordAvatar: false, discordDecoration: false, discordPresence: false,
   },
   discordId: '',
