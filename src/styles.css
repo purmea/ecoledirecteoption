@@ -970,3 +970,4 @@ small { display: block; font-size: 13px; color: var(--muted); }
 
 .ed-actions { gap: 4px; }
 .ed-actions .ed-icon { padding: 4px 3px; }
+.ed-icon.small { margin-left: 6px; }
