@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { useSession } from '../state/session'
 import { useWeek } from '../hooks/useWeek'
-import { displayedMonday } from '../api/ecoledirecte'
+import { displayedMonday, isoDate } from '../api/ecoledirecte'
 import { DAYS } from '../lib'
 import type { Lesson } from '../types'
 import { hasEdits, type CustomLesson } from '../planning/edits'
@@ -27,6 +27,8 @@ function colorOf(subject: string) {
   if (s.startsWith('FRANC')) return '#bdd1f7'
   if (s.startsWith('ANGLAIS')) return '#f9f28a'
   if (s.startsWith('MATH')) return '#66cc55'
+  if (s.startsWith('HISTOIRE') || s.startsWith('ENS. MORAL') || s.startsWith('ENSEIGN')) return '#8fb3c0'
+  if (s.startsWith('SC. ECONO') || s.startsWith('SES')) return '#e9b27a'
   let h = 0
   for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) % 997
   return PALETTE[h % PALETTE.length]
@@ -62,13 +64,15 @@ export function Planning() {
   const [menu, setMenu] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
+  const [actions, setActions] = useState(false)
+  const touch = useRef<{ x: number; y: number } | null>(null)
   const { lessons, monday, loading, failed } = useWeek(weekOffset(date))
 
   const selected = lessons.find((l) => l.id === openId) ?? null
   const today = new Date()
   const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString()
 
-  const label = view === 'day' ? cap(date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }))
+  const label = view === 'day' ? date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
     : view === 'week' ? (() => { const m = mondayOf(date); const f = addDays(m, 4); return `Du ${m.getDate()} ${m.getMonth() === f.getMonth() ? '' : m.toLocaleDateString('fr-FR', { month: 'long' }) + ' '}au ${f.getDate()} ${f.toLocaleDateString('fr-FR', { month: 'long' })}` })()
     : cap(date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }))
   const step = (n: number) => setDate((d) => {
@@ -99,14 +103,24 @@ export function Planning() {
   const day0 = Math.min(4, dayIdx(date))
 
   return (
-    <div className="ed">
+    <div className="ed"
+      onTouchStart={(e) => { touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }}
+      onTouchEnd={(e) => {
+        const t = touch.current
+        touch.current = null
+        if (!t) return
+        const dx = e.changedTouches[0].clientX - t.x, dy = e.changedTouches[0].clientY - t.y
+        if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) step(dx < 0 ? 1 : -1)
+      }}>
       <div className="ed-top">
       <header className="ed-bar">
-        <button className="ed-icon" onClick={() => setMenu(true)} aria-label="Menu"><Svg size={30}><path d="M3 6h18M3 12h18M3 18h18" strokeWidth="2.6" /></Svg></button>
+        <button className="ed-icon" onClick={() => setMenu(true)} aria-label="Menu"><Svg size={30}><path d="M3 6h18M3 12h18M3 18h18" strokeWidth="2" /></Svg></button>
         <h1>Emploi du temps</h1>
         <div className="ed-actions">
-          <button className="ed-icon" onClick={() => setAdding(true)} aria-label="Ajouter un cours"><Svg size={30}><path d="M12 4v16M4 12h16" strokeWidth="2.6" /></Svg></button>
-          <button className={`ed-icon ${refreshing ? 'spin' : ''}`} onClick={() => { void refresh(); setWeeks({}) }} aria-label="Actualiser"><Svg size={30}><path d="M20 12a8 8 0 1 1-2.6-5.9" /><path d="M20 4v5h-5" /></Svg></button>
+          <button className="ed-icon" onClick={() => setActions(true)} aria-label="Modifier l’emploi du temps">
+            <svg viewBox="0 0 32 32" width="34" height="34" fill="currentColor" aria-hidden="true"><circle cx="16" cy="7" r="3.6" /><path d="M9.5 17.5c0-3.3 2.9-5.2 6.5-5.2s6.5 1.9 6.5 5.2z" /><circle cx="6.5" cy="22" r="3" /><path d="M1.5 29c0-2.6 2.2-4.2 5-4.2s5 1.6 5 4.2z" /><circle cx="25.5" cy="22" r="3" /><path d="M20.5 29c0-2.6 2.2-4.2 5-4.2s5 1.6 5 4.2z" /><path d="M13.5 22.5l2.5 2.5 2.5-2.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+          </button>
+          <button className={`ed-icon ${refreshing ? 'spin' : ''}`} onClick={() => { void refresh(); setWeeks({}) }} aria-label="Actualiser"><Svg size={30}><path d="M20 12a8 8 0 1 1-2.6-5.9" strokeWidth="1.9" /><path d="M20 4v5h-5" strokeWidth="1.9" /></Svg></button>
         </div>
       </header>
 
@@ -117,11 +131,10 @@ export function Planning() {
       </div>
 
       <div className="ed-date">
-        <button onClick={() => step(-1)} aria-label="Précédent"><Svg size={22}><path d="M15 5l-7 7 7 7" /></Svg></button>
-        <button className="ed-date-label" onClick={() => setDate(new Date())} aria-label="Revenir à aujourd’hui">
+        <label className="ed-date-label">
           <span className="ed-cal" aria-hidden="true">31</span>{label}
-        </button>
-        <button onClick={() => step(1)} aria-label="Suivant"><Svg size={22}><path d="M9 5l7 7-7 7" /></Svg></button>
+          <input type="date" value={isoDate(date)} aria-label="Choisir une date" onChange={(e) => e.target.value && setDate(parse(e.target.value))} />
+        </label>
       </div>
       </div>
 
@@ -143,7 +156,15 @@ export function Planning() {
         <Grid view={view} date={date} lessons={lessons} monday={monday} today={today} onOpen={setOpenId} />
       )}
 
-      {hasEdits(planEdits) && <button className="ed-reset" onClick={() => editPlan({ type: 'reset' })}>Effacer mes modifications</button>}
+
+      <Sheet open={actions} title="Emploi du temps" light onClose={() => setActions(false)}>
+        <h2 className="sheet-title">Emploi du temps</h2>
+        <p className="sheet-sub">Tes modifications restent dans l’app : l’école ne les voit pas.</p>
+        <div className="sheet-list">
+          <button onClick={() => { setActions(false); setAdding(true) }}><Icon name="plus" size={20} /><span>Ajouter un cours</span></button>
+          {hasEdits(planEdits) && <button className="danger" onClick={() => { editPlan({ type: 'reset' }); setActions(false) }}><Icon name="undo" size={20} /><span>Effacer toutes mes modifications</span></button>}
+        </div>
+      </Sheet>
 
       <Drawer open={menu} onClose={() => setMenu(false)} />
 
@@ -188,13 +209,24 @@ function Grid({ view, date, lessons, monday, today, onOpen }: { view: View; date
                     left: `calc(${(col / cols) * 100}% + 3px)`, width: `calc(${100 / cols}% - 6px)`, background: l.cancelled ? undefined : colorOf(l.subject),
                   } as CSSProperties}
                   onClick={() => onOpen(l.id)} aria-label={`${l.subject}, ${DAYS[l.day]} ${l.start} à ${l.end}${l.cancelled ? ', annulé' : ''}`}>
-                  <span className="ed-l1">
-                    {view === 'day' && <span>{l.start} - {l.end}{l.cancelled && <b className="ed-x"> · ANNULÉ</b>}</span>}
-                    <strong>{upper(l.subject)}</strong>
-                  </span>
-                  {l.cancelled && <em className="ed-cancel">ANNULÉ</em>}
-                  {l.room && <span className="ed-room">{l.modified && <i aria-hidden="true">i</i>}{l.room}</span>}
-                  {l.teacher && <span className="ed-prof">{l.teacher}</span>}
+                  {l.cancelled ? (
+                    <>
+                      <span className="ed-l1">
+                        <span className="ed-time">{view === 'day' ? `${l.start} - ${l.end}` : ''}</span>
+                        <b className="ed-annule"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M12 2.5 1.5 21h21z" fill="currentColor" /><path d="M12 9v5.5M12 17.2v.6" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" /></svg>ANNULE</b>
+                      </span>
+                      <span className="ed-l2"><i aria-hidden="true">i</i>{upper(l.subject)}{l.room && ` - ${l.room}`}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="ed-l1">
+                        {view === 'day' && <span className="ed-time">{l.start} - {l.end}</span>}
+                        <strong>{l.modified && view === 'day' && <i className="ed-i" aria-hidden="true">i</i>}{upper(l.subject)}</strong>
+                      </span>
+                      {l.room && <span className="ed-room">{l.modified && view === 'day' && <i className="ed-i" aria-hidden="true">i</i>}{l.room}</span>}
+                      {l.teacher && <span className="ed-prof">{l.teacher}</span>}
+                    </>
+                  )}
                 </button>
               ))}
             </div>
