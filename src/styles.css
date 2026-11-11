@@ -971,3 +971,8 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .ed-actions { gap: 4px; }
 .ed-actions .ed-icon { padding: 4px 3px; }
 .ed-icon.small { margin-left: 6px; }
+
+/* Balayage : changer de jour / semaine / mois en glissant */
+.ed { touch-action: pan-y; }
+.ed-swap[data-dir='1'] { animation: page-in-r 0.55s var(--spring-soft) backwards; }
+.ed-swap[data-dir='-1'] { animation: page-in-l 0.55s var(--spring-soft) backwards; }
