@@ -32,7 +32,7 @@ export function Simulator({ grades, subjects }: { grades: Grade[]; subjects: str
       </div>
       <div className="swap-in" key={`${subject}-${coef}`}>
       <label className="sim-slider">
-        <span>Si j’avais <strong>{fmt(value)}</strong>/20</span>
+        <span>Nouvelle note <strong>{fmt(value)}</strong>/20</span>
         <input type="range" className="range" min={0} max={20} step={0.5} value={value}
           onChange={(e) => setValue(Number(e.target.value))} style={{ '--p': `${(value / 20) * 100}%` } as CSSProperties} />
       </label>

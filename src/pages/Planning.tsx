@@ -117,10 +117,13 @@ export function Planning() {
         <button className="ed-icon" onClick={() => setMenu(true)} aria-label="Menu"><Svg size={30}><path d="M3 6h18M3 12h18M3 18h18" strokeWidth="2" /></Svg></button>
         <h1>Emploi du temps</h1>
         <div className="ed-actions">
-          <button className="ed-icon" onClick={() => setActions(true)} aria-label="Modifier l’emploi du temps">
-            <svg viewBox="0 0 32 32" width="34" height="34" fill="currentColor" aria-hidden="true"><circle cx="16" cy="7" r="3.6" /><path d="M9.5 17.5c0-3.3 2.9-5.2 6.5-5.2s6.5 1.9 6.5 5.2z" /><circle cx="6.5" cy="22" r="3" /><path d="M1.5 29c0-2.6 2.2-4.2 5-4.2s5 1.6 5 4.2z" /><circle cx="25.5" cy="22" r="3" /><path d="M20.5 29c0-2.6 2.2-4.2 5-4.2s5 1.6 5 4.2z" /><path d="M13.5 22.5l2.5 2.5 2.5-2.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+          <button className="ed-icon small" onClick={() => setAdding(true)} aria-label="Créer un cours">
+            <svg viewBox="0 0 32 32" width="24" height="24" fill="currentColor" aria-hidden="true"><circle cx="13" cy="7" r="3.4" /><path d="M6.8 17.5c0-3.2 2.7-5 6.2-5s6.2 1.8 6.2 5z" /><circle cx="5" cy="22.5" r="2.8" /><path d="M0.5 29c0-2.4 2-3.9 4.5-3.9s4.5 1.5 4.5 3.9z" /><circle cx="19" cy="22.5" r="2.8" /><path d="M14.5 29c0-2.4 2-3.9 4.5-3.9s4.5 1.5 4.5 3.9z" /><path d="M26.5 5v10M21.5 10h10" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
           </button>
-          <button className={`ed-icon ${refreshing ? 'spin' : ''}`} onClick={() => { void refresh(); setWeeks({}) }} aria-label="Actualiser"><Svg size={30}><path d="M20 12a8 8 0 1 1-2.6-5.9" strokeWidth="1.9" /><path d="M20 4v5h-5" strokeWidth="1.9" /></Svg></button>
+          <button className="ed-icon" onClick={() => setActions(true)} aria-label="Modifier l’emploi du temps">
+            <svg viewBox="0 0 32 32" width="30" height="30" fill="currentColor" aria-hidden="true"><circle cx="16" cy="7" r="3.6" /><path d="M9.5 17.5c0-3.3 2.9-5.2 6.5-5.2s6.5 1.9 6.5 5.2z" /><circle cx="6.5" cy="22" r="3" /><path d="M1.5 29c0-2.6 2.2-4.2 5-4.2s5 1.6 5 4.2z" /><circle cx="25.5" cy="22" r="3" /><path d="M20.5 29c0-2.6 2.2-4.2 5-4.2s5 1.6 5 4.2z" /><path d="M13.5 22.5l2.5 2.5 2.5-2.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+          </button>
+          <button className={`ed-icon ${refreshing ? 'spin' : ''}`} onClick={() => { void refresh(); setWeeks({}) }} aria-label="Actualiser"><Svg size={26}><path d="M20 12a8 8 0 1 1-2.6-5.9" strokeWidth="1.9" /><path d="M20 4v5h-5" strokeWidth="1.9" /></Svg></button>
         </div>
       </header>
 
@@ -157,7 +160,7 @@ export function Planning() {
       )}
 
 
-      <button className="ed-reset" onClick={() => editPlan({ type: 'reset' })} disabled={!hasEdits(planEdits)}>Réinitialiser mes modifications</button>
+      <button className="ed-reset" onClick={() => editPlan({ type: 'reset' })} disabled={!hasEdits(planEdits)}>Original</button>
 
       <Sheet open={actions} title="Emploi du temps" light onClose={() => setActions(false)}>
         <h2 className="sheet-title">Emploi du temps</h2>
@@ -261,7 +264,6 @@ function LessonPanel({ l, close, act }: { l: Lesson; close: () => void; act: (la
       <h2 className="sheet-title">{l.subject}</h2>
       <p className="sheet-sub">{DAYS[l.day]} · {l.start} – {l.end}{l.room && ` · ${l.room}`}{l.teacher && ` · ${l.teacher}`}</p>
       <p className="sheet-flags">
-        {l.cancelled && <span className="status bad">{l.byYou ? 'Annulé par toi' : 'Annulé par l’école'}</span>}
         {l.custom && <span className="status">Ajouté par toi</span>}
         {l.modified && !l.cancelled && !l.custom && <span className="status accent">Modifié</span>}
       </p>
