@@ -157,6 +157,8 @@ export function Planning() {
       )}
 
 
+      <button className="ed-reset" onClick={() => editPlan({ type: 'reset' })} disabled={!hasEdits(planEdits)}>Réinitialiser mes modifications</button>
+
       <Sheet open={actions} title="Emploi du temps" light onClose={() => setActions(false)}>
         <h2 className="sheet-title">Emploi du temps</h2>
         <p className="sheet-sub">Tes modifications restent dans l’app : l’école ne les voit pas.</p>
