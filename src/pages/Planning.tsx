@@ -187,7 +187,7 @@ function Grid({ view, date, lessons, monday, today, onOpen }: { view: View; date
   const dayList = view === 'day' ? [dayIdx(date)] : [0, 1, 2, 3, 4]
   const shown = lessons.filter((l) => dayList.includes(l.day))
   const from = 7
-  const to = view === 'day' ? 23 : Math.max(18, Math.ceil(Math.max(0, ...shown.map((l) => toMin(l.end))) / 60))
+  const to = view === 'day' ? 27 : Math.max(18, Math.ceil(Math.max(0, ...shown.map((l) => toMin(l.end))) / 60))
   const hours = Array.from({ length: to - from + 1 }, (_, i) => from + i)
   const dates = monday ? dayList.map((i) => addDays(parse(monday), i)) : []
 
@@ -201,7 +201,7 @@ function Grid({ view, date, lessons, monday, today, onOpen }: { view: View; date
       )}
       {view === 'day' && <div className="ed-allday"><span>Journée</span><i /></div>}
       <div className="ed-body" style={{ height: hours.length * H }}>
-        <div className="ed-hours">{hours.map((h) => <span key={h} style={{ height: H }}>{String(h).padStart(2, '0')}</span>)}</div>
+        <div className="ed-hours">{hours.map((h) => <span key={h} style={{ height: H }}>{String(h % 24).padStart(2, '0')}</span>)}</div>
         <div className="ed-cols">
           {dayList.map((d) => (
             <div key={d} className="ed-col">
