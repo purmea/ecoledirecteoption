@@ -75,11 +75,12 @@ export function Planning() {
   const label = view === 'day' ? date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
     : view === 'week' ? (() => { const m = mondayOf(date); const f = addDays(m, 4); return `Du ${m.getDate()} ${m.getMonth() === f.getMonth() ? '' : m.toLocaleDateString('fr-FR', { month: 'long' }) + ' '}au ${f.getDate()} ${f.toLocaleDateString('fr-FR', { month: 'long' })}` })()
     : cap(date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }))
-  const step = (n: number) => setDate((d) => {
+  const [dir, setDir] = useState(0)
+  const step = (n: number) => { setDir(n); setDate((d) => {
     if (view === 'day') return addDays(d, n)
     if (view === 'week') return addDays(d, 7 * n)
     const x = new Date(d); x.setDate(1); x.setMonth(x.getMonth() + n); return x
-  })
+  }) }
 
   // Mois : on charge les semaines du mois pour montrer les jours qui ont des cours.
   const [weeks, setWeeks] = useState<Record<number, { lessons: Lesson[]; monday: string }>>({})
@@ -110,7 +111,7 @@ export function Planning() {
         touch.current = null
         if (!t) return
         const dx = e.changedTouches[0].clientX - t.x, dy = e.changedTouches[0].clientY - t.y
-        if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) step(dx < 0 ? 1 : -1)
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.2) step(dx < 0 ? 1 : -1)
       }}>
       <div className="ed-top">
       <header className="ed-bar">
@@ -134,11 +135,12 @@ export function Planning() {
       <div className="ed-date">
         <label className="ed-date-label">
           <span className="ed-cal" aria-hidden="true">31</span>{label}
-          <input type="date" value={isoDate(date)} aria-label="Choisir une date" onChange={(e) => e.target.value && setDate(parse(e.target.value))} />
+          <input type="date" value={isoDate(date)} aria-label="Choisir une date" onChange={(e) => { if (e.target.value) { setDir(0); setDate(parse(e.target.value)) } }} />
         </label>
       </div>
       </div>
 
+      <div className="ed-swap" key={`${view}-${isoDate(date)}`} data-dir={dir}>
       {view === 'month' ? (
         <div className="ed-month">
           {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <span key={i} className="ed-mh">{d}</span>)}
@@ -146,7 +148,7 @@ export function Planning() {
             const n = countOn(c)
             return (
               <button key={c.toISOString()} className={`ed-mc ${c.getMonth() !== first.getMonth() ? 'out' : ''} ${sameDay(c, today) ? 'today' : ''} ${sameDay(c, date) ? 'sel' : ''}`}
-                onClick={() => { setDate(c); setView('day') }} aria-label={c.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) + (n ? `, ${n} cours` : '')}>
+                onClick={() => { setDir(0); setDate(c); setView('day') }} aria-label={c.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) + (n ? `, ${n} cours` : '')}>
                 <b>{c.getDate()}</b>
                 <i>{Array.from({ length: Math.min(3, n) }, (_, k) => <u key={k} />)}</i>
               </button>
@@ -156,6 +158,7 @@ export function Planning() {
       ) : failed ? <p className="ed-empty">Impossible de charger cette semaine.</p> : loading ? <div className="spinner" style={{ margin: '40px auto' }} /> : (
         <Grid view={view} date={date} lessons={lessons} monday={monday} today={today} onOpen={setOpenId} />
       )}
+      </div>
 
 
       <button className="ed-reset" onClick={() => editPlan({ type: 'reset' })} disabled={!hasEdits(planEdits)}>Original</button>
