@@ -1095,3 +1095,7 @@ input, select, textarea { font-size: max(16px, 1em); }
 @keyframes ed-swap { from { opacity: .4; transform: scale(.96); } }
 .gt-v small, .gd-hero strong small, .gd-list b small { display: inline; }
 .gd-hero strong, .gt-v, .gd-list b { white-space: nowrap; }
+
+/* Poignée des panneaux : zone de prise plus large, glisser pour fermer */
+.sheet-handle { margin: -10px -20px 0; padding: 10px 20px 4px; touch-action: none; cursor: grab; position: sticky; top: -10px; z-index: 1; background: inherit; }
+.sheet-handle .sheet-grab { margin-bottom: 10px; }
