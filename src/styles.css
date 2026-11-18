@@ -1051,3 +1051,6 @@ input, select, textarea { font-size: max(16px, 1em); }
 .day-strip .strip-arrow { flex: none; align-self: stretch; width: 38px; height: auto; border-radius: 14px; transform: rotate(180deg); }
 .day-strip .strip-arrow.on { transform: none; }
 .hw-done { margin: 4px 0 2px; padding: 12px 0; border-bottom: 1px solid color-mix(in srgb, currentColor 9%, transparent); }
+
+/* Pastille avec le nombre de devoirs (barre du bas) */
+.nav .badge.count { top: -6px; right: -10px; width: auto; min-width: 17px; height: 17px; padding: 0 5px; display: grid; place-items: center; font-size: 10.5px; font-weight: 800; line-height: 1; color: var(--on-accent); background: var(--accent); border-radius: 999px; }

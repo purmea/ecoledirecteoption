@@ -7,7 +7,7 @@ const MAX = 120
 export function usePullToRefresh(onRefresh: () => Promise<unknown>, enabled: boolean) {
   const [pull, setPull] = useState(0)
   const [busy, setBusy] = useState(false)
-  const start = useRef<number | null>(null)
+  const start = useRef<{ x: number; y: number } | null>(null)
   const pullRef = useRef(0)
   const refresh = useRef(onRefresh)
   refresh.current = onRefresh
@@ -15,11 +15,18 @@ export function usePullToRefresh(onRefresh: () => Promise<unknown>, enabled: boo
   useEffect(() => {
     if (!enabled) return
     const set = (v: number) => { pullRef.current = v; setPull(v) }
-    const onStart = (e: TouchEvent) => { start.current = window.scrollY <= 0 ? e.touches[0].clientY : null }
+    // Pas de « tirer pour actualiser » depuis une zone qui défile à l'horizontale (barre des jours…).
+    const onStart = (e: TouchEvent) => {
+      const inScroller = (e.target as Element | null)?.closest?.('.day-strip, [data-no-ptr]')
+      start.current = window.scrollY <= 0 && !inScroller ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null
+    }
     const onMove = (e: TouchEvent) => {
       if (start.current === null || busy) return
-      const dy = e.touches[0].clientY - start.current
-      if (dy <= 0) return set(0)
+      const dx = e.touches[0].clientX - start.current.x
+      const dy = e.touches[0].clientY - start.current.y
+      // Geste horizontal : on abandonne, la page ne doit pas bouger.
+      if (Math.abs(dx) > Math.abs(dy)) { start.current = null; return pullRef.current && set(0) }
+      if (dy <= 0) return pullRef.current && set(0)
       // résistance : plus on tire, plus c'est dur
       set(Math.min(MAX, dy * 0.5))
     }

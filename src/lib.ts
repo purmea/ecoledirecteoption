@@ -81,9 +81,9 @@ export function periodShort(label: string) {
 }
 
 /** Devoirs encore à faire pour DEMAIN uniquement (0 = pas de pastille), quels que soient ceux des autres jours. */
+/** Devoirs restants pour le prochain jour de cours qui a des devoirs (demain, ou lundi le vendredi…). */
 export function homeworkForTomorrow(homework: { due: string; done: boolean }[], now = new Date()) {
-  const t = new Date(now)
-  t.setDate(t.getDate() + 1)
-  const tomorrow = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
-  return homework.filter((h) => !h.done && h.due === tomorrow).length
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const next = homework.filter((h) => h.due > today).map((h) => h.due).sort()[0]
+  return next ? homework.filter((h) => !h.done && h.due === next).length : 0
 }
