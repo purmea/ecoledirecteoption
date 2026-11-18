@@ -1044,3 +1044,7 @@ input, select, textarea { font-size: max(16px, 1em); }
 .day-chip { scroll-snap-align: center; }
 .swipe-area { touch-action: pan-y; min-height: 50vh; }
 .spinner.small { width: 16px; height: 16px; }
+
+/* Flèche « jours précédents » à côté de la date du jour */
+.day-head .past-toggle { width: 30px; height: 30px; transform: rotate(180deg); flex: none; }
+.day-head .past-toggle.on { transform: none; }

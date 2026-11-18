@@ -115,10 +115,6 @@ export function Devoirs() {
       {days.length === 0 ? <Empty>Aucun devoir</Empty> : (
         <>
           <div className="day-strip-row">
-          <button className={`past-toggle ${showPast ? 'on' : ''}`} onClick={togglePast} aria-pressed={showPast}
-            aria-label={showPast ? 'Masquer les jours précédents' : 'Voir les jours précédents (semaine dernière)'}>
-            {showPast && !past && !pastErr ? <span className="spinner small" /> : <Icon name="chevron" size={18} />}
-          </button>
           <div className="day-strip" ref={stripRef} role="tablist" aria-label="Jour">
             {days.map((d) => {
               const week = mondayOf(d.due)
@@ -140,7 +136,13 @@ export function Devoirs() {
 
           <div className="swipe-area" {...swipe}>
           <header className="day-head">
-            <h2>{formatDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
+            <h2>
+              <button className={`past-toggle ${showPast ? 'on' : ''}`} onClick={togglePast} aria-pressed={showPast}
+                aria-label={showPast ? 'Masquer les jours précédents' : 'Voir les jours précédents (semaine dernière)'}>
+                {showPast && !past && !pastErr ? <span className="spinner small" /> : <Icon name="chevron" size={18} />}
+              </button>
+              {formatDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}
+            </h2>
             <span>{current ? (current.left === 0 ? 'Tout est fait' : `${current.left} à faire sur ${current.total}`) : ''}</span>
           </header>
 

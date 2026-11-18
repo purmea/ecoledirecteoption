@@ -17,6 +17,12 @@ createRoot(document.getElementById('root')!).render(
 // Mode hors connexion : l'application elle-même est mise en cache (les données sont gardées par l'app).
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => { /* non pris en charge ici (iframe, navigation privée…) */ })
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((reg) => {
+      // Vérifie s'il y a une nouvelle version à chaque retour sur l'app (PWA iPhone restée ouverte).
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') void reg.update() })
+    }).catch(() => { /* non pris en charge ici (iframe, navigation privée…) */ })
+    // Nouvelle version installée : on recharge une fois pour l'afficher.
+    let reloaded = false
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (!reloaded) { reloaded = true; location.reload() } })
   })
 }

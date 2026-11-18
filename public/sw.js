@@ -1,6 +1,6 @@
 // Service worker : l'app (HTML, JS, CSS, polices) reste disponible hors connexion.
 // Les appels vers École Directe (/ed/) et l'API des profils (/api/) ne sont jamais mis en cache.
-const CACHE = 'edo-shell-v1'
+const CACHE = 'edo-shell-v2'
 
 self.addEventListener('install', () => self.skipWaiting())
 
