@@ -1050,3 +1050,4 @@ input, select, textarea { font-size: max(16px, 1em); }
 
 .day-strip .strip-arrow { flex: none; align-self: stretch; width: 38px; height: auto; border-radius: 14px; transform: rotate(180deg); }
 .day-strip .strip-arrow.on { transform: none; }
+.hw-done { margin: 4px 0 2px; padding: 12px 0; border-bottom: 1px solid color-mix(in srgb, currentColor 9%, transparent); }

@@ -189,6 +189,10 @@ export function DevoirView({ id }: { id: string }) {
       <a href="#/devoirs" className="back"><Icon name="chevron" size={16} />Devoirs</a>
       <PageHeader title={h.subject} subtitle={`Pour ${formatDate(h.due, { weekday: 'long', day: 'numeric', month: 'long' })}`} />
       {h.test && <span className="status">Évaluation</span>}
+      <label className="toggle-row hw-done">
+        <span className="grow"><span>Fait</span></span>
+        <input type="checkbox" role="switch" className="switch" checked={h.done} onChange={() => onCheck(h.id, h.due, h.done)} />
+      </label>
       <div className="msg-body">{h.title}</div>
       {!!h.files?.length && (
         <div className="msg-files">
@@ -213,9 +217,6 @@ export function DevoirView({ id }: { id: string }) {
         </div>
       )}
       {viewer && <FileViewer {...viewer} onClose={() => setViewer(null)} />}
-      <button className={`btn ${h.done ? 'ghost' : 'primary'}`} onClick={() => onCheck(h.id, h.due, h.done)}>
-        {h.done ? 'Marquer comme à faire' : 'Marquer comme fait'}
-      </button>
     </article>
   )
 }
