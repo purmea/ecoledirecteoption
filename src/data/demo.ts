@@ -61,10 +61,10 @@ const lessons: Lesson[] = [
 ]
 
 const homework: Homework[] = [
-  { id: 'h1', subject: 'Mathématiques', title: 'Exercices 12 à 15 p. 84', due: '2026-11-10', done: false },
+  { id: 'h1', subject: 'Mathématiques', title: 'Exercices 12 à 15 p. 84.\n\nPense à recopier les énoncés avant de les résoudre et à rédiger chaque démonstration en entier.\nLe corrigé des exercices 12 et 13 est dans la fiche jointe.', due: '2026-11-10', done: false, files: [{ id: 'f1', name: 'Exercices_p84.pdf' }, { id: 'f2', name: 'Corrige_ex12-13.pdf' }] },
   { id: 'h2', subject: 'Français', title: 'Lire le chapitre 3 du Horla', due: '2026-11-11', done: false },
   { id: 'h3', subject: 'Anglais', title: 'Apprendre le vocabulaire unit 4', due: '2026-11-12', done: true },
-  { id: 'h4', subject: 'SVT', test: true, title: 'Évaluation — génétique', due: '2026-11-13', done: false },
+  { id: 'h4', subject: 'SVT', test: true, title: 'Évaluation — génétique.\n\nChapitres 3 et 4 : ADN, gènes, mutations. Les schémas de la fiche de révision peuvent tomber.', due: '2026-11-13', done: false, files: [{ id: 'f3', name: 'Fiche_revision_genetique.pdf' }] },
   { id: 'h5', subject: 'Histoire-Géo', title: 'Fiche de révision — 1ère GM', due: '2026-11-17', done: false },
 ]
 
@@ -108,4 +108,24 @@ export const demoData: SchoolData = {
   lessons,
   homework,
   messages,
+}
+
+/** Petit PDF de démonstration (téléchargé quand on touche une pièce jointe en mode démo). */
+export function demoPdf(name: string): Blob {
+  const text = `Document de demonstration : ${name}`.replace(/[()\\]/g, ' ')
+  const stream = `BT /F1 18 Tf 60 740 Td (${text}) Tj ET`
+  const objs = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ]
+  let pdf = '%PDF-1.4\n'
+  const offsets: number[] = []
+  objs.forEach((o, i) => { offsets.push(pdf.length); pdf += `${i + 1} 0 obj\n${o}\nendobj\n` })
+  const xref = pdf.length
+  pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offsets.map((o) => `${String(o).padStart(10, '0')} 00000 n \n`).join('')
+  pdf += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`
+  return new Blob([pdf], { type: 'application/pdf' })
 }

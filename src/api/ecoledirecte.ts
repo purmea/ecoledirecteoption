@@ -1,7 +1,7 @@
 // Connexion et récupération des données École Directe, converties au format de l'app.
 // Référence (non officielle) : https://github.com/EduWireApps/ecoledirecte-api-docs
-import type { Grade, Homework, Incident, Lesson, Message, MessageDetail, Period, SchoolData, Student } from '../types'
-import { b64decode, edRequest } from './client'
+import type { Grade, Homework, HomeworkFile, Incident, Lesson, Message, MessageDetail, Period, SchoolData, Student } from '../types'
+import { b64decode, edDownload, edRequest } from './client'
 
 export interface Account {
   id: number
@@ -197,7 +197,7 @@ export async function fetchLessonsFor(s: Session, monday: Date) {
 }
 
 type RawHomeworkList = Record<string, { matiere: string; idDevoir: number; effectue: boolean; interrogation: boolean }[]>
-interface RawHomeworkDay { matieres?: { id: number; aFaire?: { contenu?: string } }[] }
+interface RawHomeworkDay { matieres?: { id: number; aFaire?: { contenu?: string; documents?: { id: number | string; libelle?: string; nom?: string }[] } }[] }
 
 async function fetchHomework(s: Session) {
   const r = await edRequest<RawHomeworkList>(`/v3/Eleves/${s.account.id}/cahierdetexte.awp`, {}, { token: s.token, twoFa: s.twoFa })
@@ -206,12 +206,15 @@ async function fetchHomework(s: Session) {
 
   // Le détail (consigne) est dans une route par jour ; on la récupère pour les 14 prochains jours de devoirs.
   const details = new Map<number, string>()
+  const files = new Map<number, HomeworkFile[]>()
   await Promise.all(dates.map(async (date) => {
     try {
       const d = await edRequest<RawHomeworkDay>(`/v3/Eleves/${s.account.id}/cahierdetexte/${date}.awp`, {}, { token: r.token ?? s.token, twoFa: s.twoFa })
       for (const m of d.data.matieres ?? []) {
         const txt = m.aFaire?.contenu ? htmlToText(b64decode(m.aFaire.contenu)) : ''
         if (txt) details.set(m.id, txt)
+        const docs = (m.aFaire?.documents ?? []).map((f) => ({ id: String(f.id), name: String(f.libelle || f.nom || 'Document') }))
+        if (docs.length) files.set(m.id, docs)
       }
     } catch { /* on garde le titre générique */ }
   }))
@@ -221,6 +224,7 @@ async function fetchHomework(s: Session) {
       id: String(h.idDevoir),
       subject: prettySubject(h.matiere),
       title: details.get(h.idDevoir) ?? (h.interrogation ? 'Évaluation' : 'Travail à faire'),
+      ...(files.get(h.idDevoir) ? { files: files.get(h.idDevoir) } : {}),
       due,
       done: h.effectue,
       test: h.interrogation,
@@ -283,6 +287,11 @@ export async function fetchAll(s: Session): Promise<{ data: SchoolData; token: s
     },
     token: h.token ?? l.token ?? g.token ?? s.token,
   }
+}
+
+/** Télécharge la pièce jointe d'un devoir. */
+export function fetchHomeworkFile(s: Session, file: HomeworkFile) {
+  return edDownload('/v3/telechargement.awp', { leTypeDeFichier: 'FICHIER_CDT', fichierId: file.id, anneeMessages: '' }, { token: s.token, twoFa: s.twoFa })
 }
 
 export async function setHomeworkDone(s: Session, id: string, done: boolean) {

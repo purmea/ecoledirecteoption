@@ -9,7 +9,7 @@ const items: { route: string; label: string; icon: IconName }[] = [
   { route: 'planning', label: 'Emploi du temps', icon: 'calendar' },
   { route: 'devoirs', label: 'Devoirs', icon: 'book' },
   { route: 'messages', label: 'Messages', icon: 'mail' },
-  { route: 'profil', label: 'Profil', icon: 'user' },
+  { route: 'reglages', label: 'Réglages', icon: 'settings' },
 ]
 
 /** Menu qui glisse depuis la gauche (ouvert par les trois traits) : remplace la barre du bas sur l'emploi du temps. */

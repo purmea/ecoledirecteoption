@@ -5,7 +5,7 @@
 # EcoleDirecte Option
 
 **Une interface épurée et mobile-first pour suivre sa scolarité sur École Directe.**<br />
-Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.lol.
+Notes en graphiques et en tableau, emploi du temps, devoirs avec pièces jointes, messagerie.
 
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-blue?style=flat-square)](LICENSE)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
@@ -15,7 +15,7 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 
 <br />
 
-<img src="docs/apercu.png" alt="Aperçu : accueil, notes avec simulateur, profil public" width="880" />
+<img src="docs/apercu.png" alt="Aperçu : accueil, notes avec simulateur" width="880" />
 
 </div>
 
@@ -33,18 +33,14 @@ Notes en graphiques, emploi du temps, devoirs, et un profil public façon guns.l
 - **Notes** : courbe d'évolution, barres par matière comparées à la classe, détail de chaque note, choix de la période (**trimestres ou semestres**, selon l'établissement, plus « Année »)
 - **Simulateur** : « et si j'avais 15/20 en maths (Coef 2) ? » → l'effet immédiat sur la moyenne générale
 - **Planning** : la même interface que l'app École Directe, toujours sur fond blanc : barre bleue avec les trois traits (menu de navigation, la barre du bas disparaît sur cet écran), vues **Jour / Semaine / Mois**, grille horaire et blocs colorés par matière ; touche un cours pour l'annuler, le masquer, changer salle, prof ou horaire, ou ajoute un cours avec « + » (modifications gardées dans l'app, l'école ne les voit pas)
-- **Réglages d'interface** (Profil, Personnalisation générale, valables pour toute l'app) : animations on/off, taille du texte, vibrations, confettis, noms sous les icônes de la barre du bas.
+- **Réglages** (onglet de la barre du bas) : fonds, couleurs d'accent et réglages d'interface valables pour toute l'app : animations on/off, taille du texte, vibrations, confettis, noms sous les icônes de la barre du bas.
 - **Messages** : boîte de réception, ouverture d'un message (marqué comme lu), et raccourcis en haut du message : **épingler, archiver, supprimer, marquer comme non lu** (avec « Annuler »), filtres Tous / Non lus / Épinglés / Archivés / Supprimés (avec « Restaurer »)
-- **Devoirs** : barre de jours en haut (comme le planning) avec le nombre restant par jour, notification « Plus que N devoirs pour mardi », cases à cocher synchronisées avec École Directe (aussi depuis l'accueil), devoirs des jours passés cochés automatiquement, confettis quand tout est fait
-
-**Profil public** (`#/u/ton-pseudo`)
-
-- Page au style « clean » : effets d'arrière-plan (pluie, neige, étoiles…), widgets de moyennes, blocs à 1 % sans flou et particules (réglages de base fixes) ; elle reprend le thème et les couleurs de l'app
-- Pseudo unique, photo, bio, compteur de vues, présence Discord ; **enregistrement automatique** (aucun bouton à valider) ; profil privé par défaut, public quand tu l'actives
+- **Notes** : un tableau de toutes les notes (date, matière, note, coef, moyenne de classe) entre la courbe et les moyennes par matière.
+- **Devoirs** : touche un devoir pour lire la consigne en entier et télécharger les pièces jointes ; barre de jours en haut (comme le planning) avec le nombre restant par jour, notification « Plus que N devoirs pour mardi », cases à cocher synchronisées avec École Directe (aussi depuis l'accueil), devoirs des jours passés cochés automatiquement, confettis quand tout est fait
 
 **Confort**
 
-- **Thème et couleurs** (dans Profil, pour toute l'app) : fond marine (presque noir, par défaut), nuit, clair, auto ou **fond exact** ; **9 couleurs d'accent flashy** (turquoise par défaut sur fond noir, rouge vif, orange #ff5a1f, jaune, vert, turquoise, bleu, violet, rose, blanc) ou **couleur exacte** saisie en hexadécimal, appliquées aussitôt ; pensé pour le téléphone (encoches, barre du bas, PWA)
+- **Thème et couleurs** (dans Réglages, pour toute l'app) : fond marine (presque noir, par défaut), nuit, clair, auto ou **fond exact** ; **9 couleurs d'accent flashy** (turquoise par défaut sur fond noir, rouge vif, orange #ff5a1f, jaune, vert, turquoise, bleu, violet, rose, blanc) ou **couleur exacte** saisie en hexadécimal, appliquées aussitôt ; pensé pour le téléphone (encoches, barre du bas, PWA)
 - Animations façon Apple : ressorts physiques, pages qui glissent dans le sens de la navigation, barre du bas à bulle mobile, onglets qui glissent, titre qui se réduit au défilement, messages « Dynamic Island »
 - **Hors connexion** : l'app s'ouvre instantanément avec tes dernières données (gardées sur l'appareil) puis se met à jour ; tirer vers le bas pour actualiser
 - HTML sémantique, ARIA, focus visible, respect de « réduire les animations »
@@ -76,10 +72,10 @@ npm start        # http://localhost:8080  (PORT=… pour changer)
 
 | Commande | Rôle |
 | --- | --- |
-| `npm run dev` | Serveur de développement (app + proxy + API des profils) |
+| `npm run dev` | Serveur de développement (app + proxy) |
 | `npm run build` | Vérifie les types puis construit `dist/` |
 | `npm run preview` | Sert la version construite en local |
-| `npm start` | Serveur de production : `dist/` + proxy + API des profils |
+| `npm start` | Serveur de production : `dist/` + proxy |
 | `npm run typecheck` | Vérification TypeScript seule |
 
 ## Comment ça marche
@@ -103,32 +99,12 @@ navigateur ──► /ed/v3/…  (serveur de l'app) ──► api.ecoledirecte.c
   messages est converti en texte : aucun HTML d'École Directe n'est injecté dans la page.
 - Derrière un proxy d'entreprise : `NODE_USE_ENV_PROXY=1 npm run dev`.
 
-### Profils publics
-
-- **Enregistrement automatique** : chaque réglage est enregistré tout seul (rien n'est créé ni réservé avant ta première modification). Le profil est **privé par défaut** ; l'interrupteur « Profil public » le rend visible par lien.
-- **Pseudo unique** (3 à 20 caractères : `a-z`, `0-9`, `_`, `.`), vérifié en direct ; en changer libère l'ancien.
-- **Propriété** : au login réussi, le serveur lie la session de l'appareil au compte élève ; seule cette session
-  peut modifier le profil ou envoyer des fichiers. Un profil ne peut utiliser que ses propres médias.
-- **Photo de profil** : image recadrée et convertie en WebP côté navigateur. SVG refusés, type de contenu fixé
-  (`nosniff`), fichiers inutilisés supprimés automatiquement.
-- **Widgets** : instantané des moyennes, mis à jour à chaque enregistrement et actualisation.
-- **Stockage** : `data/` (ignoré par git), ou `$DATA_DIR`. En mode démo, tout reste sur l'appareil.
-- **Discord** (avatar, décoration, présence) via [Lanyard](https://github.com/Phineas/lanyard).
-
-| Route | Rôle |
-| --- | --- |
-| `GET /api/u/:pseudo` | Profil public (+1 vue) |
-| `GET /api/handles/:pseudo` | Disponibilité d'un pseudo |
-| `GET` · `PUT` · `DELETE /api/me/profile` | Lire, enregistrer, supprimer son profil |
-| `POST /api/media` · `GET /api/media/:fichier` | Envoyer / lire un média |
-
 ## Structure
 
 ```
 src/
-├── pages/        Accueil, Notes, Planning, Devoirs, Messages, Profil, Profil public, Réglages, Connexion
+├── pages/        Accueil, Notes, Planning, Devoirs, Messages, Réglages, Connexion
 ├── components/   Graphiques, navigation, simulateur, carte « maintenant »
-├── profile/      Profils publics : types, API, page, effets, Discord
 ├── api/          Client École Directe + conversion des données
 ├── state/        Session : connexion, QCM, démo, chargement
 ├── fx/           Messages, confettis, compteur animé, vibration
@@ -136,7 +112,6 @@ src/
 └── styles.css    Design tokens + styles (clair & sombre)
 server/
 ├── ed-proxy.mjs  Proxy vers École Directe
-├── profiles.mjs  API des profils publics
 └── serve.mjs     Serveur de production
 ```
 
@@ -145,7 +120,6 @@ server/
 - [x] Interface mobile-first, thèmes clair / sombre, PWA
 - [x] Connexion École Directe (élève) avec QCM
 - [x] Notes en graphiques, simulateur, planning, devoirs
-- [x] Profils publics : médias, effets, couleurs, thèmes, Discord, widgets
 - [ ] Comptes parents (plusieurs enfants)
 - [x] Messagerie : lecture des messages reçus
 - [ ] Messagerie : répondre, envoyer, télécharger les pièces jointes

@@ -2,7 +2,6 @@ import { useData, useSession } from '../state/session'
 import { averageTimeline, fmt, formatDate, generalAverage, greeting } from '../lib'
 import { Empty, SectionTitle } from '../components/ui'
 import { Sparkline } from '../components/charts'
-import { Avatar, useMyProfile } from '../profile/useMyProfile'
 import { displayedMonday, isoDate } from '../api/ecoledirecte'
 import { NowCard } from '../components/NowCard'
 import { CountUp } from '../fx'
@@ -13,7 +12,6 @@ const KIND = { absence: 'Absence', retard: 'Retard', punition: 'Punition', sanct
 export function Accueil() {
   const { student, grades, lessons, homework, currentPeriod, incidents = [] } = useData()
   const { mode, applyPlan } = useSession()
-  const me = useMyProfile()
   const onCheck = useHomeworkCheck()
   const periodGrades = grades.filter((g) => g.period === currentPeriod)
   const avg = generalAverage(periodGrades)
@@ -34,7 +32,7 @@ export function Accueil() {
           </p>
           <h1>{greeting()} {student.firstName}</h1>
         </div>
-        <a href="#/profil" aria-label="Mon profil"><Avatar profile={me} initials={`${student.firstName[0]}${student.lastName[0] ?? ''}`} size={44} /></a>
+        <a href="#/reglages" aria-label="Réglages"><span className="avatar" style={{ width: 44, height: 44, fontSize: 16 }}>{`${student.firstName[0]}${student.lastName[0] ?? ''}`}</span></a>
       </header>
 
       <a href="#/notes" className="hero">

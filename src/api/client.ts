@@ -85,6 +85,34 @@ export async function edRequest<T>(
   return { data: json.data, token: newToken, twoFa: res.headers.get('2FA-Token') || undefined, code: json.code }
 }
 
+/** Télécharge un fichier (pièce jointe) via le proxy de l'app. Renvoie le contenu. */
+export async function edDownload(path: string, form: Record<string, string>, { token, twoFa }: { token?: string; twoFa?: string } = {}): Promise<Blob> {
+  const sep = path.includes('?') ? '&' : '?'
+  let res: Response
+  try {
+    res = await fetch(`./ed${path}${sep}verbe=get`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Session': proxySession(),
+        ...(token ? { 'X-Token': token } : {}),
+        ...(twoFa ? { '2FA-Token': twoFa } : {}),
+      },
+      body: new URLSearchParams(form).toString(),
+    })
+  } catch {
+    throw new EdError(0, 'Pas de connexion au serveur. Vérifie ton réseau.')
+  }
+  const type = res.headers.get('content-type') ?? ''
+  if (!res.ok || type.includes('json')) {
+    // École Directe répond en JSON quand le fichier est refusé (session expirée, fichier introuvable).
+    let msg = 'Fichier indisponible.'
+    try { const j = JSON.parse(await res.text()); if (j?.code) msg = j.message || messageFor(j.code) } catch { /* corps vide */ }
+    throw new EdError(res.status, msg)
+  }
+  return res.blob()
+}
+
 function messageFor(code: number) {
   switch (code) {
     case 505: return 'Identifiant ou mot de passe incorrect.'

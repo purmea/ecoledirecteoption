@@ -44,10 +44,18 @@ export interface Lesson {
   modified?: boolean
 }
 
+/** Pièce jointe d'un devoir (cahier de textes). */
+export interface HomeworkFile {
+  id: string
+  name: string
+}
+
 export interface Homework {
   id: string
   subject: string
+  /** Consigne complète. */
   title: string
+  files?: HomeworkFile[]
   due: string // ISO
   done: boolean
   test?: boolean

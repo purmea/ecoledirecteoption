@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../state/session'
-import { averageTimeline, fmt, generalAverage, groupBySubject, periodShort } from '../lib'
+import { averageTimeline, fmt, formatDate, generalAverage, groupBySubject, periodShort } from '../lib'
 import { Empty, PageHeader, SectionTitle, Segmented } from '../components/ui'
 import { SubjectBars, TrendChart } from '../components/charts'
 import { Simulator } from '../components/Simulator'
@@ -46,6 +46,28 @@ export function Notes() {
             )}
             <TrendChart points={timeline} label="Évolution de la moyenne générale" tone={tone} />
           </section>
+
+          <SectionTitle meta={<span className="muted small">{list.length} note{list.length > 1 ? 's' : ''}</span>}>Toutes les notes</SectionTitle>
+          <div className="grades-wrap">
+            <table className="grades-table">
+              <thead>
+                <tr><th scope="col" className="date">Date</th><th scope="col">Matière</th><th scope="col" className="num">Note</th><th scope="col" className="num">Coef</th></tr>
+              </thead>
+              <tbody>
+                {[...list].sort((a, b) => b.date.localeCompare(a.date) || a.subject.localeCompare(b.subject, 'fr')).map((g) => (
+                  <tr key={g.id}>
+                    <td className="date">{formatDate(g.date)}</td>
+                    <td>
+                      <strong>{g.subject}</strong>
+                      <small>{g.label}{g.classAvg !== null ? ` · classe ${fmt(g.classAvg)}` : ''}</small>
+                    </td>
+                    <td className="num"><b>{fmt(g.value)}</b><small>/{g.outOf}</small></td>
+                    <td className="num coef">{fmt(g.coef)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <SectionTitle meta={
             subjects.some((s) => s.classAverage !== null) && (

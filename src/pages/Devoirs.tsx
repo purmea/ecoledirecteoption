@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useData } from '../state/session'
+import { useData, useSession } from '../state/session'
+import { Sheet } from '../components/Sheet'
+import { toast } from '../fx'
+import { Icon } from '../components/Icon'
+import type { HomeworkFile } from '../types'
 import { useHomeworkCheck } from '../hooks/useHomeworkCheck'
 import { formatDate } from '../lib'
 import { Empty, PageHeader } from '../components/ui'
@@ -14,6 +18,9 @@ const mondayOf = (isoDate: string) => {
 export function Devoirs() {
   const { homework } = useData()
   const onCheck = useHomeworkCheck()
+  const { fetchHomeworkFile } = useSession()
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [busy, setBusy] = useState<string | null>(null)
   const stripRef = useRef<HTMLDivElement>(null)
 
   // Jours qui ont des devoirs (triés), avec le nombre restant à faire pour chacun.
@@ -43,6 +50,28 @@ export function Devoirs() {
   const total = homework.length
   const doneCount = homework.filter((h) => h.done).length
   const current = days.find((d) => d.due === day)
+
+  const opened = homework.find((h) => h.id === openId) ?? null
+
+  /** Récupère la pièce jointe puis la télécharge / l'ouvre. */
+  const openFile = async (f: HomeworkFile) => {
+    setBusy(f.id)
+    try {
+      const url = URL.createObjectURL(await fetchHomeworkFile(f))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = f.name
+      a.rel = 'noopener'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Fichier indisponible.', 'check')
+    } finally {
+      setBusy(null)
+    }
+  }
 
   let lastWeek = ''
   return (
@@ -81,16 +110,46 @@ export function Devoirs() {
                     aria-label={h.done ? 'Marquer comme à faire' : 'Marquer comme fait'} aria-pressed={h.done}>
                     <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength={1} /></svg>
                   </button>
-                  <div className="grow">
-                    <strong>{h.subject}{h.test && <span className="status">Éval</span>}</strong>
+                  <button className="grow hw-open" onClick={() => setOpenId(h.id)} aria-label={`Voir le détail : ${h.subject}`}>
+                    <strong>{h.subject}{h.test && <span className="status">Éval</span>}{h.files?.length ? <Icon name="clip" size={14} /> : null}</strong>
                     <small className="clamp">{h.title}</small>
-                  </div>
+                  </button>
                 </li>
               ))}
             </ul>
           )}
         </>
       )}
+    
+      <Sheet open={!!opened} title="Détail du devoir" onClose={() => setOpenId(null)}>
+        {opened && (
+          <>
+            <h2 className="sheet-title">{opened.subject}</h2>
+            <p className="sheet-sub">Pour {formatDate(opened.due, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            <p className="sheet-flags">
+              {opened.test && <span className="status accent">Évaluation</span>}
+              {opened.done && <span className="status">Fait</span>}
+            </p>
+            <div className="hw-body">{opened.title}</div>
+            {opened.files && opened.files.length > 0 && (
+              <>
+                <h3 className="sub-title">Pièces jointes</h3>
+                <div className="sheet-list">
+                  {opened.files.map((f) => (
+                    <button key={f.id} onClick={() => void openFile(f)} disabled={busy === f.id}>
+                      {busy === f.id ? <span className="spinner" /> : <Icon name="clip" size={20} />}
+                      <span>{f.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            <button className="btn primary hw-done" onClick={() => onCheck(opened.id, opened.due, opened.done)}>
+              {opened.done ? 'Marquer comme à faire' : 'Marquer comme fait'}
+            </button>
+          </>
+        )}
+      </Sheet>
     </>
   )
 }

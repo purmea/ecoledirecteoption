@@ -12,11 +12,8 @@ import { Planning } from './pages/Planning'
 import { Devoirs } from './pages/Devoirs'
 import { Login } from './pages/Login'
 import { MessageView, Messages } from './pages/Messages'
-import { Profil } from './pages/Profil'
-import { PublicProfile } from './pages/PublicProfile'
 import { Reglages } from './pages/Reglages'
 import { AppearanceProvider } from './state/appearance'
-import { buildSnapshot, getMyProfile, saveProfile } from './profile/api'
 
 export default function App() {
   return (
@@ -32,7 +29,7 @@ function Shell() {
   const { status, data, error, mode, refresh } = useSession()
   const { route, param } = useHashRoute()
   const messages = useMessages()
-  const order = ['accueil', 'notes', 'planning', 'devoirs', 'messages', 'profil', 'reglages']
+  const order = ['accueil', 'notes', 'planning', 'devoirs', 'messages', 'reglages']
   const idx = Math.max(0, order.indexOf(route))
   const prevIdx = useRef(idx)
   const dir = idx === prevIdx.current ? 0 : idx > prevIdx.current ? 1 : -1
@@ -46,22 +43,9 @@ function Shell() {
     window.addEventListener('scroll', on, { passive: true })
     return () => window.removeEventListener('scroll', on)
   }, [])
-  const titles: Record<string, string> = { accueil: 'Accueil', notes: 'Notes', planning: 'Emploi du temps', devoirs: 'Devoirs', messages: 'Messages', profil: 'Profil', reglages: 'Réglages' }
+  const titles: Record<string, string> = { accueil: 'Accueil', notes: 'Notes', planning: 'Emploi du temps', devoirs: 'Devoirs', messages: 'Messages', reglages: 'Réglages' }
 
   const ptr = usePullToRefresh(async () => { await refresh(); toast('Données à jour') }, mode === 'live' && status === 'ready')
-
-  // Compte réel : à chaque chargement des données, on rafraîchit les moyennes du profil public.
-  useEffect(() => {
-    if (mode !== 'live' || !data) return
-    const snapshot = buildSnapshot(data)
-    getMyProfile('live')
-      .then((p) => p && JSON.stringify({ ...p.snapshot, updatedAt: null }) !== JSON.stringify({ ...snapshot, updatedAt: null })
-        ? saveProfile('live', { ...p, snapshot }) : null)
-      .catch(() => { /* serveur sans profils ou session non liée : rien à faire */ })
-  }, [mode, data])
-
-  // Le profil public se consulte sans être connecté.
-  if (route === 'u' && param) return <PublicProfile handle={param} />
 
   if (status === 'signed-out') return <Login />
   if (status === 'loading' || !data) return <Skeleton />
@@ -82,7 +66,6 @@ function Shell() {
         {route === 'notes' && <Notes />}
         {route === 'devoirs' && <Devoirs />}
         {route === 'messages' && (param ? <MessageView id={param} key={param} /> : <Messages />)}
-        {route === 'profil' && <Profil />}
         {route === 'reglages' && <Reglages />}
       </main>
       )}

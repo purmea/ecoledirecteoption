@@ -13,7 +13,6 @@
 // ne sont jamais stockés : ils ne font que transiter vers École Directe.
 
 // ED_API_ORIGIN permet de pointer vers un faux serveur pour les tests.
-import { bindSession } from './profiles.mjs'
 
 const ED_ORIGIN = process.env.ED_API_ORIGIN || 'https://api.ecoledirecte.com'
 export const ED_VERSION = '4.75.0'
@@ -120,18 +119,18 @@ export function edProxy(prefix = '/ed') {
       url.searchParams.set('v', ED_VERSION)
       const upstream = await fetch(`${ED_ORIGIN}${url.pathname}${url.search}`, { method: 'POST', headers, body })
       storeCookies(jar, upstream)
+      // Téléchargement d'une pièce jointe : on renvoie le fichier tel quel (binaire), sans le lire comme du texte.
+      if (url.pathname === '/v3/telechargement.awp' && upstream.ok && !(upstream.headers.get('content-type') ?? '').includes('json')) {
+        res.statusCode = 200
+        res.setHeader('Content-Type', upstream.headers.get('content-type') ?? 'application/octet-stream')
+        res.setHeader('Cache-Control', 'no-store')
+        res.end(Buffer.from(await upstream.arrayBuffer()))
+        return
+      }
       const text = await upstream.text()
       // Journal sans données sensibles : route, statut HTTP et code École Directe.
       const edCode = /"code"\s*:\s*(\d+)/.exec(text)?.[1] ?? '?'
       console.log(`[ed] ${url.pathname} → HTTP ${upstream.status}, code ${edCode}${edCode === '?' ? ` (${JSON.stringify(text.slice(0, 120))})` : ''}`)
-      // Login réussi : cette session (appareil) est désormais liée au compte élève, ce qui
-      // l'autorise à gérer le profil public de ce compte (voir profiles.mjs).
-      if (url.pathname === '/v3/login.awp' && edCode === '200') {
-        try {
-          const account = JSON.parse(text)?.data?.accounts?.find((a) => a.typeCompte === 'E')
-          if (account?.id) await bindSession(sessionId, account.id)
-        } catch { /* réponse inattendue : pas de liaison */ }
-      }
       const newToken = upstream.headers.get('x-token')
       if (newToken) res.setHeader('X-Token', newToken)
       const newTwoFa = upstream.headers.get('2fa-token')

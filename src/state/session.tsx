@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { demoData, demoMessageDetails } from '../data/demo'
+import { demoData, demoMessageDetails, demoPdf } from '../data/demo'
 import { applyEdits, EMPTY_PLAN, reducePlan, type PlanAction, type PlanEdits } from '../planning/edits'
-import type { Lesson, MessageDetail, SchoolData } from '../types'
-import { displayedMonday, fetchAll, fetchLessonsFor, fetchMessageDetail, isoDate, login as edLogin, answerQcm, setHomeworkDone, type DeviceTrust, type Qcm, type Session } from '../api/ecoledirecte'
+import type { HomeworkFile, Lesson, MessageDetail, SchoolData } from '../types'
+import { displayedMonday, fetchAll, fetchHomeworkFile, fetchLessonsFor, fetchMessageDetail, isoDate, login as edLogin, answerQcm, setHomeworkDone, type DeviceTrust, type Qcm, type Session } from '../api/ecoledirecte'
 import { isAuthError } from '../api/client'
 
 const SESSION_KEY = 'edo:session'
@@ -49,6 +49,8 @@ interface Ctx {
   signOut: () => void
   refresh: () => Promise<void>
   toggleHomework: (id: string) => void
+  /** Télécharge la pièce jointe d'un devoir. */
+  fetchHomeworkFile: (file: HomeworkFile) => Promise<Blob>
 }
 
 const SessionContext = createContext<Ctx | null>(null)
@@ -247,6 +249,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     })
   }, [mode])
 
+  const downloadFile = useCallback(async (file: HomeworkFile) => {
+    if (mode === 'demo' || !session.current) return demoPdf(file.name)
+    return fetchHomeworkFile(session.current.session, file)
+  }, [mode])
+
   const loadWeek = useCallback(async (offset: number) => {
     const monday = displayedMonday()
     monday.setDate(monday.getDate() + offset * 7)
@@ -318,8 +325,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Ctx>(() => ({
     status, mode, data: shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, planEdits, editPlan, applyPlan,
-    signIn, submitQcm, cancelQcm: () => setPendingQcm(null), startDemo, signOut, refresh, toggleHomework,
-  }), [status, mode, shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, planEdits, editPlan, applyPlan, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
+    signIn, submitQcm, cancelQcm: () => setPendingQcm(null), startDemo, signOut, refresh, toggleHomework, fetchHomeworkFile: downloadFile,
+  }), [status, mode, shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, planEdits, editPlan, applyPlan, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework, downloadFile])
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }
