@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../state/session'
-import { averageTimeline, fmt, generalAverage, groupBySubject, periodShort } from '../lib'
+import { averageTimeline, fmt, generalAverage, groupBySubject, periodShort, weightedAverage } from '../lib'
+import type { Grade } from '../types'
 import { Empty, PageHeader, SectionTitle, Segmented } from '../components/ui'
 import { SubjectBars, TrendChart } from '../components/charts'
-import { Simulator } from '../components/Simulator'
 import { CountUp } from '../fx'
 
 const ALL = 'all'
@@ -19,9 +19,13 @@ export function Notes() {
   ]
   const [period, setPeriod] = useState(periods.some((p) => p.code === currentPeriod) ? currentPeriod : periods.at(-1)?.code ?? ALL)
 
+  const [sims, setSims] = useState<Grade[]>([])
+  const [adding, setAdding] = useState<string | null>(null)
+  const [draft, setDraft] = useState({ value: '', coef: '1' })
   const list = period === ALL ? grades : grades.filter((g) => g.period === period)
   const subjects = groupBySubject(list).sort((a, b) => a.subject.localeCompare(b.subject, 'fr'))
   const avg = generalAverage(list)
+  const simAvg = sims.length ? generalAverage([...list, ...sims]) : null
   const timeline = averageTimeline(list)
   // Évolution de la moyenne avec la dernière note : vert si elle monte, rouge si elle baisse (onglet Notes uniquement).
   const delta = timeline.length > 1 ? timeline[timeline.length - 1].value - timeline[timeline.length - 2].value : null
@@ -32,7 +36,7 @@ export function Notes() {
   return (
     <>
       <PageHeader title="Notes" subtitle={label} />
-      {options.length > 1 && <Segmented label="Période" value={period} onChange={setPeriod} options={options} />}
+      {options.length > 1 && <Segmented label="Période" value={period} onChange={(v) => { setPeriod(v); setSims([]); setAdding(null) }} options={options} />}
 
       {list.length === 0 ? <Empty>Aucune note sur cette période</Empty> : (
         <div className="swap-in" key={period}>
@@ -47,15 +51,21 @@ export function Notes() {
             <TrendChart points={timeline} label="Évolution de la moyenne générale" tone={tone} />
           </section>
 
-          <SectionTitle>Toutes les notes</SectionTitle>
+          <SectionTitle meta={sims.length > 0 && (
+            <span className="gt-sim-avg">Moyenne simulée <b>{simAvg !== null ? fmt(simAvg) : '—'}</b>
+              <button className="gt-reset" onClick={() => setSims([])} aria-label="Effacer les simulations">Effacer</button></span>
+          )}>Toutes les notes</SectionTitle>
           <div className="block grades-table-wrap">
             <table className="grades-table">
               <thead><tr><th scope="col">Matière</th><th scope="col">Moy.</th><th scope="col">Notes</th></tr></thead>
               <tbody>
-                {subjects.map((s) => (
+                {subjects.map((s) => {
+                  const mine = sims.filter((g) => g.subject === s.subject)
+                  const rowAvg = mine.length ? weightedAverage([...s.items, ...mine]) : s.average
+                  return (
                   <tr key={s.subject}>
                     <th scope="row">{s.subject}</th>
-                    <td className="gt-avg">{fmt(s.average)}</td>
+                    <td className={`gt-avg ${mine.length ? 'gt-avg-sim' : ''}`}>{rowAvg !== null ? fmt(rowAvg) : '—'}</td>
                     <td>
                       <span className="gt-notes">
                         {[...s.items].reverse().map((g) => (
@@ -63,10 +73,34 @@ export function Notes() {
                             {fmt(g.value)}{g.outOf !== 20 && <small>/{g.outOf}</small>}{g.coef !== 1 && <sup>({g.coef})</sup>}
                           </span>
                         ))}
+                        {mine.map((g) => (
+                          <button key={g.id} className="gt-note sim" onClick={() => setSims((l) => l.filter((x) => x.id !== g.id))}
+                            aria-label={`Retirer la note simulée ${fmt(g.value)}`}>
+                            {fmt(g.value)}{g.coef !== 1 && <sup>({g.coef})</sup>}
+                          </button>
+                        ))}
+                        {adding === s.subject ? (
+                          <form className="gt-add-form" onSubmit={(e) => {
+                            e.preventDefault()
+                            const v = Number(draft.value.replace(',', '.')), c = Number(draft.coef.replace(',', '.')) || 1
+                            if (!Number.isFinite(v) || v < 0 || v > 20) return
+                            setSims((l) => [...l, { id: `sim-${Date.now()}`, period: period === ALL ? '' : period, subject: s.subject, label: 'Simulation', value: v, outOf: 20, coef: c, classAvg: null, date: new Date().toISOString() }])
+                            setAdding(null)
+                            setDraft({ value: '', coef: '1' })
+                          }}>
+                            <input autoFocus inputMode="decimal" placeholder="/20" aria-label="Note sur 20" value={draft.value} onChange={(e) => setDraft({ ...draft, value: e.target.value })} />
+                            <input inputMode="decimal" aria-label="Coefficient" className="coef" value={draft.coef} onChange={(e) => setDraft({ ...draft, coef: e.target.value })} />
+                            <button type="submit" aria-label="Ajouter">✓</button>
+                            <button type="button" onClick={() => setAdding(null)} aria-label="Annuler">✕</button>
+                          </form>
+                        ) : (
+                          <button className="gt-add" onClick={() => setAdding(s.subject)} aria-label={`Simuler une note en ${s.subject}`}>+</button>
+                        )}
                       </span>
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -81,8 +115,6 @@ export function Notes() {
           }>Matières</SectionTitle>
           <SubjectBars subjects={subjects} />
 
-          <SectionTitle>Simulateur</SectionTitle>
-          <Simulator grades={list} subjects={subjects.map((x) => x.subject)} />
         </div>
       )}
     </>

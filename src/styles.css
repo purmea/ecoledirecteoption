@@ -996,3 +996,21 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .hw-view .msg-files li { list-style: none; }
 .hw-view .msg-files .row-action { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; }
 .hw-view .btn { width: 100%; margin-top: 20px; }
+
+/* Notes simulées dans le tableau */
+.gt-note.sim { background: var(--accent); color: var(--on-accent, #000); border: 0; font: inherit; font-weight: 700; cursor: pointer; }
+.gt-avg-sim { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+.gt-add { width: 30px; height: 26px; border-radius: 8px; border: 0; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); font: inherit; font-size: 18px; font-weight: 700; line-height: 1; cursor: pointer; }
+.gt-add:active { transform: scale(.94); }
+.gt-add-form { display: inline-flex; gap: 4px; align-items: center; }
+.gt-add-form input { width: 52px; height: 28px; padding: 0 6px; border-radius: 8px; border: 1px solid var(--accent); background: transparent; color: inherit; font: inherit; font-size: 14px; }
+.gt-add-form input.coef { width: 36px; }
+.gt-add-form button { width: 28px; height: 28px; border-radius: 8px; border: 0; background: color-mix(in srgb, currentColor 10%, transparent); color: inherit; cursor: pointer; }
+.gt-add-form button[type=submit] { background: var(--accent); color: var(--on-accent, #000); }
+.gt-sim-avg { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+.gt-sim-avg b { color: var(--accent); font-size: 16px; }
+.gt-reset { border: 0; background: none; color: inherit; opacity: .6; font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; }
+.gt-notes { align-items: center; }
+.gt-note { display: inline-flex; align-items: flex-start; line-height: 1.35; }
+.gt-note sup { line-height: 1; margin-top: 1px; }
+.gt-note.sim { justify-content: flex-start; gap: 0; padding: 3px 8px; }
