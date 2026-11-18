@@ -1086,8 +1086,8 @@ input, select, textarea { font-size: max(16px, 1em); }
 .gd-comment { margin: 12px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--fill); font-size: 15px; line-height: 1.5; }
 
 /* Fermeture rapide des panneaux */
-.sheet-wrap.closing .sheet { animation: sheet-out .22s cubic-bezier(.4,0,1,1) both; }
-.sheet-wrap.closing .sheet-backdrop { animation: fade-out .22s ease-in both; }
+.sheet-wrap.closing .sheet { animation: sheet-out .15s cubic-bezier(.4,0,1,1) both; }
+.sheet-wrap.closing .sheet-backdrop { animation: fade-out .15s ease-in both; }
 @keyframes sheet-out { to { transform: translateY(100%); } }
 @keyframes fade-out { to { opacity: 0; } }
 /* Cours annulé / rétabli : changement en douceur */

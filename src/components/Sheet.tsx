@@ -12,7 +12,7 @@ export function Sheet({ open, title, onClose, children, light }: { open: boolean
     if (open) { setShown(true); setClosing(false); return }
     if (!shown) return
     setClosing(true)
-    const t = window.setTimeout(() => { setShown(false); setClosing(false) }, 220)
+    const t = window.setTimeout(() => { setShown(false); setClosing(false) }, 150)
     return () => window.clearTimeout(t)
   }, [open, shown])
   useEffect(() => {
@@ -53,8 +53,10 @@ export function Sheet({ open, title, onClose, children, light }: { open: boolean
     const v = e.timeStamp - d.lastT > 120 ? 0 : d.v
     const h = sheetRef.current?.offsetHeight ?? 400
     if (dy > h * 0.3 || (v > 0.5 && dy > 10)) {
-      setY(h, true)
-      window.setTimeout(onClose, 180)
+      // Ferme tout de suite : l'animation de sortie part de la position du doigt.
+      if (sheetRef.current) sheetRef.current.style.transition = 'none'
+      void h
+      onClose()
     } else setY(0, true)
   }
   useEffect(() => { if (open) setY(0, false) }, [open])
