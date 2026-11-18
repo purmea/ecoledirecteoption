@@ -131,7 +131,7 @@ export function edProxy(prefix = '/ed') {
       if (url.pathname === '/v3/telechargement.awp') {
         const ct = upstream.headers.get('content-type') ?? 'application/octet-stream'
         const buf = Buffer.from(await upstream.arrayBuffer())
-        console.log(`[ed] téléchargement → HTTP ${upstream.status}, ${buf.length} o`)
+        console.log(`[ed] téléchargement → HTTP ${upstream.status}, ${ct}, ${buf.length} o${ct.includes('json') ? ' ' + JSON.stringify(buf.toString('utf8', 0, 160)) : ''}`)
         res.statusCode = upstream.ok ? 200 : 502
         res.setHeader('Content-Type', ct)
         res.setHeader('Cache-Control', 'no-store')

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useData } from '../state/session'
+import type { Homework } from '../types'
 import { useHomeworkCheck } from '../hooks/useHomeworkCheck'
 import { formatDate } from '../lib'
 import { Empty, PageHeader } from '../components/ui'
@@ -14,7 +16,25 @@ const mondayOf = (isoDate: string) => {
   return iso(d)
 }
 
+/** Gardés entre deux ouvertures de l'écran : retour depuis un devoir sans revenir au premier jour. */
+let lastDay: string | null = null
+let pastCache: Homework[] | null = null
+let pastOpen = false
+
+/** Les 7 derniers jours (hier compris), du plus ancien au plus récent. */
+const pastDates = () => Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 7 + i); return iso(d) })
+
 export function Devoirs() {
+  const { loadPastHomework } = useSession()
+  const [showPast, setShowPast] = useState(pastOpen)
+  const [past, setPast] = useState<Homework[] | null>(pastCache)
+  const [pastErr, setPastErr] = useState('')
+  useEffect(() => {
+    pastOpen = showPast
+    if (!showPast || past) return
+    loadPastHomework(pastDates()).then((l) => { pastCache = l; setPast(l) }).catch((e) => setPastErr(e instanceof Error ? e.message : String(e)))
+  }, [showPast, past, loadPastHomework])
+
   const { homework } = useData()
   const onCheck = useHomeworkCheck()
   const stripRef = useRef<HTMLDivElement>(null)
@@ -32,14 +52,17 @@ export function Devoirs() {
   }, [homework])
 
   // Jour choisi par défaut : le premier jour (à partir d'aujourd'hui) qui a encore des devoirs.
-  const [day, setDay] = useState<string>(() => {
+  const [day, setDayState] = useState<string>(() => {
+    if (lastDay && days.some((d) => d.due === lastDay)) return lastDay
     const today = iso(new Date())
     return (days.find((d) => d.due >= today && d.left > 0) ?? days.find((d) => d.due >= today) ?? days.at(-1) ?? { due: today }).due
   })
 
+  const setDay = (d: string) => { lastDay = d; setDayState(d) }
+
   // Garde le jour choisi visible dans la barre
   useEffect(() => {
-    stripRef.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+    stripRef.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: lastDay === day ? 'instant' : 'smooth' })
   }, [day])
 
   const list = homework.filter((h) => h.due === day)
@@ -72,9 +95,34 @@ export function Devoirs() {
           </div>
 
           <header className="day-head">
-            <h2>{formatDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
+            <h2>
+              <button className={`past-toggle ${showPast ? 'on' : ''}`} onClick={() => setShowPast(!showPast)} aria-expanded={showPast} aria-controls="past-week"
+                aria-label={showPast ? 'Fermer les devoirs de la semaine dernière' : 'Voir les devoirs de la semaine dernière'}>
+                <Icon name="chevron" size={16} />
+              </button>
+              {formatDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}
+            </h2>
             <span>{current ? (current.left === 0 ? 'Tout est fait' : `${current.left} à faire sur ${current.total}`) : ''}</span>
           </header>
+
+          {showPast && (
+            <section id="past-week" className="past-week">
+              <h3>Semaine dernière</h3>
+              {pastErr ? <p className="muted small">{pastErr}</p> : !past ? <div className="spinner" /> : past.length === 0 ? <p className="muted small">Aucun devoir la semaine dernière</p> : (
+                <ul className="list">
+                  {past.map((h) => (
+                    <li key={`${h.due}-${h.id}`} className="done">
+                      <a href={`#/devoirs/${h.id}`} className="grow hw-open">
+                        <strong>{h.subject}{h.files?.length ? <Icon name="clip" size={14} /> : null}</strong>
+                        <small className="clamp">{formatDate(h.due, { weekday: 'short', day: 'numeric' })} · {h.title}</small>
+                      </a>
+                      <Icon name="chevron" size={16} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
 
           {list.length === 0 ? <Empty>Aucun devoir ce jour-là</Empty> : (
             <ul className="list" key={day}>
@@ -105,7 +153,9 @@ export function DevoirView({ id }: { id: string }) {
   const { download } = useSession()
   const onCheck = useHomeworkCheck()
   const [busy, setBusy] = useState<number | null>(null)
-  const h = homework.find((x) => x.id === id)
+  const h = homework.find((x) => x.id === id) ?? pastCache?.find((x) => x.id === id)
+  const [viewer, setViewer] = useState<{ url: string; name: string; type: string; blob: Blob } | null>(null)
+  useEffect(() => () => { if (viewer) URL.revokeObjectURL(viewer.url) }, [viewer])
   if (!h) return (<><a href="#/devoirs" className="back"><Icon name="chevron" size={16} />Devoirs</a><Empty>Devoir introuvable</Empty></>)
   return (
     <article className="hw-view">
@@ -121,7 +171,10 @@ export function DevoirView({ id }: { id: string }) {
               <li key={f.id}>
                 <button className="row-action" disabled={busy === f.id} onClick={async () => {
                   setBusy(f.id)
-                  try { await download(f.id, f.name) } catch (e) { toast(e instanceof Error ? e.message : 'Téléchargement impossible') }
+                  try {
+                    const blob = await download(f.id)
+                    setViewer({ url: URL.createObjectURL(blob), name: f.name, type: blob.type, blob })
+                  } catch (e) { toast(e instanceof Error ? e.message : 'Téléchargement impossible') }
                   setBusy(null)
                 }}>
                   <Icon name="clip" size={14} /> {busy === f.id ? 'Ouverture…' : f.name}
@@ -132,9 +185,40 @@ export function DevoirView({ id }: { id: string }) {
           </ul>
         </div>
       )}
+      {viewer && <FileViewer {...viewer} onClose={() => setViewer(null)} />}
       <button className={`btn ${h.done ? 'ghost' : 'primary'}`} onClick={() => onCheck(h.id, h.due, h.done)}>
         {h.done ? 'Marquer comme à faire' : 'Marquer comme fait'}
       </button>
     </article>
+  )
+}
+
+/** Aperçu plein écran d'une pièce jointe (PDF, image), avec partage/enregistrement. */
+function FileViewer({ url, name, type, blob, onClose }: { url: string; name: string; type: string; blob: Blob; onClose: () => void }) {
+  const isImg = type.startsWith('image/') || /\.(png|jpe?g|gif|webp|heic)$/i.test(name)
+  const isPdf = type.includes('pdf') || /\.pdf$/i.test(name)
+  const share = async () => {
+    const file = new File([blob], name, { type: type || 'application/octet-stream' })
+    if (navigator.canShare?.({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: name }) } catch { /* annulé */ }
+      return
+    }
+    const a = document.createElement('a')
+    a.href = url
+    a.download = name
+    a.click()
+  }
+  return createPortal(
+    <div className="file-viewer" role="dialog" aria-modal="true" aria-label={name}>
+      <header>
+        <button className="text-btn" onClick={onClose}>Fermer</button>
+        <strong className="clamp">{name}</strong>
+        <button className="text-btn" onClick={share}>Enregistrer</button>
+      </header>
+      {isImg ? <img src={url} alt={name} />
+        : isPdf ? <iframe src={url} title={name} />
+        : <div className="fv-other"><p>Aperçu indisponible pour ce type de fichier.</p><button className="btn primary" onClick={share}>Ouvrir / enregistrer</button></div>}
+    </div>,
+    document.body,
   )
 }

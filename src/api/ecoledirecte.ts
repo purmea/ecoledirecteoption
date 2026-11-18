@@ -197,7 +197,7 @@ export async function fetchLessonsFor(s: Session, monday: Date) {
 }
 
 type RawHomeworkList = Record<string, { matiere: string; idDevoir: number; effectue: boolean; interrogation: boolean }[]>
-interface RawHomeworkDay { matieres?: { id: number; aFaire?: { contenu?: string; documents?: { id: number; libelle?: string; taille?: number }[] } }[] }
+interface RawHomeworkDay { matieres?: { id: number; matiere?: string; interrogation?: boolean; aFaire?: { contenu?: string; effectue?: boolean; documents?: { id: number; libelle?: string; taille?: number }[] } }[] }
 
 async function fetchHomework(s: Session) {
   const r = await edRequest<RawHomeworkList>(`/v3/Eleves/${s.account.id}/cahierdetexte.awp`, {}, { token: s.token, twoFa: s.twoFa })
@@ -392,15 +392,46 @@ export async function fetchMessageDetail(s: Session, id: string): Promise<Messag
   }
 }
 
+/** Devoirs donnés pour les jours passés (la liste principale ne contient que les prochains jours). */
+export async function fetchHomeworkDays(s: Session, dates: string[]): Promise<Homework[]> {
+  const out: Homework[] = []
+  await Promise.all(dates.map(async (date) => {
+    try {
+      const d = await edRequest<RawHomeworkDay>(`/v3/Eleves/${s.account.id}/cahierdetexte/${date}.awp`, {}, { token: s.token, twoFa: s.twoFa })
+      for (const m of d.data.matieres ?? []) {
+        if (!m.aFaire) continue
+        const txt = m.aFaire.contenu ? htmlToText(b64decode(m.aFaire.contenu)) : ''
+        const files = (m.aFaire.documents ?? []).map((x) => ({ id: x.id, name: x.libelle || 'Pièce jointe', size: x.taille }))
+        out.push({
+          id: String(m.id), subject: prettySubject(m.matiere ?? ''), title: txt || (m.interrogation ? 'Évaluation' : 'Travail à faire'),
+          due: date, done: m.aFaire.effectue ?? true, test: m.interrogation, files: files.length ? files : undefined,
+        })
+      }
+    } catch { /* jour sans données */ }
+  }))
+  return out.sort((a, b) => a.due.localeCompare(b.due))
+}
+
 /** Télécharge une pièce jointe (cahier de texte : FICHIER_CDT, message : PIECE_JOINTE). */
 export async function downloadFile(s: Session, id: number, type: 'FICHIER_CDT' | 'PIECE_JOINTE' = 'FICHIER_CDT'): Promise<Blob> {
   const q = new URLSearchParams({ fichierId: String(id), leTypeDeFichier: type })
-  const res = await fetch(`./api/ed?p=${encodeURIComponent('v3/telechargement.awp')}&${q}&verbe=get`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Session': proxySession(), 'X-Token': s.token, ...(s.twoFa ? { '2FA-Token': s.twoFa } : {}) },
-    body: 'data=' + encodeURIComponent(JSON.stringify({ forceDownload: 0 })),
-  })
-  const ct = res.headers.get('Content-Type') ?? ''
-  if (!res.ok || ct.includes('application/json')) throw new Error('Téléchargement impossible.')
-  return res.blob()
+  const url = `./api/ed?p=${encodeURIComponent('v3/telechargement.awp')}&${q}&verbe=get`
+  const headers = { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Session': proxySession(), 'X-Token': s.token, ...(s.twoFa ? { '2FA-Token': s.twoFa } : {}) }
+  // Deux formes vues dans la nature : corps « data={…} » ou formulaire avec le jeton (téléchargement du site officiel).
+  const bodies = [
+    'data=' + encodeURIComponent(JSON.stringify({ forceDownload: 0 })),
+    new URLSearchParams({ token: s.token, forceDownload: '0' }).toString(),
+  ]
+  let last = 'Téléchargement impossible.'
+  for (const body of bodies) {
+    const res = await fetch(url, { method: 'POST', headers, body })
+    const ct = res.headers.get('Content-Type') ?? ''
+    if (res.ok && !ct.includes('json') && !ct.includes('text/html')) {
+      const blob = await res.blob()
+      if (blob.size > 0) return blob
+    }
+    const t = await res.text().catch(() => '')
+    try { const j = JSON.parse(t); if (j.message) last = `École Directe : ${j.message} (code ${j.code})` } catch { if (t) last = `Réponse inattendue (HTTP ${res.status})` }
+  }
+  throw new Error(last)
 }

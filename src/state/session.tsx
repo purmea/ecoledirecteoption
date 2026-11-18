@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { demoData, demoMessageDetails } from '../data/demo'
 import { applyEdits, EMPTY_PLAN, reducePlan, type PlanAction, type PlanEdits } from '../planning/edits'
-import type { Lesson, MessageDetail, SchoolData } from '../types'
-import { downloadFile as edDownload, displayedMonday, fetchAll, fetchLessonsFor, fetchMessageDetail, isoDate, login as edLogin, answerQcm, setHomeworkDone, type DeviceTrust, type Qcm, type Session } from '../api/ecoledirecte'
+import type { Homework, Lesson, MessageDetail, SchoolData } from '../types'
+import { fetchHomeworkDays, downloadFile as edDownload, displayedMonday, fetchAll, fetchLessonsFor, fetchMessageDetail, isoDate, login as edLogin, answerQcm, setHomeworkDone, type DeviceTrust, type Qcm, type Session } from '../api/ecoledirecte'
 import { isAuthError } from '../api/client'
 
 const SESSION_KEY = 'edo:session'
@@ -34,7 +34,8 @@ interface Ctx {
   loadWeek: (offset: number) => Promise<{ lessons: Lesson[]; monday: string }>
   /** Ouvre un message (le marque comme lu, ici et sur École Directe). */
   openMessage: (id: string) => Promise<MessageDetail>
-  download: (id: number, name: string) => Promise<void>
+  download: (id: number) => Promise<Blob>
+  loadPastHomework: (dates: string[]) => Promise<Homework[]>
   messageMeta: MessageMeta
   /** Modifications de l'emploi du temps faites dans l'app (locales à l'appareil). */
   planEdits: PlanEdits
@@ -309,19 +310,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return detail
   }, [mode])
 
-  const download = useCallback(async (id: number, name: string) => {
+  const download = useCallback(async (id: number) => {
     if (mode === 'demo' || !session.current) throw new Error('Pas de pièce jointe en mode démo.')
-    const blob = await edDownload(session.current.session, id)
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = name
-    // Sur iPhone, ouvrir dans un nouvel onglet affiche l'aperçu (PDF, image).
-    if (/iP(hone|ad)/.test(navigator.userAgent)) a.target = '_blank'
-    document.body.append(a)
-    a.click()
-    a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    return edDownload(session.current.session, id)
+  }, [mode])
+
+  const loadPastHomework = useCallback(async (dates: string[]) => {
+    if (mode === 'demo' || !session.current) {
+      const subj = ['Mathématiques', 'Français', 'Anglais', 'SVT', 'Histoire-Géo']
+      return dates.slice(0, 4).map((due, i) => ({ id: `past-${due}`, subject: subj[i % subj.length], title: ['Exercices 12 à 15 p. 84', 'Lire le chapitre 3', 'Apprendre le vocabulaire unité 4', 'Schéma de la cellule à compléter'][i % 4], due, done: true }))
+    }
+    return fetchHomeworkDays(session.current.session, dates)
   }, [mode])
 
   // Un jour passé = devoirs faits : ceux dont la date est dépassée apparaissent cochés (affichage seulement, rien n'est envoyé à l'école).
@@ -333,9 +332,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [data])
 
   const value = useMemo<Ctx>(() => ({
-    status, mode, data: shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, download, messageMeta, messageAction, planEdits, editPlan, applyPlan,
+    status, mode, data: shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, download, loadPastHomework, messageMeta, messageAction, planEdits, editPlan, applyPlan,
     signIn, submitQcm, cancelQcm: () => setPendingQcm(null), startDemo, signOut, refresh, toggleHomework,
-  }), [status, mode, shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, download, messageMeta, messageAction, planEdits, editPlan, applyPlan, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
+  }), [status, mode, shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, download, loadPastHomework, messageMeta, messageAction, planEdits, editPlan, applyPlan, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }
