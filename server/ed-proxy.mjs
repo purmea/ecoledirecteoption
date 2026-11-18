@@ -83,6 +83,13 @@ async function fetchGtk(jar) {
  */
 export function edProxy(prefix = '/ed') {
   return async (req, res, next) => {
+    // Forme sans réécriture (Vercel) : /api/ed?p=v3/xxx.awp&verbe=…
+    if (req.url?.startsWith('/api/ed?') || req.url === '/api/ed') {
+      const u = new URL(req.url, 'http://local')
+      const p = u.searchParams.get('p') ?? ''
+      u.searchParams.delete('p')
+      req.url = `${prefix}/${p}${u.search}`
+    }
     if (!req.url?.startsWith(prefix + '/')) return next()
     // Permet à l'app de vérifier que le serveur (et donc la connexion) est disponible.
     if (req.url === `${prefix}/health`) return send(res, 200, { ok: true, version: ED_VERSION })

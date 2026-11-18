@@ -1,9 +1,15 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "functions": { "api/*.mjs": { "includeFiles": "server/**" } },
-  "rewrites": [
-    { "source": "/ed/:path*", "destination": "/api/ed?p=:path*" },
-    { "source": "/api/:path((?!ed$|profiles$).*)", "destination": "/api/profiles?p=:path" }
-  ]
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "functions": {
+        "api/*.mjs": {
+            "includeFiles": "server/**"
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/api/:path((?!ed$|profiles$).*)",
+            "destination": "/api/profiles?p=:path"
+        }
+    ]
 }

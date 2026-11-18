@@ -47,8 +47,8 @@ export async function edRequest<T>(
   body: unknown = {},
   { verbe = 'get', token, twoFa, allowCodes = [] }: { verbe?: string; token?: string; twoFa?: string; allowCodes?: number[] } = {},
 ): Promise<RequestResult<T>> {
-  const sep = path.includes('?') ? '&' : '?'
-  const url = `./ed${path}${verbe ? `${sep}verbe=${verbe}` : ''}`
+  const [route, query] = path.slice(1).split('?')
+  const url = `./api/ed?p=${encodeURIComponent(route)}${query ? `&${query}` : ''}${verbe ? `&verbe=${verbe}` : ''}`
   let res: Response
   try {
     res = await fetch(url, {
@@ -109,7 +109,7 @@ export function b64decode(s: string) {
 /** Vérifie que le proxy École Directe de l'app répond (sinon seule la démo est possible). */
 export async function proxyAvailable() {
   try {
-    const r = await fetch('./ed/health', { cache: 'no-store' })
+    const r = await fetch('./api/ed?p=health', { cache: 'no-store' })
     return r.ok && (await r.json()).ok === true
   } catch {
     return false

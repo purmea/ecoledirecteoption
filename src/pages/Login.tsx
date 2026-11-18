@@ -1,5 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { proxyAvailable } from '../api/client'
+import { useState, type FormEvent } from 'react'
 import { useSession } from '../state/session'
 
 export function Login() {
@@ -10,14 +9,6 @@ export function Login() {
   const [showPw, setShowPw] = useState(false)
   const [busy, setBusy] = useState(false)
   const [choice, setChoice] = useState('')
-  const [server, setServer] = useState<'checking' | 'ok' | 'missing'>('checking')
-
-  useEffect(() => {
-    let alive = true
-    proxyAvailable().then((ok) => alive && setServer(ok ? 'ok' : 'missing'))
-    return () => { alive = false }
-  }, [])
-  const offline = server === 'missing'
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -62,22 +53,16 @@ export function Login() {
         </form>
       ) : (
         <form className="login-card" onSubmit={onSubmit}>
-          {offline && (
-            <p className="notice" role="status">
-              La connexion à École Directe n’est pas disponible sur cette version en ligne. Lance l’app avec
-              <code>npm run dev</code> (ou <code>npm start</code>), ou essaie la démo.
-            </p>
-          )}
           <label className="field">
             <span>Identifiant</span>
             <input value={identifiant} onChange={(e) => setIdentifiant(e.target.value)} autoComplete="username"
-              autoCapitalize="none" autoCorrect="off" spellCheck={false} required disabled={offline} />
+              autoCapitalize="none" autoCorrect="off" spellCheck={false} required />
           </label>
           <label className="field">
             <span>Mot de passe</span>
             <span className="pw">
               <input type={showPw ? 'text' : 'password'} value={motdepasse} onChange={(e) => setMotdepasse(e.target.value)}
-                autoComplete="current-password" required disabled={offline} />
+                autoComplete="current-password" required />
               <button type="button" className="pw-toggle" onClick={() => setShowPw((v) => !v)}
                 aria-label={showPw ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>{showPw ? 'Masquer' : 'Afficher'}</button>
             </span>
@@ -87,8 +72,8 @@ export function Login() {
             Rester connecté sur cet appareil
           </label>
           {error && <p className="error shake" role="alert" key={error}>{error}</p>}
-          <button className="btn primary" disabled={busy || offline}>{busy ? 'Connexion…' : 'Se connecter'}</button>
-          <button type="button" className={`btn ${offline ? 'primary' : 'ghost'}`} onClick={startDemo}>Essayer avec la démo</button>
+          <button className="btn primary" disabled={busy}>{busy ? 'Connexion…' : 'Se connecter'}</button>
+          <button type="button" className={`btn ghost`} onClick={startDemo}>Essayer avec la démo</button>
         </form>
       )}
 
