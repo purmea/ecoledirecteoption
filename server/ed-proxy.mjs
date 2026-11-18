@@ -121,6 +121,7 @@ export function edProxy(prefix = '/ed') {
         jar.cookies.clear()
         const gtk = await fetchGtk(jar)
         if (gtk) headers['X-Gtk'] = gtk
+        console.log(`[ed] login : GTK ${gtk ? 'reçu' : 'ABSENT'}, ${jar.cookies.size} cookie(s), corps ${body.length} o`)
       }
       if (jar.cookies.size) headers.Cookie = cookieHeader(jar)
 

@@ -39,7 +39,7 @@ export type LoginResult =
  * site : cn/cv à la racine ET dans fa[] avec uniq: false (doc, PR #55).
  */
 export async function login(identifiant: string, motdepasse: string, trust?: DeviceTrust, twoFa?: string): Promise<LoginResult> {
-  const body: Record<string, unknown> = { identifiant, motdepasse, isReLogin: false, uuid: '' }
+  const body: Record<string, unknown> = { identifiant, motdepasse, isRelogin: false, uuid: '' }
   if (trust) {
     body.cn = trust.cn
     body.cv = trust.cv
