@@ -23,6 +23,11 @@ export interface Grade {
   coef: number
   classAvg: number | null // sur outOf
   date: string // ISO
+  classMin?: number | null // sur outOf
+  classMax?: number | null // sur outOf
+  type?: string // « Devoir surveillé », « Interrogation orale »…
+  comment?: string
+  enteredAt?: string // date de saisie
 }
 
 export interface Lesson {

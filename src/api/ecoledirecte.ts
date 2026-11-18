@@ -126,6 +126,7 @@ interface RawGrades {
   notes?: {
     id: number; devoir: string; codePeriode: string; libelleMatiere: string; coef: string; noteSur: string
     valeur: string; nonSignificatif: boolean; date: string; moyenneClasse: string
+    minClasse?: string; maxClasse?: string; typeDevoir?: string; dateSaisie?: string; commentaire?: string
   }[]
 }
 
@@ -150,6 +151,11 @@ async function fetchGrades(s: Session) {
       coef: num(n.coef) ?? 1,
       classAvg: num(n.moyenneClasse),
       date: n.date,
+      classMin: num(n.minClasse ?? ''),
+      classMax: num(n.maxClasse ?? ''),
+      type: n.typeDevoir?.trim() || undefined,
+      comment: n.commentaire?.trim() || undefined,
+      enteredAt: n.dateSaisie || undefined,
     })
   }
   const today = isoDate(new Date())

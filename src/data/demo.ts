@@ -8,7 +8,7 @@ const student = {
   school: 'Collège Jean Moulin',
 }
 
-const grades: Grade[] = [
+const rawGrades: Grade[] = [
   { period: 'A001', id: 'g1', subject: 'Mathématiques', label: 'Contrôle — Équations', value: 9, outOf: 20, coef: 2, classAvg: 11.8, date: '2026-09-16' },
   { period: 'A001', id: 'g2', subject: 'Français', label: 'Rédaction — Portrait', value: 10, outOf: 20, coef: 2, classAvg: 11.2, date: '2026-09-18' },
   { period: 'A001', id: 'g3', subject: 'Anglais', label: 'Test de vocabulaire', value: 11, outOf: 20, coef: 1, classAvg: 12.5, date: '2026-09-22' },
@@ -41,6 +41,15 @@ const grades: Grade[] = [
   { period: 'A001', id: 'g30', subject: 'Anglais', label: 'Oral final', value: 19, outOf: 20, coef: 1, classAvg: 13.5, date: '2026-11-07' },
   { period: 'A001', id: 'g31', subject: 'Français', label: 'Contrôle — Poésie', value: 18, outOf: 20, coef: 2, classAvg: 11.5, date: '2026-11-08' },
 ]
+
+// Min/max de classe et type de devoir, pour montrer le détail d'une note.
+const grades: Grade[] = rawGrades.map((g, i) => g.classAvg === null ? g : ({
+  ...g,
+  classMin: Math.max(0, Math.round((g.classAvg - 4 - (i % 3)) * 2) / 2),
+  classMax: Math.min(g.outOf, Math.round((g.classAvg + 4 + (i % 4)) * 2) / 2),
+  type: g.coef >= 2 ? 'Devoir surveillé' : i % 2 ? 'Interrogation écrite' : 'Travail en classe',
+  enteredAt: g.date,
+}))
 
 const lessons: Lesson[] = [
   { id: 'l1', day: 0, start: '08:00', end: '09:00', subject: 'Mathématiques', room: 'B12', teacher: 'M. Bernard' },

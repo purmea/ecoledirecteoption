@@ -209,7 +209,7 @@ function Grid({ view, date, lessons, monday, today, onOpen }: { view: View; date
           {dayList.map((d) => (
             <div key={d} className="ed-col">
               {layout(shown.filter((l) => l.day === d)).map(({ l, col, cols }) => (
-                <button key={l.id} className={`ed-block ${l.cancelled ? 'cancelled' : ''}`}
+                <button key={`${l.id}-${l.cancelled ? 1 : 0}`} className={`ed-block ${l.cancelled ? 'cancelled' : ''}`}
                   style={{
                     top: ((toMin(l.start) - from * 60) / 60) * H + 1, height: Math.max(20, ((toMin(l.end) - toMin(l.start)) / 60) * H - 3),
                     left: `calc(${(col / cols) * 100}% + 3px)`, width: `calc(${100 / cols}% - 6px)`, background: l.cancelled ? undefined : colorOf(l.subject),
