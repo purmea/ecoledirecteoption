@@ -7,7 +7,7 @@ import { formatDate } from '../lib'
 import { Empty, PageHeader } from '../components/ui'
 import { Icon } from '../components/Icon'
 import { useSession } from '../state/session'
-import { toast } from '../fx'
+import { haptic, toast } from '../fx'
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const mondayOf = (isoDate: string) => {
@@ -35,7 +35,12 @@ export function Devoirs() {
     loadPastHomework(pastDates()).then((l) => { pastCache = l; setPast(l) }).catch((e) => setPastErr(e instanceof Error ? e.message : String(e)))
   }, [showPast, past, loadPastHomework])
 
-  const { homework } = useData()
+  const { homework: upcoming } = useData()
+  const homework = useMemo(() => {
+    if (!showPast || !past) return upcoming
+    const ids = new Set(upcoming.map((h) => `${h.due}-${h.id}`))
+    return [...past.filter((h) => !ids.has(`${h.due}-${h.id}`)), ...upcoming]
+  }, [upcoming, past, showPast])
   const onCheck = useHomeworkCheck()
   const stripRef = useRef<HTMLDivElement>(null)
 
@@ -60,6 +65,38 @@ export function Devoirs() {
 
   const setDay = (d: string) => { lastDay = d; setDayState(d) }
 
+  // À l'ouverture de la semaine passée, on se place sur son premier jour ; à la fermeture, on revient sur un jour à venir.
+  const wantPast = useRef(false)
+  useEffect(() => {
+    if (showPast && past && wantPast.current) {
+      wantPast.current = false
+      if (past.length) setDay(past[0].due)
+    }
+    if (!showPast && !days.some((d) => d.due === day)) {
+      const today = iso(new Date())
+      setDay((days.find((d) => d.due >= today) ?? days.at(-1) ?? { due: today }).due)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPast, past, days])
+  const togglePast = () => { wantPast.current = !showPast; setShowPast(!showPast) }
+
+  // Glisser à gauche / à droite sur la liste : jour suivant / précédent.
+  const touch = useRef<{ x: number; y: number } | null>(null)
+  const go = (step: number) => {
+    const i = days.findIndex((d) => d.due === day)
+    const next = days[i + step]
+    if (next) { setDay(next.due); haptic(6) }
+  }
+  const swipe = {
+    onTouchStart: (e: React.TouchEvent) => { const t = e.touches[0]; touch.current = { x: t.clientX, y: t.clientY } },
+    onTouchEnd: (e: React.TouchEvent) => {
+      const s = touch.current; touch.current = null
+      if (!s) return
+      const t = e.changedTouches[0], dx = t.clientX - s.x, dy = t.clientY - s.y
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1)
+    },
+  }
+
   // Garde le jour choisi visible dans la barre
   useEffect(() => {
     stripRef.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: lastDay === day ? 'instant' : 'smooth' })
@@ -77,6 +114,11 @@ export function Devoirs() {
 
       {days.length === 0 ? <Empty>Aucun devoir</Empty> : (
         <>
+          <div className="day-strip-row">
+          <button className={`past-toggle ${showPast ? 'on' : ''}`} onClick={togglePast} aria-pressed={showPast}
+            aria-label={showPast ? 'Masquer les jours précédents' : 'Voir les jours précédents (semaine dernière)'}>
+            {showPast && !past && !pastErr ? <span className="spinner small" /> : <Icon name="chevron" size={18} />}
+          </button>
           <div className="day-strip" ref={stripRef} role="tablist" aria-label="Jour">
             {days.map((d) => {
               const week = mondayOf(d.due)
@@ -93,36 +135,14 @@ export function Devoirs() {
               )
             })}
           </div>
+          </div>
+          {pastErr && showPast && <p className="muted small">{pastErr}</p>}
 
+          <div className="swipe-area" {...swipe}>
           <header className="day-head">
-            <h2>
-              <button className={`past-toggle ${showPast ? 'on' : ''}`} onClick={() => setShowPast(!showPast)} aria-expanded={showPast} aria-controls="past-week"
-                aria-label={showPast ? 'Fermer les devoirs de la semaine dernière' : 'Voir les devoirs de la semaine dernière'}>
-                <Icon name="chevron" size={16} />
-              </button>
-              {formatDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}
-            </h2>
+            <h2>{formatDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
             <span>{current ? (current.left === 0 ? 'Tout est fait' : `${current.left} à faire sur ${current.total}`) : ''}</span>
           </header>
-
-          {showPast && (
-            <section id="past-week" className="past-week">
-              <h3>Semaine dernière</h3>
-              {pastErr ? <p className="muted small">{pastErr}</p> : !past ? <div className="spinner" /> : past.length === 0 ? <p className="muted small">Aucun devoir la semaine dernière</p> : (
-                <ul className="list">
-                  {past.map((h) => (
-                    <li key={`${h.due}-${h.id}`} className="done">
-                      <a href={`#/devoirs/${h.id}`} className="grow hw-open">
-                        <strong>{h.subject}{h.files?.length ? <Icon name="clip" size={14} /> : null}</strong>
-                        <small className="clamp">{formatDate(h.due, { weekday: 'short', day: 'numeric' })} · {h.title}</small>
-                      </a>
-                      <Icon name="chevron" size={16} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
 
           {list.length === 0 ? <Empty>Aucun devoir ce jour-là</Empty> : (
             <ul className="list" key={day}>
@@ -141,6 +161,7 @@ export function Devoirs() {
               ))}
             </ul>
           )}
+          </div>
         </>
       )}
     </>
