@@ -12,7 +12,7 @@ export function Sheet({ open, title, onClose, children, light }: { open: boolean
     if (open) { setShown(true); setClosing(false); return }
     if (!shown) return
     setClosing(true)
-    const t = window.setTimeout(() => { setShown(false); setClosing(false) }, 150)
+    const t = window.setTimeout(() => { setShown(false); setClosing(false) }, 180)
     return () => window.clearTimeout(t)
   }, [open, shown])
   useEffect(() => {
@@ -23,6 +23,7 @@ export function Sheet({ open, title, onClose, children, light }: { open: boolean
   }, [open, onClose])
   // Glisser la poignée : on suit le doigt ; lâcher loin ou vite vers le bas ferme, sinon ça remonte.
   const sheetRef = useRef<HTMLElement>(null)
+  const frame = useRef(0)
   const drag = useRef<{ y: number; t: number; lastY: number; lastT: number; v: number } | null>(null)
   const setY = (y: number, anim: boolean) => {
     const el = sheetRef.current
@@ -38,8 +39,9 @@ export function Sheet({ open, title, onClose, children, light }: { open: boolean
     const d = drag.current
     if (!d) return
     const dy = e.clientY - d.y
-    // Vers le haut : petite résistance seulement.
-    setY(dy > 0 ? dy : dy / 6, false)
+    // Vers le haut : petite résistance seulement. Une mise à jour par image (60/120 Hz).
+    cancelAnimationFrame(frame.current)
+    frame.current = requestAnimationFrame(() => setY(dy > 0 ? dy : dy / 6, false))
     const dt = e.timeStamp - d.lastT
     if (dt > 0) d.v = 0.6 * ((e.clientY - d.lastY) / dt) + 0.4 * d.v // vitesse lissée (px/ms)
     d.lastY = e.clientY; d.lastT = e.timeStamp
@@ -47,6 +49,7 @@ export function Sheet({ open, title, onClose, children, light }: { open: boolean
   const onUp = (e: React.PointerEvent) => {
     const d = drag.current
     drag.current = null
+    cancelAnimationFrame(frame.current)
     if (!d) return
     const dy = e.clientY - d.y
     // Vitesse au lâcher ; si le doigt s'est arrêté avant de lâcher, elle ne compte plus.

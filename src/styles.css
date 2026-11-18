@@ -1086,8 +1086,8 @@ input, select, textarea { font-size: max(16px, 1em); }
 .gd-comment { margin: 12px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--fill); font-size: 15px; line-height: 1.5; }
 
 /* Fermeture rapide des panneaux */
-.sheet-wrap.closing .sheet { animation: sheet-out .15s cubic-bezier(.4,0,1,1) both; }
-.sheet-wrap.closing .sheet-backdrop { animation: fade-out .15s ease-in both; }
+.sheet-wrap.closing .sheet { animation: sheet-out .18s cubic-bezier(.32,.72,0,1) both; }
+.sheet-wrap.closing .sheet-backdrop { animation: fade-out .18s ease-out both; }
 @keyframes sheet-out { to { transform: translateY(100%); } }
 @keyframes fade-out { to { opacity: 0; } }
 /* Cours annulé / rétabli : changement en douceur */
@@ -1099,3 +1099,6 @@ input, select, textarea { font-size: max(16px, 1em); }
 /* Poignée des panneaux : zone de prise plus large, glisser pour fermer */
 .sheet-handle { margin: -10px -20px 0; padding: 10px 20px 4px; touch-action: none; cursor: grab; position: sticky; top: -10px; z-index: 1; background: inherit; }
 .sheet-handle .sheet-grab { margin-bottom: 10px; }
+
+.sheet { backface-visibility: hidden; transform: translateZ(0); contain: layout paint; }
+.sheet-backdrop { will-change: opacity; }
