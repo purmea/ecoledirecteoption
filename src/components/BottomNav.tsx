@@ -9,7 +9,7 @@ const items: { route: Route; label: string; icon: IconName }[] = [
   { route: 'planning', label: 'Planning', icon: 'calendar' },
   { route: 'devoirs', label: 'Devoirs', icon: 'book' },
   { route: 'messages', label: 'Messages', icon: 'mail' },
-  { route: 'profil', label: 'Profil', icon: 'user' },
+  { route: 'profil', label: 'Réglages', icon: 'user' },
 ]
 
 export function BottomNav({ current, badges }: { current: Route; badges: Partial<Record<Route, number>> }) {

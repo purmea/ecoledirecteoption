@@ -51,6 +51,8 @@ export interface Homework {
   due: string // ISO
   done: boolean
   test?: boolean
+  /** Pièces jointes du cahier de texte */
+  files?: { id: number; name: string; size?: number }[]
 }
 
 export interface Message {

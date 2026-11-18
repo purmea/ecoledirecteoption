@@ -976,3 +976,23 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .ed { touch-action: pan-y; }
 .ed-swap[data-dir='1'] { animation: page-in-r 0.55s var(--spring-soft) backwards; }
 .ed-swap[data-dir='-1'] { animation: page-in-l 0.55s var(--spring-soft) backwards; }
+
+/* Tableau des notes par matière */
+.grades-table-wrap { padding: 4px 0; overflow-x: auto; }
+.grades-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.grades-table th, .grades-table td { padding: 11px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid color-mix(in srgb, currentColor 9%, transparent); }
+.grades-table tr:last-child > * { border-bottom: 0; }
+.grades-table thead th { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; opacity: .55; }
+.grades-table tbody th { font-weight: 600; min-width: 92px; }
+.grades-table .gt-avg { font-weight: 700; color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.gt-notes { display: flex; flex-wrap: wrap; gap: 6px; }
+.gt-note { padding: 3px 8px; border-radius: 8px; background: color-mix(in srgb, currentColor 8%, transparent); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gt-note small { opacity: .6; font-weight: 500; }
+.gt-note sup { opacity: .6; font-size: 10px; margin-left: 2px; }
+
+/* Devoir en plein écran */
+.hw-open { color: inherit; text-decoration: none; min-width: 0; }
+.hw-view .status { display: inline-block; margin-bottom: 8px; }
+.hw-view .msg-files li { list-style: none; }
+.hw-view .msg-files .row-action { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; }
+.hw-view .btn { width: 100%; margin-top: 20px; }

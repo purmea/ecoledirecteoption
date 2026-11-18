@@ -47,6 +47,30 @@ export function Notes() {
             <TrendChart points={timeline} label="Évolution de la moyenne générale" tone={tone} />
           </section>
 
+          <SectionTitle>Toutes les notes</SectionTitle>
+          <div className="block grades-table-wrap">
+            <table className="grades-table">
+              <thead><tr><th scope="col">Matière</th><th scope="col">Moy.</th><th scope="col">Notes</th></tr></thead>
+              <tbody>
+                {subjects.map((s) => (
+                  <tr key={s.subject}>
+                    <th scope="row">{s.subject}</th>
+                    <td className="gt-avg">{fmt(s.average)}</td>
+                    <td>
+                      <span className="gt-notes">
+                        {[...s.items].reverse().map((g) => (
+                          <span key={g.id} className="gt-note" title={`${g.label} · ${g.date}`}>
+                            {fmt(g.value)}{g.outOf !== 20 && <small>/{g.outOf}</small>}{g.coef !== 1 && <sup>({g.coef})</sup>}
+                          </span>
+                        ))}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
           <SectionTitle meta={
             subjects.some((s) => s.classAverage !== null) && (
               <span className="legend" aria-hidden="true">

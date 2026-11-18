@@ -1,7 +1,7 @@
 // Connexion et récupération des données École Directe, converties au format de l'app.
 // Référence (non officielle) : https://github.com/EduWireApps/ecoledirecte-api-docs
 import type { Grade, Homework, Incident, Lesson, Message, MessageDetail, Period, SchoolData, Student } from '../types'
-import { b64decode, edRequest } from './client'
+import { b64decode, edRequest, proxySession } from './client'
 
 export interface Account {
   id: number
@@ -197,7 +197,7 @@ export async function fetchLessonsFor(s: Session, monday: Date) {
 }
 
 type RawHomeworkList = Record<string, { matiere: string; idDevoir: number; effectue: boolean; interrogation: boolean }[]>
-interface RawHomeworkDay { matieres?: { id: number; aFaire?: { contenu?: string } }[] }
+interface RawHomeworkDay { matieres?: { id: number; aFaire?: { contenu?: string; documents?: { id: number; libelle?: string; taille?: number }[] } }[] }
 
 async function fetchHomework(s: Session) {
   const r = await edRequest<RawHomeworkList>(`/v3/Eleves/${s.account.id}/cahierdetexte.awp`, {}, { token: s.token, twoFa: s.twoFa })
@@ -206,12 +206,15 @@ async function fetchHomework(s: Session) {
 
   // Le détail (consigne) est dans une route par jour ; on la récupère pour les 14 prochains jours de devoirs.
   const details = new Map<number, string>()
+  const docs = new Map<number, { id: number; name: string; size?: number }[]>()
   await Promise.all(dates.map(async (date) => {
     try {
       const d = await edRequest<RawHomeworkDay>(`/v3/Eleves/${s.account.id}/cahierdetexte/${date}.awp`, {}, { token: r.token ?? s.token, twoFa: s.twoFa })
       for (const m of d.data.matieres ?? []) {
         const txt = m.aFaire?.contenu ? htmlToText(b64decode(m.aFaire.contenu)) : ''
         if (txt) details.set(m.id, txt)
+        const f = (m.aFaire?.documents ?? []).map((d) => ({ id: d.id, name: d.libelle || 'Pièce jointe', size: d.taille }))
+        if (f.length) docs.set(m.id, f)
       }
     } catch { /* on garde le titre générique */ }
   }))
@@ -224,6 +227,7 @@ async function fetchHomework(s: Session) {
       due,
       done: h.effectue,
       test: h.interrogation,
+      files: docs.get(h.idDevoir),
     })))
   return { homework, token: r.token }
 }
@@ -386,4 +390,17 @@ export async function fetchMessageDetail(s: Session, id: string): Promise<Messag
     body: messageBody(d.content),
     files,
   }
+}
+
+/** Télécharge une pièce jointe (cahier de texte : FICHIER_CDT, message : PIECE_JOINTE). */
+export async function downloadFile(s: Session, id: number, type: 'FICHIER_CDT' | 'PIECE_JOINTE' = 'FICHIER_CDT'): Promise<Blob> {
+  const q = new URLSearchParams({ fichierId: String(id), leTypeDeFichier: type })
+  const res = await fetch(`./api/ed?p=${encodeURIComponent('v3/telechargement.awp')}&${q}&verbe=get`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Session': proxySession(), 'X-Token': s.token, ...(s.twoFa ? { '2FA-Token': s.twoFa } : {}) },
+    body: 'data=' + encodeURIComponent(JSON.stringify({ forceDownload: 0 })),
+  })
+  const ct = res.headers.get('Content-Type') ?? ''
+  if (!res.ok || ct.includes('application/json')) throw new Error('Téléchargement impossible.')
+  return res.blob()
 }

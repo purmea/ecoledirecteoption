@@ -3,6 +3,9 @@ import { useData } from '../state/session'
 import { useHomeworkCheck } from '../hooks/useHomeworkCheck'
 import { formatDate } from '../lib'
 import { Empty, PageHeader } from '../components/ui'
+import { Icon } from '../components/Icon'
+import { useSession } from '../state/session'
+import { toast } from '../fx'
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const mondayOf = (isoDate: string) => {
@@ -81,10 +84,11 @@ export function Devoirs() {
                     aria-label={h.done ? 'Marquer comme à faire' : 'Marquer comme fait'} aria-pressed={h.done}>
                     <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength={1} /></svg>
                   </button>
-                  <div className="grow">
-                    <strong>{h.subject}{h.test && <span className="status">Éval</span>}</strong>
+                  <a href={`#/devoirs/${h.id}`} className="grow hw-open">
+                    <strong>{h.subject}{h.test && <span className="status">Éval</span>}{h.files?.length ? <Icon name="clip" size={14} /> : null}</strong>
                     <small className="clamp">{h.title}</small>
-                  </div>
+                  </a>
+                  <Icon name="chevron" size={16} />
                 </li>
               ))}
             </ul>
@@ -92,5 +96,45 @@ export function Devoirs() {
         </>
       )}
     </>
+  )
+}
+
+/** Détail d'un devoir en plein écran : consigne complète et pièces jointes. */
+export function DevoirView({ id }: { id: string }) {
+  const { homework } = useData()
+  const { download } = useSession()
+  const onCheck = useHomeworkCheck()
+  const [busy, setBusy] = useState<number | null>(null)
+  const h = homework.find((x) => x.id === id)
+  if (!h) return (<><a href="#/devoirs" className="back"><Icon name="chevron" size={16} />Devoirs</a><Empty>Devoir introuvable</Empty></>)
+  return (
+    <article className="hw-view">
+      <a href="#/devoirs" className="back"><Icon name="chevron" size={16} />Devoirs</a>
+      <PageHeader title={h.subject} subtitle={`Pour ${formatDate(h.due, { weekday: 'long', day: 'numeric', month: 'long' })}`} />
+      {h.test && <span className="status">Évaluation</span>}
+      <div className="msg-body">{h.title}</div>
+      {!!h.files?.length && (
+        <div className="msg-files">
+          <h2>Pièces jointes</h2>
+          <ul>
+            {h.files.map((f) => (
+              <li key={f.id}>
+                <button className="row-action" disabled={busy === f.id} onClick={async () => {
+                  setBusy(f.id)
+                  try { await download(f.id, f.name) } catch (e) { toast(e instanceof Error ? e.message : 'Téléchargement impossible') }
+                  setBusy(null)
+                }}>
+                  <Icon name="clip" size={14} /> {busy === f.id ? 'Ouverture…' : f.name}
+                  {f.size ? <small>{Math.max(1, Math.round(f.size / 1024))} Ko</small> : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <button className={`btn ${h.done ? 'ghost' : 'primary'}`} onClick={() => onCheck(h.id, h.due, h.done)}>
+        {h.done ? 'Marquer comme à faire' : 'Marquer comme fait'}
+      </button>
+    </article>
   )
 }

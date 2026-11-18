@@ -128,6 +128,15 @@ export function edProxy(prefix = '/ed') {
       url.searchParams.set('v', ED_VERSION)
       const upstream = await fetch(`${ED_ORIGIN}${url.pathname}${url.search}`, { method: 'POST', headers, body })
       storeCookies(jar, upstream)
+      if (url.pathname === '/v3/telechargement.awp') {
+        const ct = upstream.headers.get('content-type') ?? 'application/octet-stream'
+        const buf = Buffer.from(await upstream.arrayBuffer())
+        console.log(`[ed] téléchargement → HTTP ${upstream.status}, ${buf.length} o`)
+        res.statusCode = upstream.ok ? 200 : 502
+        res.setHeader('Content-Type', ct)
+        res.setHeader('Cache-Control', 'no-store')
+        return res.end(buf)
+      }
       const text = await upstream.text()
       // Journal sans données sensibles : route, statut HTTP et code École Directe.
       const edCode = /"code"\s*:\s*(\d+)/.exec(text)?.[1] ?? '?'

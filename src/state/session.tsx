@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { demoData, demoMessageDetails } from '../data/demo'
 import { applyEdits, EMPTY_PLAN, reducePlan, type PlanAction, type PlanEdits } from '../planning/edits'
 import type { Lesson, MessageDetail, SchoolData } from '../types'
-import { displayedMonday, fetchAll, fetchLessonsFor, fetchMessageDetail, isoDate, login as edLogin, answerQcm, setHomeworkDone, type DeviceTrust, type Qcm, type Session } from '../api/ecoledirecte'
+import { downloadFile as edDownload, displayedMonday, fetchAll, fetchLessonsFor, fetchMessageDetail, isoDate, login as edLogin, answerQcm, setHomeworkDone, type DeviceTrust, type Qcm, type Session } from '../api/ecoledirecte'
 import { isAuthError } from '../api/client'
 
 const SESSION_KEY = 'edo:session'
@@ -34,6 +34,7 @@ interface Ctx {
   loadWeek: (offset: number) => Promise<{ lessons: Lesson[]; monday: string }>
   /** Ouvre un message (le marque comme lu, ici et sur École Directe). */
   openMessage: (id: string) => Promise<MessageDetail>
+  download: (id: number, name: string) => Promise<void>
   messageMeta: MessageMeta
   /** Modifications de l'emploi du temps faites dans l'app (locales à l'appareil). */
   planEdits: PlanEdits
@@ -308,6 +309,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return detail
   }, [mode])
 
+  const download = useCallback(async (id: number, name: string) => {
+    if (mode === 'demo' || !session.current) throw new Error('Pas de pièce jointe en mode démo.')
+    const blob = await edDownload(session.current.session, id)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = name
+    // Sur iPhone, ouvrir dans un nouvel onglet affiche l'aperçu (PDF, image).
+    if (/iP(hone|ad)/.test(navigator.userAgent)) a.target = '_blank'
+    document.body.append(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  }, [mode])
+
   // Un jour passé = devoirs faits : ceux dont la date est dépassée apparaissent cochés (affichage seulement, rien n'est envoyé à l'école).
   const shown = useMemo(() => {
     if (!data) return data
@@ -317,9 +333,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [data])
 
   const value = useMemo<Ctx>(() => ({
-    status, mode, data: shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, planEdits, editPlan, applyPlan,
+    status, mode, data: shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, download, messageMeta, messageAction, planEdits, editPlan, applyPlan,
     signIn, submitQcm, cancelQcm: () => setPendingQcm(null), startDemo, signOut, refresh, toggleHomework,
-  }), [status, mode, shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, messageMeta, messageAction, planEdits, editPlan, applyPlan, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
+  }), [status, mode, shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, download, messageMeta, messageAction, planEdits, editPlan, applyPlan, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }
