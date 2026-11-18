@@ -97,10 +97,16 @@ export function Devoirs() {
     },
   }
 
-  // Garde le jour choisi visible dans la barre
-  useEffect(() => {
-    stripRef.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: lastDay === day ? 'instant' : 'smooth' })
-  }, [day])
+  // Jour choisi au centre de la barre (sauf aux extrémités, où la barre ne peut pas aller plus loin).
+  const centre = (smooth: boolean) => {
+    const strip = stripRef.current
+    const chip = strip?.querySelector<HTMLElement>('[aria-selected="true"]')
+    if (!strip || !chip) return
+    const left = chip.offsetLeft - (strip.clientWidth - chip.offsetWidth) / 2
+    strip.scrollTo({ left: Math.max(0, left), behavior: smooth ? 'smooth' : 'auto' })
+  }
+  const first = useRef(true)
+  useEffect(() => { centre(!first.current); first.current = false }, [day, days.length])
 
   const list = homework.filter((h) => h.due === day)
   const total = homework.length
@@ -116,6 +122,10 @@ export function Devoirs() {
         <>
           <div className="day-strip-row">
           <div className="day-strip" ref={stripRef} role="tablist" aria-label="Jour">
+              <button className={`past-toggle strip-arrow ${showPast ? 'on' : ''}`} onClick={togglePast} aria-pressed={showPast}
+                aria-label={showPast ? 'Masquer les jours précédents' : 'Voir les jours précédents (semaine dernière)'}>
+                {showPast && !past && !pastErr ? <span className="spinner small" /> : <Icon name="chevron" size={18} />}
+              </button>
             {days.map((d) => {
               const week = mondayOf(d.due)
               const newWeek = lastWeek && week !== lastWeek
@@ -136,13 +146,7 @@ export function Devoirs() {
 
           <div className="swipe-area" {...swipe}>
           <header className="day-head">
-            <h2>
-              <button className={`past-toggle ${showPast ? 'on' : ''}`} onClick={togglePast} aria-pressed={showPast}
-                aria-label={showPast ? 'Masquer les jours précédents' : 'Voir les jours précédents (semaine dernière)'}>
-                {showPast && !past && !pastErr ? <span className="spinner small" /> : <Icon name="chevron" size={18} />}
-              </button>
-              {formatDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}
-            </h2>
+            <h2>{formatDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
             <span>{current ? (current.left === 0 ? 'Tout est fait' : `${current.left} à faire sur ${current.total}`) : ''}</span>
           </header>
 

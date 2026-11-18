@@ -748,9 +748,9 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .chart[data-tone='down'] .series-dot { fill: var(--bad); }
 
 /* Devoirs : barre de jours (comme le planning) */
-.day-strip { display: flex; gap: 6px; margin: 0 calc(var(--gutter) * -1) 4px; padding: 4px var(--gutter) 10px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+.day-strip { display: flex; gap: 6px; margin: 0 calc(var(--gutter) * -1) 4px; padding: 4px var(--gutter) 10px; overflow-x: auto; scrollbar-width: none; }
 .day-strip::-webkit-scrollbar { display: none; }
-.day-chip { flex: 1 0 58px; display: grid; justify-items: center; gap: 2px; padding: 9px 0 8px; border: 0; border-radius: 16px; background: var(--fill); color: var(--muted); scroll-snap-align: center; transition: background 0.3s, color 0.3s, transform 0.5s var(--spring); }
+.day-chip { flex: 1 0 58px; display: grid; justify-items: center; gap: 2px; padding: 9px 0 8px; border: 0; border-radius: 16px; background: var(--fill); color: var(--muted); transition: background 0.3s, color 0.3s, transform 0.5s var(--spring); }
 .day-chip.new-week { margin-left: 10px; }
 .day-chip:active { transform: scale(0.94); }
 .dc-name { font-size: 12px; font-weight: 600; text-transform: capitalize; }
@@ -1040,11 +1040,13 @@ input, select, textarea { font-size: max(16px, 1em); }
 .day-strip-row .day-strip { flex: 1; min-width: 0; }
 .day-strip-row .past-toggle { flex: none; width: 36px; height: 64px; border-radius: 14px; transform: rotate(180deg); }
 .day-strip-row .past-toggle.on { transform: none; }
-.day-strip { scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x; }
-.day-chip { scroll-snap-align: center; }
+.day-strip { position: relative; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
 .swipe-area { touch-action: pan-y; min-height: 50vh; }
 .spinner.small { width: 16px; height: 16px; }
 
 /* Flèche « jours précédents » à côté de la date du jour */
 .day-head .past-toggle { width: 30px; height: 30px; transform: rotate(180deg); flex: none; }
 .day-head .past-toggle.on { transform: none; }
+
+.day-strip .strip-arrow { flex: none; align-self: stretch; width: 38px; height: auto; border-radius: 14px; transform: rotate(180deg); }
+.day-strip .strip-arrow.on { transform: none; }
