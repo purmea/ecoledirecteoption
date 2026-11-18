@@ -1102,3 +1102,8 @@ input, select, textarea { font-size: max(16px, 1em); }
 
 .sheet { backface-visibility: hidden; transform: translateZ(0); contain: layout paint; }
 .sheet-backdrop { will-change: opacity; }
+
+/* Poignée : zone de prise bien plus grande (invisible) et barre plus épaisse */
+.sheet-handle { padding: 12px 20px 14px; min-height: 44px; display: grid; place-items: center; }
+.sheet-handle::before { content: ''; position: absolute; inset: -12px 0 -18px; }
+.sheet-handle .sheet-grab { width: 48px; height: 6px; border-radius: 3px; margin: 0; background: color-mix(in srgb, var(--text) 35%, transparent); }
