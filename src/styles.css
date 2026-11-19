@@ -1114,3 +1114,6 @@ input, select, textarea { font-size: max(16px, 1em); }
 .streak b { font-size: 15px; font-weight: 800; color: #ff9500; font-variant-numeric: tabular-nums; }
 .streak.off { opacity: .45; }
 .streak.off b { color: var(--muted); }
+
+.avg-line { display: flex; align-items: center; gap: 14px; }
+.avg-line .streak b { font-size: 22px; }

@@ -46,8 +46,8 @@ export function Notes() {
       {list.length === 0 ? <Empty>Aucune note sur cette période</Empty> : (
         <div className="swap-in" key={period}>
           <section className="block">
-            <span className="eyebrow avg-head">Moyenne générale<Streak count={streak} /></span>
-            <strong className={`big ${tone ? `trend-${tone}` : ''}`}>{avg !== null ? <CountUp value={avg} /> : '—'}<small>/20</small></strong>
+            <span className="eyebrow">Moyenne générale</span>
+            <div className="avg-line"><strong className={`big ${tone ? `trend-${tone}` : ''}`}>{avg !== null ? <CountUp value={avg} /> : '—'}<small>/20</small></strong><Streak count={streak} /></div>
             {delta !== null && tone && (
               <span className={`trend-note trend-${tone}`}>
                 <i aria-hidden="true">{tone === 'up' ? '▲' : '▼'}</i>{tone === 'up' ? '+' : '−'}{fmt(Math.abs(delta))} depuis la dernière note
