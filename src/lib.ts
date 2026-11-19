@@ -87,3 +87,19 @@ export function homeworkForTomorrow(homework: { due: string; done: boolean }[], 
   const next = homework.filter((h) => h.due > today).map((h) => h.due).sort()[0]
   return next ? homework.filter((h) => !h.done && h.due === next).length : 0
 }
+
+/** Série en cours : nombre de dernières notes d'affilée qui ont fait monter la moyenne générale (une note qui la fait baisser remet à 0). */
+export function gradeStreak(list: Grade[]) {
+  const sorted = [...list].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id))
+  let streak = 0
+  let prev: number | null = null
+  for (let i = 0; i < sorted.length; i++) {
+    const avg = generalAverage(sorted.slice(0, i + 1))
+    if (prev !== null && avg !== null) {
+      if (avg > prev + 1e-9) streak++
+      else if (avg < prev - 1e-9) streak = 0
+    }
+    prev = avg
+  }
+  return streak
+}

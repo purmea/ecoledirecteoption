@@ -1107,3 +1107,10 @@ input, select, textarea { font-size: max(16px, 1em); }
 .sheet-handle { padding: 12px 20px 14px; min-height: 44px; display: grid; place-items: center; }
 .sheet-handle::before { content: ''; position: absolute; inset: -12px 0 -18px; }
 .sheet-handle .sheet-grab { width: 48px; height: 6px; border-radius: 3px; margin: 0; background: color-mix(in srgb, var(--text) 35%, transparent); }
+
+/* Série (flamme) */
+.avg-head { display: flex; align-items: center; justify-content: space-between; }
+.streak { display: inline-flex; align-items: center; gap: 5px; text-transform: none; letter-spacing: 0; }
+.streak b { font-size: 15px; font-weight: 800; color: #ff9500; font-variant-numeric: tabular-nums; }
+.streak.off { opacity: .45; }
+.streak.off b { color: var(--muted); }
