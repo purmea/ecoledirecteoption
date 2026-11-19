@@ -849,14 +849,19 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .grades-table th.date { width: 1%; }
 .grades-table td.num { width: 1%; }
 
-/* Série de notes qui font monter la moyenne */
+/* Série de notes qui font monter la moyenne : logo flamme dans un rond stylisé */
 .block { position: relative; }
-.streak { position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 8px; }
-.streak-ring { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff4a5c, #e5102e 62%, #b3081f); box-shadow: 0 0 0 3px color-mix(in srgb, #e5102e 28%, transparent), 0 4px 14px rgb(229 16 46 / 0.45); }
-.streak-ring svg { filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35)); animation: flame-flicker 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
-.streak strong { min-width: 1ch; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; animation: pop-in 0.55s var(--spring) both; }
-.streak.zero .streak-ring { box-shadow: none; filter: saturate(0.55); }
-.streak.zero .streak-ring svg { animation: none; opacity: 0.6; }
+.streak { position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 10px; }
+.streak-ring {
+  position: relative; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 38%, #ff4a3d 0%, #e5102e 55%, #a30a1e 100%);
+  box-shadow: 0 0 0 2.5px #ff9a1f, 0 0 0 5px rgb(229 16 46 / 0.3), 0 6px 18px rgb(229 16 46 / 0.5), inset 0 1px 2px rgb(255 255 255 / 0.45);
+}
+.streak-ring::after { content: ''; position: absolute; top: 4px; left: 9px; width: 18px; height: 9px; border-radius: 50%; background: linear-gradient(rgb(255 255 255 / 0.4), transparent); transform: rotate(-24deg); }
+.streak-flame { font-size: 26px; line-height: 1; transform-origin: 50% 90%; animation: flame-flicker 2.4s ease-in-out infinite; filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35)); }
+.streak strong { min-width: 1ch; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; animation: pop-in 0.55s var(--spring) both; }
+.streak.zero .streak-ring { box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--muted) 60%, transparent); filter: saturate(0.4) brightness(0.9); }
+.streak.zero .streak-flame { animation: none; filter: grayscale(1); opacity: 0.55; }
 .streak.zero strong { color: var(--muted); }
-@keyframes flame-flicker { 0%, 100% { transform: scale(1) rotate(0); } 30% { transform: scale(1.06, 1.1) rotate(-2deg); } 60% { transform: scale(0.97, 1.03) rotate(2deg); } }
-@media (prefers-reduced-motion: reduce) { .streak-ring svg, .streak strong { animation: none; } }
+@keyframes flame-flicker { 0%, 100% { transform: scale(1) rotate(0); } 30% { transform: scale(1.07, 1.12) rotate(-3deg); } 60% { transform: scale(0.97, 1.03) rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { .streak-flame, .streak strong { animation: none; } }

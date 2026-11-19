@@ -139,8 +139,6 @@ server/
 
 [MIT](LICENSE)
 
-Icône de la flamme : [Lucide](https://lucide.dev) (licence ISC).
-
 ## Contact
 
 **@mea et @sofki** · [@purmea](https://github.com/purmea) · [shawtybae@atomicmail.io](mailto:shawtybae@atomicmail.io)
