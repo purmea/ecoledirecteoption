@@ -848,3 +848,15 @@ small { display: block; font-size: 13px; color: var(--muted); }
 .grades-table th:last-child, .grades-table td:last-child { padding-right: 14px; }
 .grades-table th.date { width: 1%; }
 .grades-table td.num { width: 1%; }
+
+/* Série de notes qui font monter la moyenne */
+.block { position: relative; }
+.streak { position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 8px; }
+.streak-ring { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff4a5c, #e5102e 62%, #b3081f); box-shadow: 0 0 0 3px color-mix(in srgb, #e5102e 28%, transparent), 0 4px 14px rgb(229 16 46 / 0.45); }
+.streak-ring svg { filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35)); animation: flame-flicker 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
+.streak strong { min-width: 1ch; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; animation: pop-in 0.55s var(--spring) both; }
+.streak.zero .streak-ring { box-shadow: none; filter: saturate(0.55); }
+.streak.zero .streak-ring svg { animation: none; opacity: 0.6; }
+.streak.zero strong { color: var(--muted); }
+@keyframes flame-flicker { 0%, 100% { transform: scale(1) rotate(0); } 30% { transform: scale(1.06, 1.1) rotate(-2deg); } 60% { transform: scale(0.97, 1.03) rotate(2deg); } }
+@media (prefers-reduced-motion: reduce) { .streak-ring svg, .streak strong { animation: none; } }

@@ -87,3 +87,23 @@ export function homeworkForTomorrow(homework: { due: string; done: boolean }[], 
   const tomorrow = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
   return homework.filter((h) => !h.done && h.due === tomorrow).length
 }
+
+/**
+ * Série : combien de notes d'affilée (les plus récentes) ont fait monter la moyenne générale.
+ * Une note qui la fait baisser remet la série à 0 ; une note sans effet ne la change pas.
+ */
+export function improvementStreak(list: Grade[]) {
+  const sorted = [...list].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id, undefined, { numeric: true }))
+  let streak = 0
+  let prev: number | null = null
+  for (let i = 0; i < sorted.length; i++) {
+    const now = generalAverage(sorted.slice(0, i + 1))
+    if (prev !== null && now !== null) {
+      const d = now - prev
+      if (d > 0.004) streak++
+      else if (d < -0.004) streak = 0
+    }
+    prev = now
+  }
+  return streak
+}

@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../state/session'
-import { averageTimeline, fmt, formatDate, generalAverage, groupBySubject, periodShort } from '../lib'
+import { averageTimeline, fmt, formatDate, generalAverage, groupBySubject, improvementStreak, periodShort } from '../lib'
 import { Empty, PageHeader, SectionTitle, Segmented } from '../components/ui'
 import { SubjectBars, TrendChart } from '../components/charts'
 import { Simulator } from '../components/Simulator'
+import { Streak } from '../components/Streak'
 import { CountUp } from '../fx'
 
 const ALL = 'all'
@@ -23,6 +24,7 @@ export function Notes() {
   const subjects = groupBySubject(list).sort((a, b) => a.subject.localeCompare(b.subject, 'fr'))
   const avg = generalAverage(list)
   const timeline = averageTimeline(list)
+  const streak = improvementStreak(list)
   // Évolution de la moyenne avec la dernière note : vert si elle monte, rouge si elle baisse (onglet Notes uniquement).
   const delta = timeline.length > 1 ? timeline[timeline.length - 1].value - timeline[timeline.length - 2].value : null
   const tone = delta === null || Math.abs(delta) < 0.005 ? undefined : delta > 0 ? 'up' : 'down'
@@ -37,6 +39,7 @@ export function Notes() {
       {list.length === 0 ? <Empty>Aucune note sur cette période</Empty> : (
         <div className="swap-in" key={period}>
           <section className="block">
+            <Streak count={streak} />
             <span className="eyebrow">Moyenne générale</span>
             <strong className={`big ${tone ? `trend-${tone}` : ''}`}>{avg !== null ? <CountUp value={avg} /> : '—'}<small>/20</small></strong>
             {delta !== null && tone && (
