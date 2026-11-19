@@ -9,15 +9,20 @@ const items: { route: Route; label: string; icon: IconName }[] = [
   { route: 'planning', label: 'Planning', icon: 'calendar' },
   { route: 'devoirs', label: 'Devoirs', icon: 'book' },
   { route: 'messages', label: 'Messages', icon: 'mail' },
+  // Réglages : visible seulement quand on y est (accès depuis le menu de l'emploi du temps).
+  { route: 'profil', label: 'Réglages', icon: 'gear' },
 ]
 
 export function BottomNav({ current, badges }: { current: Route; badges: Partial<Record<Route, number>> }) {
+  const inSettings = current === 'profil' || current === 'reglages'
+  const n = inSettings ? items.length : items.length - 1
   const active = Math.max(0, items.findIndex((it) => it.route === current || (it.route === 'profil' && current === 'reglages')))
   return (
-    <nav className="nav" aria-label="Navigation principale" style={{ '--n': items.length, '--i': active } as CSSProperties}>
+    <nav className="nav" aria-label="Navigation principale" style={{ '--n': n, '--i': active } as CSSProperties}>
       <span className="nav-pill" aria-hidden="true" />
       {items.map((it) => (
-        <a key={it.route} href={`#/${it.route}`} className="nav-item" onClick={() => haptic(6)}
+        <a key={it.route} href={`#/${it.route}`} className={`nav-item ${it.route === 'profil' ? `nav-extra ${inSettings ? 'in' : ''}` : ''}`}
+          aria-hidden={it.route === 'profil' && !inSettings ? true : undefined} tabIndex={it.route === 'profil' && !inSettings ? -1 : undefined} onClick={() => haptic(6)}
           aria-current={current === it.route || (it.route === 'profil' && current === 'reglages') ? 'page' : undefined}>
           <span className="nav-icon">
             <Icon name={it.icon} />

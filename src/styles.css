@@ -1117,3 +1117,9 @@ input, select, textarea { font-size: max(16px, 1em); }
 
 .avg-line { display: flex; align-items: center; gap: 14px; }
 .avg-line .streak b { font-size: 22px; }
+
+/* Onglet Réglages dans la barre du bas : n'apparaît que dans les réglages, les autres se recentrent */
+.nav-item { transition: flex-grow .38s cubic-bezier(.2,.9,.25,1), opacity .25s, transform .38s cubic-bezier(.2,.9,.25,1); min-width: 0; overflow: hidden; }
+.nav-extra { flex-grow: 0; flex-basis: 0; opacity: 0; transform: scale(.6); pointer-events: none; }
+.nav-extra.in { flex-grow: 1; opacity: 1; transform: none; pointer-events: auto; }
+.nav-pill { transition: left .45s var(--spring), width .38s cubic-bezier(.2,.9,.25,1); }

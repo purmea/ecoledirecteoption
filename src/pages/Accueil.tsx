@@ -1,6 +1,5 @@
 import { useData, useSession } from '../state/session'
-import { averageTimeline, fmt, formatDate, generalAverage, gradeStreak, greeting } from '../lib'
-import { Streak } from '../components/Streak'
+import { averageTimeline, fmt, formatDate, generalAverage, greeting } from '../lib'
 import { Empty, SectionTitle } from '../components/ui'
 import { Sparkline } from '../components/charts'
 import { Avatar, useMyProfile } from '../profile/useMyProfile'
@@ -41,10 +40,7 @@ export function Accueil() {
       <a href="#/notes" className="hero">
         <div>
           <span className="eyebrow">Moyenne générale</span>
-          <div className="avg-line">
-            <strong className="big">{avg !== null ? <CountUp value={avg} /> : '—'}<small>/20</small></strong>
-            <Streak count={gradeStreak(periodGrades)} />
-          </div>
+          <strong className="big">{avg !== null ? <CountUp value={avg} /> : '—'}<small>/20</small></strong>
           {delta !== null && Math.abs(delta) >= 0.01 && (
             <span className="delta">
               {delta > 0 ? '+' : '−'}{fmt(Math.abs(delta))} depuis la dernière note
