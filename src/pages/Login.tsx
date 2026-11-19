@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
-import { useSession } from '../state/session'
+import { LAST_ID_KEY, useSession } from '../state/session'
 
 export function Login() {
   const { signIn, startDemo, error, pendingQcm, submitQcm, cancelQcm } = useSession()
-  const [identifiant, setIdentifiant] = useState('')
+  const [identifiant, setIdentifiant] = useState(() => { try { return JSON.parse(localStorage.getItem(LAST_ID_KEY) ?? '""') as string } catch { return '' } })
   const [motdepasse, setMotdepasse] = useState('')
   const [remember, setRemember] = useState(true)
   const [showPw, setShowPw] = useState(false)

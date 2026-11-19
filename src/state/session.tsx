@@ -9,6 +9,8 @@ const SESSION_KEY = 'edo:session'
 const TRUST_KEY = 'edo:trust'
 const DEMO_KEY = 'edo:demo-homework'
 const CACHE_KEY = 'edo:cache'
+/** Dernier identifiant utilisé (jamais le mot de passe), pour pré-remplir la reconnexion. */
+export const LAST_ID_KEY = 'edo:last-id'
 
 type Status = 'signed-out' | 'loading' | 'ready'
 
@@ -45,6 +47,10 @@ interface Ctx {
   /** Épingler, archiver, supprimer (masquer) ou remettre en non lu un message. */
   messageAction: (id: string, action: MessageAction) => void
   signIn: (identifiant: string, motdepasse: string, remember: boolean) => Promise<void>
+  /** Session expirée : les données restent affichées, il suffit de se reconnecter. */
+  expired: boolean
+  /** Reconnexion sur place (sans quitter la page). Renvoie un message d'erreur, ou null si c'est bon. */
+  reauth: (identifiant: string, motdepasse: string) => Promise<string | null>
   submitQcm: (choice: string) => Promise<void>
   cancelQcm: () => void
   startDemo: () => void
@@ -95,6 +101,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<SchoolData | null>(null)
   const [status, setStatus] = useState<Status>(saved ? 'loading' : 'signed-out')
   const [error, setError] = useState<string | null>(null)
+  const [expired, setExpired] = useState(false)
   const [pendingQcm, setPendingQcm] = useState<PendingQcm | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [updatedAt, setUpdatedAt] = useState<number | null>(null)
@@ -136,7 +143,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setError(null)
       setStatus('ready')
     } catch (e) {
-      if (isAuthError(e)) {
+      if (isAuthError(e) && dataRef.current) {
+        // On garde tout à l'écran ; un bandeau propose de se reconnecter.
+        setExpired(true)
+        setStatus('ready')
+      } else if (isAuthError(e)) {
         signOut()
         setError('Ta session a expiré, reconnecte-toi.')
       } else if (dataRef.current) {
@@ -175,6 +186,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const finishLogin = useCallback(async (s: Session, remember: boolean) => {
+    setExpired(false)
     session.current = { session: s, remember }
     saveSession(s, remember)
     setMode('live')
@@ -185,6 +197,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (identifiant: string, motdepasse: string, remember: boolean) => {
     setError(null)
+    store.set(LAST_ID_KEY, identifiant)
     try {
       const trust = store.get<Record<string, DeviceTrust>>(TRUST_KEY)?.[trustKey(identifiant)]
       const r = await edLogin(identifiant, motdepasse, trust)
@@ -210,6 +223,31 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setError(e instanceof Error ? e.message : String(e))
     }
   }, [pendingQcm, finishLogin])
+
+  // Reconnexion sur place : même connexion que l'écran de login, mais on reste sur la page.
+  const reauth = useCallback(async (identifiant: string, motdepasse: string) => {
+    try {
+      const trust = store.get<Record<string, DeviceTrust>>(TRUST_KEY)?.[trustKey(identifiant)]
+      const r = await edLogin(identifiant, motdepasse, trust)
+      if (r.kind === 'qcm') {
+        // Question de sécurité demandée : on passe par l'écran de connexion complet.
+        const remember = session.current?.remember ?? true
+        setPendingQcm({ identifiant, motdepasse, remember, token: r.token, twoFa: r.twoFa, qcm: r.qcm })
+        setStatus('signed-out')
+        return null
+      }
+      const remember = session.current?.remember ?? true
+      session.current = { session: r.session, remember }
+      saveSession(r.session, remember)
+      store.set(LAST_ID_KEY, identifiant)
+      setExpired(false)
+      setError(null)
+      void load()
+      return null
+    } catch (e) {
+      return e instanceof Error ? e.message : String(e)
+    }
+  }, [load])
 
   const startDemo = useCallback(() => {
     store.set(SESSION_KEY, { demo: true })
@@ -333,8 +371,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Ctx>(() => ({
     status, mode, data: shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, download, loadPastHomework, messageMeta, messageAction, planEdits, editPlan, applyPlan,
-    signIn, submitQcm, cancelQcm: () => setPendingQcm(null), startDemo, signOut, refresh, toggleHomework,
-  }), [status, mode, shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, download, loadPastHomework, messageMeta, messageAction, planEdits, editPlan, applyPlan, signIn, submitQcm, startDemo, signOut, refresh, toggleHomework])
+    signIn, expired, reauth, submitQcm, cancelQcm: () => setPendingQcm(null), startDemo, signOut, refresh, toggleHomework,
+  }), [status, mode, shown, error, pendingQcm, refreshing, updatedAt, loadWeek, openMessage, download, loadPastHomework, messageMeta, messageAction, planEdits, editPlan, applyPlan, signIn, expired, reauth, submitQcm, startDemo, signOut, refresh, toggleHomework])
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }

@@ -1123,3 +1123,10 @@ input, select, textarea { font-size: max(16px, 1em); }
 .nav-extra { flex-grow: 0; flex-basis: 0; opacity: 0; transform: scale(.6); pointer-events: none; }
 .nav-extra.in { flex-grow: 1; opacity: 1; transform: none; pointer-events: auto; }
 .nav-pill { transition: left .45s var(--spring), width .38s cubic-bezier(.2,.9,.25,1); }
+
+/* Session expirée : bandeau discret au-dessus de la barre du bas */
+.reauth-banner { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 10px);
+  display: flex; align-items: center; gap: 12px; padding: 10px 16px; border: 0; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer;
+  background: color-mix(in srgb, var(--text) 92%, transparent); color: var(--bg); box-shadow: 0 8px 24px rgb(0 0 0 / .3); animation: reauth-in .35s cubic-bezier(.2,.9,.25,1) both; white-space: nowrap; }
+.reauth-banner b { color: var(--accent); }
+@keyframes reauth-in { from { opacity: 0; transform: translate(-50%, 12px); } }

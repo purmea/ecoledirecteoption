@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useHashRoute } from './hooks/useHashRoute'
 import { SessionProvider, useMessages, useSession } from './state/session'
 import { BottomNav } from './components/BottomNav'
+import { Reauth } from './components/Reauth'
 import { Confetti, Toaster, toast } from './fx'
 import { homeworkForTomorrow } from './lib'
 import { Skeleton } from './components/Skeleton'
@@ -72,6 +73,7 @@ function Shell() {
       </main>
       )}
       {route !== 'planning' && <BottomNav current={route} badges={{ devoirs: todo, messages: unread }} />}
+      <Reauth />
       <Toaster />
       <Confetti />
     </div>
